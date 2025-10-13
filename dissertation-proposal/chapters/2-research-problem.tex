@@ -1,0 +1,16 @@
+\chapter{Problema de Pesquisa}
+
+O monitoramento contínuo das bolhas de plasma equatorial através de imageadores airglow gera um volume substancial de dados diários que demandam processamento e análise sistemática. Cada estação do programa EMBRACE/INPE produz uma imagem a cada poucos minutos durante toda a noite, resultando em centenas de imagens por noite e dezenas de milhares de imagens por ano \cite{Githio2024}.
+
+As EPBs possuem uma alta variabilidade morfológica e dinâmica, o que dificulta sua detecção automática. Elas podem variar em tamanho, forma e intensidade, e podem se mover rapidamente através do campo de visão dos imageadores airglow~\cite{Githio2024}. Além disso, as imagens frequentemente contêm ruído de fundo, nuvens, estrelas e poluição luminosa~\cite{Siddiqui2025} o que pode levar a falsos positivos ou negativos na detecção das EPBs.
+
+Trabalhos recentes têm demonstrado a aplicabilidade de técnicas de deep learning para classificação e segmentação de estruturas em imagens airglow, porém lacunas importantes permanecem em aberto \cite{Githio2024}: (i) não existe um modelo otimizado especificamente para o contexto das imagens EMBRACE/INPE com suas características instrumentais particulares; (ii) a performance de diferentes arquiteturas de CNN (ResNet, U-Net, EfficientNet) não foi sistematicamente comparada para este problema específico; (iii) estratégias de aumento de dados (\textit{data augmentation}) e transferência de aprendizado (\textit{transfer learning}) carecem de investigação aprofundada neste domínio; e (iv) a integração de modelos de detecção em sistemas operacionais de tempo real ainda representa um desafio técnico.
+
+Diante desse contexto, este projeto busca responder às seguintes questões de pesquisa:
+
+\begin{enumerate}
+\item Qual arquitetura de rede neural convolucional apresenta melhor desempenho na detecção automática de bolhas de plasma equatorial em imagens airglow 630,0 nm do programa EMBRACE/INPE?
+\item Que estratégias de pré-processamento, aumento de dados e treinamento otimizam a capacidade de generalização dos modelos para diferentes condições observacionais e estações do ano?
+\item Como métricas de classificação (\textit{accuracy, precision, recall, F1-score}) e métricas de segmentação morfológica em nível de pixel (\textit{Intersection over Union - IoU, Dice coefficient, pixel accuracy}) se complementam na avaliação da qualidade da detecção de EPBs?
+\item É viável implementar um sistema de detecção automática em tempo quase-real integrado ao fluxo operacional do programa EMBRACE?
+\end{enumerate}

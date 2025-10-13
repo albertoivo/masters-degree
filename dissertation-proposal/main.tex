@@ -1,0 +1,107 @@
+\documentclass[
+   12pt,
+   oneside,
+   a4paper,
+   brazil
+]{abntex2}
+
+% Codificação e fontes (para pdflatex)
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+% Microtipografia
+\usepackage{microtype}
+
+% Língua já vem de 'brazil' na classe, mas se quiser múltiplos idiomas:
+% \usepackage[english,brazil]{babel}
+
+% Figuras e gráficos
+\usepackage{graphicx}
+\graphicspath{{figuras/}}
+
+% Matemática (se necessário)
+%\usepackage{amsmath, amssymb, mathtools}
+
+% Tabelas melhoradas
+\usepackage{booktabs}
+\usepackage{array}
+
+% Listas
+\usepackage{enumitem}
+\setlist{nosep}
+
+% Espaçamento inicial
+\usepackage{indentfirst}
+
+% Citações ABNT
+\usepackage{abntex2cite}
+\bibliographystyle{abntex2-alf}
+
+% Hiperlinks
+\usepackage{hyperref}
+\hypersetup{
+  pdftitle={DETECÇÃO AUTOMÁTICA DE BOLHAS DE PLASMA EQUATORIAL EM IMAGENS AIRGLOW UTILIZANDO TÉCNICAS DE APRENDIZADO PROFUNDO: UMA APLICAÇÃO AO PROJETO EMBRACE/INPE},
+  pdfauthor={Alberto Ivo da Costa Vieira},
+  pdfsubject={Pré-projeto de dissertação},
+  pdfkeywords={Bolhas de Plasma Equatorial, Inteligência Artificial, Deep Learning, Machine Learning, Clima Espacial, EMBRACE, INPE},
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=blue
+}
+
+% Metadados/capa
+\titulo{DETECÇÃO AUTOMÁTICA DE BOLHAS DE PLASMA EQUATORIAL EM IMAGENS AIRGLOW UTILIZANDO TÉCNICAS DE APRENDIZADO PROFUNDO: UMA APLICAÇÃO AO PROJETO EMBRACE/INPE}
+\autor{Alberto Ivo da Costa Vieira}
+\local{João Pessoa-PB}
+\data{2025}
+\orientador{Prof.\ Dr.\ Tiago Maritan Ugulino de Araujo}
+\coorientador{Prof.\ Dr.\ Cosme Alexandre Oliveira Barros Figueiredo}
+\instituicao{
+  Universidade Federal da Paraíba
+  \par
+  Programa de Pós-Graduação em Informática
+}
+\tipotrabalho{Pré-projeto de dissertação de mestrado}
+
+\begin{document}
+
+% Pré-textuais essenciais
+\imprimircapa
+\imprimirfolhaderosto*
+
+% --- Listas (somente Figuras e Tabelas) ---
+% \listoffigures
+\listoftables
+
+% siglas
+\begin{siglas}
+  \item[2DPCA] Análise de Componentes Principais Bidimensional (Two-Dimensional PCA)
+  \item[CNN] Rede Neural Convolucional (Convolutional Neural Network)
+  \item[DL] Aprendizado Profundo (Deep Learning)
+  \item[EMBRACE] Programa de Estudo e Monitoramento Brasileiro de Clima Espacial
+  \item[EPB] Bolhas de Plasma Equatorial (Equatorial Plasma Bubble)
+  \item[GNSS] Sistemas Globais de Navegação por Satélite (Global Navigation Satellite Systems)
+  \item[INPE] Instituto Nacional de Pesquisas Espaciais
+  \item[IoU] Intersection over Union
+  \item[ML] Aprendizado de Máquina (Machine Learning)
+  \item[SVM] Máquina de Vetor de Suporte (Support Vector Machine)
+  \item[XAI] Inteligência Artificial Explicável (Explainable Artificial Intelligence)
+\end{siglas}
+
+% Sumário
+\tableofcontents
+
+% --- Capítulos (cada um em arquivo separado) ---
+\include{chapters/1-introduction}
+\include{chapters/2-research-problem}
+\include{chapters/3-justification}
+\include{chapters/4-objectives}
+\include{chapters/5-methodology}
+\include{chapters/6-schedule}
+
+% Referências
+\bibliography{references}
+
+\end{document}
