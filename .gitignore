@@ -34,3 +34,6 @@
 *.synctex(busy)
 *.synctex.gz(busy)
 **/settings.json
+code/All_Sky_images.zip
+code/All_Sky_images/
+code/epb/
