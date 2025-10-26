@@ -889,12 +889,12 @@ def main():
         }
     }
     
-    with open('epb_recognition_model.pkl', 'wb') as f:
+    with open('models/epb_recognition_model.pkl', 'wb') as f:
         pickle.dump(model_data, f)
-    
-    print("   ✓ Modelo salvo: epb_recognition_model.pkl")
-    
-    
+
+    print("   ✓ Modelo salvo: models/epb_recognition_model.pkl")
+
+
     # ========== GUIA DE USO ==========
     print("\n" + "="*70)
     print("📚 GUIA DE USO DO MODELO TREINADO")
@@ -907,7 +907,7 @@ def main():
     import numpy as np
     
     # 1. Carrega o modelo
-    with open('epb_recognition_model.pkl', 'rb') as f:
+    with open('models/epb_recognition_model.pkl', 'rb') as f:
         model_data = pickle.load(f)
     
     system = model_data['system']
@@ -963,7 +963,7 @@ if __name__ == "__main__":
        - Teste outros classificadores no ensemble
     
     3. USO DO MODELO:
-       - Use 'epb_recognition_model.pkl' para predições
+       - Use 'models/epb_recognition_model.pkl' para predições
        - Siga o guia de uso impresso acima
        - Monitore performance em produção
     """)
