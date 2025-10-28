@@ -39,3 +39,7 @@ code/All_Sky_images/
 code/epb/
 code/models/epb_recognition_model.pkl
 code/__pycache__/*
+code/data/has-epb/*
+code/data/no-epb/*
+code/data/all-images/*
+code/data/*.zip
