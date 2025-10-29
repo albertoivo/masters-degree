@@ -700,3 +700,50 @@ def explain_feature_importance(system, X_sample, y_sample, filename=None):
     plt.show()
     
     return importance_map
+
+def explain_feature_importance_2(system, X_sample, y_sample, filename=None):
+    """
+    Comparativo simplificado da importância das features
+    """
+    importance_map, _ = system.get_feature_importance(X_sample)
+    
+    # Predição
+    prob = system.predict_proba(X_sample.reshape(1, *X_sample.shape))[0]
+    pred = system.predict(X_sample.reshape(1, *X_sample.shape))[0]
+
+    # Visualiza — mostra a imagem ORIGINAL do diretório `img-teste/<filename>`
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+    img = None
+    if filename:
+        candidate = Path('img-teste') / filename
+        if candidate.exists():
+            try:
+                img = Image.open(candidate).convert('L')
+                # NÃO redimensionar e NÃO pré-processar: queremos a imagem exata do disco
+                img = np.array(img)
+            except Exception:
+                img = None
+
+    if img is None:
+        # fallback: usa X_sample (pré-processada) mas avisa claramente
+        img = X_sample
+
+    axes[0].imshow(img, cmap='gray')
+    axes[0].set_title(filename, fontsize=12, fontweight='bold')
+    axes[0].axis('off')
+
+    im = axes[1].imshow(importance_map, cmap='hot')
+    axes[1].set_title('Mapa de Importância\n(Regiões críticas para classificação)',
+                     fontsize=12, fontweight='bold')
+    axes[1].axis('off')
+    plt.colorbar(im, ax=axes[1], fraction=0.046, label='Importância')
+
+    fig.suptitle(f'Interpretação: {"EPB" if y_sample == 1 else "Sem EPB"} '
+                 f'(Predição: {"EPB" if pred == 1 else "Sem EPB"}, {prob[1]*100:.1f}%)',
+                 fontsize=14, fontweight='bold')
+
+    plt.tight_layout()
+    plt.show()
+
+    return importance_map
