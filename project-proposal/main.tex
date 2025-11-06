@@ -9,11 +9,12 @@
 \usepackage{biblatex}
 \addbibresource{references.bib}
 
-\title{\textbf{Detecção Automática de Bolhas de Plasma Equatorial em Imagens Airglow Utilizando Deep Learning}}
+\title{\textbf{Detecção Automática de Bolhas de Plasma Equatorial em Imagens Airglow Utilizando Aprendizado de Máquina}}
 \author{Alberto Ivo da Costa Vieira\\
 % \small Orientador: Prof. Dr. Tiago Maritan Ugulino de Araujo\\
 % \small Coorientador: Prof. Dr. Cosme Alexandre Oliveira Barros Figueiredo\\
 \small Programa de Pós-Graduação em Informática - UFPB}
+\date{}
 
 \begin{document}
 
@@ -21,15 +22,15 @@
 
 \section{Introdução}
 
-As Bolhas de Plasma Equatorial (EPBs) são zonas caracterizadas por flutuações na densidade do plasma que se formam na ionosfera de baixa latitude, principalmente após o pôr do sol \cite{Githio2024}. Elas submetem sinais de rádio a variabilidades de amplitude e fase, afetando sistemas tecnológicos que utilizam Sistemas Globais de Navegação por Satélite (Global Navigation Satellite Systems - GNSS) para navegação \cite{Githio2024}.
+As Bolhas de Plasma Equatorial (EPB - \textit{Equatorial Plasma Bubbles}) são regiões caracterizadas por baixa densidade eletrônica, com ocorrência predominante entre os meses de setembro e março, logo após o pôr do sol \cite{Barros2018}. Elas submetem sinais de rádio a variabilidades de amplitude e fase, afetando, por exemplo, sistemas tecnológicos que utilizam Sistemas Globais de Navegação por Satélite (Global Navigation Satellite Systems - GNSS) para navegação \cite{Githio2024}.
 
 As EPBs apresentam morfologias características que são identificáveis em imagens de airglow: estruturas ramificadas e alongadas que se estendem verticalmente através da ionosfera com evolução temporal dinâmica. O Brasil possui localização geográfica e geomagnética única para seu estudo. O Instituto Nacional de Pesquisas Espaciais (INPE), através do programa de Estudo e Monitoramento Brasileiro de Clima Espacial (EMBRACE), monitora e difunde informações sobre Clima Espacial para prever e mitigar impactos sobre atividades tecnológicas, econômicas e sociais no Brasil \cite{EMBRACE2021}.
 
 Tradicionalmente, eventos de EPBs são identificados pelo olho humano, método demorado, ineficiente, subjetivo e não escalável. Um imageador airglow de canal único gera cerca de 1 TB de dados por ano, tornando o processamento manual desafiador \cite{Zhong2025}.
 
-Algumas técnicas de Machine Learning (ML) e Deep Learning (DL) têm sido aplicadas para automatizar a detecção das EPBs. \cite{Thanakulketsarat2023} desenvolveram modelo Rede Neural COnvolucional (CNN) com Máquina de Vetor de Suporte (SVM) com kernel \textit{Radius Basis Function}, alcançando 93,67\% de acurácia. \cite{Yacoub2025} propuseram reduzir a dimensionalidade das imagens com Análise de Componentes Principais de 2 Dimensões (2DPCA) combinada com RFE e Random Forest, atingindo 98,17\% de acurácia. Porém, estes focaram em datasets específicos, havendo necessidade de adaptação às características particulares das imagens EMBRACE/INPE.
+Algumas técnicas de Machine Learning (ML) e Deep Learning (DL) têm sido aplicadas para automatizar a detecção das EPBs. \cite{Thanakulketsarat2023} desenvolveram modelo combinando Rede Neural Convolucional e Máquina de Vetor de Suporte com kernel \textit{Radius Basis Function}, alcançando 93,67\% de acurácia. \cite{Yacoub2025} propuseram reduzir a dimensionalidade das imagens com Análise de Componentes Principais Bidimensional Random Forest, atingindo 98,17\% de acurácia. Porém, estes focaram em datasets específicos, havendo necessidade de adaptação às características particulares das imagens EMBRACE/INPE.
 
-Este projeto propõe desenvolvimento de abordagem baseada em ML/DL para detecção automática de EPBs em imagens airglow do EMBRACE, explorando arquiteturas modernas de CNN adaptadas às características específicas dessas estruturas ionosféricas.
+Este projeto propõe desenvolvimento de abordagem baseada em ML/DL para detecção automática de EPBs em imagens airglow na emissão do OI 630 nm do EMBRACE, explorando arquiteturas modernas de Redes Neurais Convolucional (CNN - \textit{Convolutional Neural Network}) adaptadas às características específicas dessas estruturas ionosféricas.
 
 \section{Problema de Pesquisa}
 
@@ -39,7 +40,7 @@ EPBs possuem alta variabilidade morfológica e dinâmica, dificultando detecçã
 
 Trabalhos recentes demonstraram aplicabilidade de ML/DL para classificação e segmentação em imagens airglow, porém lacunas permanecem \cite{Githio2024}: (i) não existe modelo otimizado para imagens EMBRACE/INPE com características instrumentais particulares; (ii) performance de arquiteturas CNN (ResNet, U-Net, EfficientNet) não foi sistematicamente comparada; (iii) estratégias de data augmentation e transfer learning carecem de investigação; (iv) integração em sistemas operacionais de tempo real representa desafio técnico.
 
-\textbf{Questões:} (Q1) Qual arquitetura CNN apresenta melhor desempenho na detecção de EPBs em imagens airglow 630,0 nm do EMBRACE/INPE? (Q2) Que estratégias de pré-processamento, aumento de dados e treinamento otimizam generalização para diferentes condições observacionais e estações? (Q3) Como métricas de classificação (accuracy, precision, recall, F1-score) e segmentação (IoU, Dice coefficient, pixel accuracy) se complementam na avaliação? (Q4) É viável implementar sistema de detecção em tempo quase-real integrado ao fluxo operacional do EMBRACE?
+\textbf{Questões:} (Q1) Qual arquitetura CNN apresenta melhor desempenho na detecção de EPBs em imagens airglow 630,0 nm do EMBRACE/INPE? (Q2) Que estratégias de pré-processamento, aumento de dados e treinamento otimizam generalização para diferentes condições observacionais e estações? (Q3) Como métricas de classificação (accuracy, precision, recall, F1-score) e segmentação (IoU, Dice coefficient, pixel accuracy) se complementam na avaliação? (Q4) É viável implementar sistema de detecção em tempo quase-real?
 
 \section{Justificativa}
 
