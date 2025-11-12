@@ -16,6 +16,7 @@ from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import (confusion_matrix, roc_curve, auc, precision_recall_curve)
+from xgboost import XGBClassifier
 from imblearn.over_sampling import SMOTE
 from imblearn.under_sampling import RandomUnderSampler
 
@@ -26,45 +27,6 @@ from scipy.ndimage import gaussian_filter, rotate, shift
 # ============================================================================
 # PARTE 1: PRÉ-PROCESSAMENTO E CARREGAMENTO DE DADOS
 # ============================================================================
-
-def preprocess_epb_image(img, apply_background_removal=True, enhance_contrast=True):
-    """
-    Pré-processamento específico para realçar estruturas de EPB
-    
-    Args:
-        img: Imagem em escala de cinza [0, 255] ou [0, 1]
-        apply_background_removal: Remove gradientes de fundo
-        enhance_contrast: Aplica CLAHE para realçar contraste local
-    
-    Returns:
-        Imagem pré-processada normalizada [0, 1]
-    """
-    # Garante [0, 1]
-    if img.max() > 1.0:
-        img = img / 255.0
-    
-    img = img.astype(np.float32)
-    
-    # 1. Remove gradientes de fundo (iluminação não-uniforme)
-    if apply_background_removal:
-        # Estima background com filtro gaussiano
-        background = gaussian_filter(img, sigma=10)
-        img = img - background
-        # Garante valores positivos
-        img = np.clip(img, 0, None)
-    
-    # 2. Realce de contraste (similar a CLAHE)
-    if enhance_contrast:
-        # Equalização adaptativa por blocos
-        from skimage.exposure import equalize_adapthist
-        img = equalize_adapthist(img, clip_limit=0.03)
-    
-    # 3. Normalização final
-    if img.max() > img.min():
-        img = (img - img.min()) / (img.max() - img.min())
-    
-    return img
-
 
 def load_epb_dataset(data_folder, label_file, target_size=(64, 64), apply_preprocessing=True):
     """
@@ -147,6 +109,45 @@ def load_epb_dataset(data_folder, label_file, target_size=(64, 64), apply_prepro
         print(f"   ⚠️  Dataset desbalanceado! Será aplicado balanceamento.")
     
     return images, labels, filenames
+
+
+def preprocess_epb_image(img, apply_background_removal=True, enhance_contrast=True):
+    """
+    Pré-processamento específico para realçar estruturas de EPB
+    
+    Args:
+        img: Imagem em escala de cinza [0, 255] ou [0, 1]
+        apply_background_removal: Remove gradientes de fundo
+        enhance_contrast: Aplica CLAHE para realçar contraste local
+    
+    Returns:
+        Imagem pré-processada normalizada [0, 1]
+    """
+    # Garante [0, 1]
+    if img.max() > 1.0:
+        img = img / 255.0
+    
+    img = img.astype(np.float32)
+    
+    # 1. Remove gradientes de fundo (iluminação não-uniforme)
+    if apply_background_removal:
+        # Estima background com filtro gaussiano
+        background = gaussian_filter(img, sigma=10)
+        img = img - background
+        # Garante valores positivos
+        img = np.clip(img, 0, None)
+    
+    # 2. Realce de contraste (similar a CLAHE)
+    if enhance_contrast:
+        # Equalização adaptativa por blocos
+        from skimage.exposure import equalize_adapthist
+        img = equalize_adapthist(img, clip_limit=0.03)
+    
+    # 3. Normalização final
+    if img.max() > img.min():
+        img = (img - img.min()) / (img.max() - img.min())
+    
+    return img
 
 
 def augment_epb_data(images, labels, augment_factor=2):
@@ -336,17 +337,14 @@ class EPBRecognitionSystem:
     - Ensemble de classificadores
     """
     
-    def __init__(self, n_components=15, use_ensemble=True, 
-                 balance_data=True, balance_method='smote'):
+    def __init__(self, n_components=15, balance_data=True, balance_method='smote'):
         """
         Args:
             n_components: Número de componentes 2DPCA
-            use_ensemble: Usar ensemble ou SVM único
             balance_data: Aplicar balanceamento de classes
             balance_method: 'smote', 'undersample', ou 'combined'
         """
         self.n_components = n_components
-        self.use_ensemble = use_ensemble
         self.balance_data = balance_data
         self.balance_method = balance_method
         
@@ -355,27 +353,55 @@ class EPBRecognitionSystem:
         self.sampler = None
         
         # Configura classificador
-        if use_ensemble:
-            self.classifier = self._create_ensemble()
-        else:
-            self.classifier = SVC(kernel='rbf', probability=True, 
-                                 gamma='scale', C=1.0, 
-                                 class_weight='balanced', random_state=42)
+        self.classifier = SVC(kernel='rbf', probability=True, gamma='scale', C=1.0, class_weight='balanced', random_state=42)
     
-    def _create_ensemble(self):
-        """Cria ensemble de classificadores"""
+    def _create_ensemble(self, y_train):
+        """Ensemble otimizado para detecção de EPBs"""
+        
+        # Calcula ratio de classes para XGBoost
+        n_neg = np.sum(y_train == 0)
+        n_pos = np.sum(y_train == 1)
+        scale_pos_weight = n_neg / n_pos if n_pos > 0 else 1.0
+        
         estimators = [
-            ('svm_rbf', SVC(kernel='rbf', probability=True, gamma='scale', 
-                           C=1.0, class_weight='balanced', random_state=42)),
-            ('svm_poly', SVC(kernel='poly', degree=3, probability=True, 
-                            class_weight='balanced', random_state=42)),
-            ('rf', RandomForestClassifier(n_estimators=100, max_depth=10,
-                                         class_weight='balanced', random_state=42))
+            # Kernel-based: captura padrões suaves/irregulares
+            ('svm_rbf', SVC(
+                kernel='rbf', 
+                probability=True, 
+                gamma='scale',              # ou tunar com GridSearch
+                C=5.0,                      # aumentado para capturar mais complexidade
+                class_weight='balanced', 
+                random_state=42
+            )),
+            
+            # Gradient Boosting: captura interações complexas
+            ('xgboost', XGBClassifier(
+                n_estimators=200,           # mais árvores = mais estabilidade
+                max_depth=6,                # evita overfitting
+                learning_rate=0.1,
+                scale_pos_weight=scale_pos_weight,
+                use_label_encoder=False,
+                random_state=42,
+                eval_metric='logloss'
+            )),
+            
+            # Tree-based robusto: resistente a ruído
+            ('rf', RandomForestClassifier(
+                n_estimators=200,           # mais árvores para robustez 
+                max_depth=15,               # maior capacidade
+                min_samples_split=5,        # evita overfitting
+                class_weight='balanced', 
+                random_state=42
+            ))
         ]
         
-        return VotingClassifier(estimators=estimators, voting='soft')
+        return VotingClassifier(
+            estimators=estimators, 
+            voting='soft',
+            weights=[2, 3, 2]  # Mais peso para XGBoost (geralmente melhor)
+        )
     
-    def _setup_balancing(self, y_train):
+    def _setup_balancing(self):
         """Configura método de balanceamento"""
         if not self.balance_data:
             return None
@@ -423,7 +449,7 @@ class EPBRecognitionSystem:
             print(f"   • Aplicando balanceamento ({self.balance_method})...")
             original_dist = np.bincount(y_train)
             
-            self.sampler = self._setup_balancing(y_train)
+            self.sampler = self._setup_balancing()
             features_train, y_train = self.sampler.fit_resample(
                 features_train, y_train
             )
@@ -433,8 +459,7 @@ class EPBRecognitionSystem:
             print(f"     ✓ Classe 1: {original_dist[1]} → {new_dist[1]}")
         
         # 5. Treina classificador
-        clf_type = "Ensemble" if self.use_ensemble else "SVM"
-        print(f"   • Treinando classificador {clf_type}...")
+        print(f"   • Treinando classificador ensemble...")
         self.classifier.fit(features_train, y_train)
         print("     ✓ Treinamento concluído!")
         
@@ -620,7 +645,6 @@ def plot_comprehensive_analysis(system, X_train, X_test, y_train, y_test,
                  fontsize=16, fontweight='bold', y=0.995)
     
     return fig
-
 
 def explain_feature_importance(system, X_sample, y_sample, filename=None):
     """
