@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Generate CSV file with EPB labels
-OUTPUT_FILE="epb_labels.csv"
+OUTPUT_FILE="../data/epb_labels.csv"
 
 # Create header if file doesn't exist
 if [ ! -f "$OUTPUT_FILE" ]; then
@@ -23,9 +23,9 @@ entry_exists() {
 }
 
 # Process has-epb directory
-if [ -d "has-epb" ]; then
+if [ -d "../data/has-epb" ]; then
     echo "Processing has-epb directory..."
-    for file in ./has-epb/*; do
+    for file in ../data/has-epb/*; do
         if [ -f "$file" ]; then
             filename=$(basename "$file")
             
@@ -42,9 +42,9 @@ if [ -d "has-epb" ]; then
 fi
 
 # Process no-epb directory
-if [ -d "./no-epb" ]; then
+if [ -d "../data/no-epb" ]; then
     echo "Processing no-epb directory..."
-    for file in ./no-epb/*; do
+    for file in ../data/no-epb/*; do
         if [ -f "$file" ]; then
             filename=$(basename "$file")
             
