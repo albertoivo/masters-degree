@@ -294,9 +294,7 @@ def optimize_n_components(X_train, y_train, max_components=30, cv_folds=5):
         
         # Validação cruzada com SVM
         clf = SVC(kernel='rbf', gamma='scale', class_weight='balanced')
-        scores = cross_val_score(clf, features, y_train, 
-                                cv=StratifiedKFold(cv_folds), 
-                                scoring='f1')
+        scores = cross_val_score(clf, features, y_train, cv=StratifiedKFold(cv_folds), scoring='f1')
         
         mean_score = scores.mean()
         std_score = scores.std()
@@ -353,7 +351,7 @@ class EPBRecognitionSystem:
         self.sampler = None
         
         # Configura classificador
-        self.classifier = SVC(kernel='rbf', probability=True, gamma='scale', C=1.0, class_weight='balanced', random_state=42)
+        self.classifier = None
     
     def _create_ensemble(self, y_train):
         """Ensemble otimizado para detecção de EPBs"""
@@ -460,6 +458,7 @@ class EPBRecognitionSystem:
         
         # 5. Treina classificador
         print(f"   • Treinando classificador ensemble...")
+        self.classifier = self._create_ensemble(y_train)
         self.classifier.fit(features_train, y_train)
         print("     ✓ Treinamento concluído!")
         
