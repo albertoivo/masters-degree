@@ -135,53 +135,68 @@ for TIF_FILE in O6_*.tif; do
         echo -e "${YELLOW}[$CONTADOR/$TOTAL]${NC} Processando: $TIF_FILE -> $(basename "$PNG_FILE")"
         
         # Extrai informações do nome do arquivo
-        if extrair_info "$TIF_FILE"; then
-            # Processa com ImageMagick e adiciona anotações
-            if magick "$TIF_FILE" \
+        extrair_info "$TIF_FILE"
+        
+        # Processa com ImageMagick e adiciona anotações
+        # Comando específico para cada observatório
+        if [ "$OBSERVATORIO" = "CA" ] || [ "$OBSERVATORIO" = "BJL" ]; then
+            magick "$TIF_FILE" \
                 -contrast-stretch 0.5%x0.5% \
                 -gamma 0.7 \
                 -clahe 25x25%+256+2.5 \
                 -level 2%,99% \
                 -flop \
                 -rotate 90 \
+                -font DejaVu-Sans \
                 -gravity NorthWest -pointsize 24 -fill white -annotate +10+10 "$OBSERVATORIO" \
                 -gravity NorthEast -pointsize 24 -fill white -annotate +10+10 "$FILTRO" \
                 -gravity SouthWest -pointsize 24 -fill white -annotate +10+10 "$HORA_FORMATADA" \
                 -gravity SouthEast -pointsize 24 -fill white -annotate +10+10 "$DATA_FORMATADA" \
                 -quality 100 \
-                "$PNG_FILE" 2>&1 | tee /tmp/magick_error.log; then
-                
-                if [ -f "$PNG_FILE" ]; then
-                    echo -e "   ${GREEN}✓ Sucesso (com anotações)${NC}"
-                    ((SUCESSO++))
-                else
-                    echo -e "   ${RED}✗ Arquivo PNG não foi criado${NC}"
-                    cat /tmp/magick_error.log
-                    ((FALHA++))
-                fi
+                "$PNG_FILE" 2>&1 | tee /tmp/magick_error.log
+        elif [ "$OBSERVATORIO" = "CP" ]; then
+            magick "$TIF_FILE" \
+                -contrast-stretch 0.5%x0.5% \
+                -gamma 0.7 \
+                -clahe 25x25%+256+2.5 \
+                -level 2%,99% \
+                -flop \
+                -gravity NorthWest -pointsize 24 -fill white -annotate +10+10 "$OBSERVATORIO" \
+                -gravity NorthEast -pointsize 24 -fill white -annotate +10+10 "$FILTRO" \
+                -gravity SouthWest -pointsize 24 -fill white -annotate +10+10 "$HORA_FORMATADA" \
+                -gravity SouthEast -pointsize 24 -fill white -annotate +10+10 "$DATA_FORMATADA" \
+                -quality 100 \
+                "$PNG_FILE" 2>&1 | tee /tmp/magick_error.log
+        elif [ "$OBSERVATORIO" = "STR" ]; then
+            magick "$TIF_FILE" \
+                -contrast-stretch 0.5%x0.5% \
+                -gamma 0.7 \
+                -clahe 25x25%+256+2.5 \
+                -level 2%,99% \
+                -flip \
+                -gravity NorthWest -pointsize 24 -fill white -annotate +10+10 "$OBSERVATORIO" \
+                -gravity NorthEast -pointsize 24 -fill white -annotate +10+10 "$FILTRO" \
+                -gravity SouthWest -pointsize 24 -fill white -annotate +10+10 "$HORA_FORMATADA" \
+                -gravity SouthEast -pointsize 24 -fill white -annotate +10+10 "$DATA_FORMATADA" \
+                -quality 100 \
+                "$PNG_FILE" 2>&1 | tee /tmp/magick_error.log
+        fi
+        
+        if [ $? -eq 0 ]; then
+            if [ -f "$PNG_FILE" ]; then
+                echo -e "   ${GREEN}✓ Sucesso${NC}"
+                ((SUCESSO++))
             else
-                echo -e "   ${RED}✗ Erro no comando magick${NC}"
+                echo -e "   ${RED}✗ Arquivo PNG não foi criado${NC}"
                 cat /tmp/magick_error.log
                 ((FALHA++))
             fi
         else
-            # Se não conseguir extrair info, processa sem anotações
-            echo -e "   ${YELLOW}⚠ Não foi possível extrair informações do nome do arquivo${NC}"
-            if magick "$TIF_FILE" -contrast-stretch 0.5%x0.5% -gamma 0.7 -clahe 25x25%+256+2.5 -level 2%,99% -flop -rotate 90 -quality 100 "$PNG_FILE" 2>&1 | tee /tmp/magick_error.log; then
-                if [ -f "$PNG_FILE" ]; then
-                    echo -e "   ${GREEN}✓ Sucesso (sem anotações)${NC}"
-                    ((SUCESSO++))
-                else
-                    echo -e "   ${RED}✗ Arquivo PNG não foi criado${NC}"
-                    cat /tmp/magick_error.log
-                    ((FALHA++))
-                fi
-            else
-                echo -e "   ${RED}✗ Erro no comando magick${NC}"
-                cat /tmp/magick_error.log
-                ((FALHA++))
-            fi
+            echo -e "   ${RED}✗ Erro no comando magick${NC}"
+            cat /tmp/magick_error.log
+            ((FALHA++))
         fi
+        
         ((CONTADOR++))
     fi
 done
@@ -219,32 +234,30 @@ if [ $SUCESSO -gt 0 ]; then
         FIRST_BASENAME=$(basename "$FIRST_PNG")
         
         # Extrair informações do primeiro arquivo
-        if extrair_info "$FIRST_BASENAME"; then
-            # Converter data de DD/MM/YYYY para YYYYMMDD
-            DATA_VIDEO="${ANO}${MES}${DIA}"
-            VIDEO_NAME="${FILTRO}_${OBSERVATORIO}_${DATA_VIDEO}.mp4"
-            VIDEO_PATH="$DIR_NAME/$VIDEO_NAME"
-            
-            echo -e "  Criando: ${YELLOW}$VIDEO_NAME${NC}"
-            
-            # Gerar timelapse
-            cd "$DIR_NAME/processed"
-            if magick -delay 16 -loop 0 *.png "../$VIDEO_NAME" 2>&1 | tee /tmp/timelapse_error.log; then
-                cd ../..
-                if [ -f "$VIDEO_PATH" ]; then
-                    echo -e "  ${GREEN}✓ Timelapse criado com sucesso!${NC}"
-                    echo -e "  Localização: ${YELLOW}$VIDEO_PATH${NC}"
-                else
-                    echo -e "  ${RED}✗ Arquivo de vídeo não foi criado${NC}"
-                    cat /tmp/timelapse_error.log
-                fi
+        extrair_info "$FIRST_BASENAME"
+        
+        # Converter data de DD/MM/YYYY para YYYYMMDD
+        DATA_VIDEO="${ANO}${MES}${DIA}"
+        VIDEO_NAME="${FILTRO}_${OBSERVATORIO}_${DATA_VIDEO}.mp4"
+        VIDEO_PATH="$DIR_NAME/$VIDEO_NAME"
+        
+        echo -e "  Criando: ${YELLOW}$VIDEO_NAME${NC}"
+        
+        # Gerar timelapse
+        cd "$DIR_NAME/processed"
+        if magick -delay 16 -loop 0 *.png "../$VIDEO_NAME" 2>&1 | tee /tmp/timelapse_error.log; then
+            cd ../..
+            if [ -f "$VIDEO_PATH" ]; then
+                echo -e "  ${GREEN}✓ Timelapse criado com sucesso!${NC}"
+                echo -e "  Localização: ${YELLOW}$VIDEO_PATH${NC}"
             else
-                cd ../..
-                echo -e "  ${RED}✗ Erro ao criar timelapse${NC}"
+                echo -e "  ${RED}✗ Arquivo de vídeo não foi criado${NC}"
                 cat /tmp/timelapse_error.log
             fi
         else
-            echo -e "  ${YELLOW}⚠ Não foi possível extrair informações para nomear o vídeo${NC}"
+            cd ../..
+            echo -e "  ${RED}✗ Erro ao criar timelapse${NC}"
+            cat /tmp/timelapse_error.log
         fi
     fi
 fi
