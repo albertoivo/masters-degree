@@ -44,3 +44,6 @@ code/data/no-epb/*
 code/data/all-images/*
 code/data/*.zip
 imagens-de-bolhas/*.zip
+code/util/**/*.tif
+code/util/**/*.png
+code/util/**/*.mp4
