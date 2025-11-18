@@ -770,3 +770,59 @@ def explain_feature_importance_2(system, X_sample, y_sample, filename=None):
     plt.show()
 
     return importance_map
+
+def explain_feature_importance_3(system, X_sample, y_sample, filename=None):
+    """
+    Visualização completa com 3 imagens:
+    1. Imagem original do disco (sem processamento)
+    2. Imagem processada (cmap plasma)
+    3. Mapa de importância das features
+    """
+    importance_map, _ = system.get_feature_importance(X_sample)
+    
+    # Predição
+    prob = system.predict_proba(X_sample.reshape(1, *X_sample.shape))[0]
+    pred = system.predict(X_sample.reshape(1, *X_sample.shape))[0]
+
+    # Visualiza 3 imagens lado a lado
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+
+    # 1. Imagem ORIGINAL do disco (sem pré-processamento)
+    img_disk = None
+    if filename:
+        candidate = Path('img-teste') / filename
+        if candidate.exists():
+            try:
+                img_disk = Image.open(candidate).convert('L')
+                img_disk = np.array(img_disk)
+            except Exception:
+                img_disk = None
+
+    if img_disk is None:
+        # fallback: usa X_sample se não encontrar no disco
+        img_disk = X_sample
+
+    axes[0].imshow(img_disk, cmap='gray')
+    axes[0].set_title(f'{filename}\n(Imagem Pré-Processada)', fontsize=12, fontweight='bold')
+    axes[0].axis('off')
+
+    # 2. Imagem processada (plasma)
+    axes[1].imshow(X_sample, cmap='plasma')
+    axes[1].set_title('Features extraídas pelo 2DPCA\n(Usada pelo modelo)', fontsize=12, fontweight='bold')
+    axes[1].axis('off')
+
+    # 3. Mapa de importância
+    im = axes[2].imshow(importance_map, cmap='hot')
+    axes[2].set_title('Mapa de Importância\n(Regiões críticas para classificação)',
+                     fontsize=12, fontweight='bold')
+    axes[2].axis('off')
+    plt.colorbar(im, ax=axes[2], fraction=0.046, label='Importância')
+
+    fig.suptitle(f'Interpretação: {"EPB" if y_sample == 1 else "Sem EPB"} '
+                 f'(Predição: {"EPB" if pred == 1 else "Sem EPB"}, {prob[1]*100:.1f}%)',
+                 fontsize=14, fontweight='bold')
+
+    plt.tight_layout()
+    plt.show()
+
+    return importance_map
