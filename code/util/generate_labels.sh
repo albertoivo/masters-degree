@@ -67,3 +67,39 @@ echo "New entries added: $new_entries"
 echo "Skipped (duplicates): $skipped_entries"
 echo "Total entries: $(tail -n +2 "$OUTPUT_FILE" | wc -l)"
 echo "=========================================="
+
+# Create all-images directory if it doesn't exist
+mkdir -p "../data/all-images"
+
+# Move images from has-epb to all-images
+moved_has_epb=0
+if [ -d "../data/has-epb" ]; then
+    moved_has_epb=$(find ../data/has-epb -type f | wc -l)
+    if [ $moved_has_epb -gt 0 ]; then
+        if mv ../data/has-epb/* "../data/all-images/" 2>/dev/null; then
+            echo "✓ Moved $moved_has_epb images from has-epb to all-images"
+        else
+            echo "✗ Failed to move images from has-epb"
+            moved_has_epb=0
+        fi
+    fi
+fi
+
+# Move images from no-epb to all-images
+moved_no_epb=0
+if [ -d "../data/no-epb" ]; then
+    moved_no_epb=$(find ../data/no-epb -type f | wc -l)
+    if [ $moved_no_epb -gt 0 ]; then
+        if mv ../data/no-epb/* "../data/all-images/" 2>/dev/null; then
+            echo "✓ Moved $moved_no_epb images from no-epb to all-images"
+        else
+            echo "✗ Failed to move images from no-epb"
+            moved_no_epb=0
+        fi
+    fi
+fi
+
+echo ""
+echo "=========================================="
+echo "Total images moved: $((moved_has_epb + moved_no_epb))"
+echo "=========================================="
