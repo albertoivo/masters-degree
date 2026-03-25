@@ -22,6 +22,10 @@ from imblearn.under_sampling import RandomUnderSampler
 
 # Processamento de imagem
 from scipy.ndimage import gaussian_filter, rotate, shift
+from skimage.exposure import equalize_adapthist
+
+import re
+from datetime import datetime
 
 
 # ============================================================================
@@ -140,7 +144,6 @@ def preprocess_epb_image(img, apply_background_removal=True, enhance_contrast=Tr
     # 2. Realce de contraste (similar a CLAHE)
     if enhance_contrast:
         # Equalização adaptativa por blocos
-        from skimage.exposure import equalize_adapthist
         img = equalize_adapthist(img, clip_limit=0.03)
     
     # 3. Normalização final
@@ -378,7 +381,6 @@ class EPBRecognitionSystem:
                 max_depth=6,                # evita overfitting
                 learning_rate=0.1,
                 scale_pos_weight=scale_pos_weight,
-                use_label_encoder=False,
                 random_state=42,
                 eval_metric='logloss'
             )),
@@ -826,3 +828,349 @@ def explain_feature_importance_3(system, X_sample, y_sample, filename=None):
     plt.show()
 
     return importance_map
+
+
+# ============================================================================
+# PARTE 5: ANÁLISE TEMPORAL DE SEQUÊNCIA DE IMAGENS
+# ============================================================================
+
+def analyze_temporal_sequence(system, image_folder, target_size=(64, 64), 
+                              show_thumbnails=True, thumbnail_interval=10):
+    """
+    Analisa uma sequência temporal de imagens e plota a evolução da probabilidade de EPB.
+    
+    Esta função é útil para:
+    - Verificar se o modelo detecta EPBs antes de serem visíveis
+    - Analisar a evolução temporal de eventos de EPB
+    - Identificar o momento de início/fim de perturbações ionosféricas
+    
+    Args:
+        system: Sistema EPBRecognitionSystem treinado
+        image_folder: Pasta com imagens ordenadas cronologicamente
+        target_size: Tamanho para redimensionar imagens (deve ser igual ao treino)
+        show_thumbnails: Se True, mostra thumbnails das imagens no gráfico
+        thumbnail_interval: Intervalo entre thumbnails (ex: 10 = mostra a cada 10 imagens)
+    
+    Returns:
+        DataFrame com timestamps, probabilidades e predições
+    """
+    print("="*70)
+    print("🕐 ANÁLISE TEMPORAL DE SEQUÊNCIA DE IMAGENS")
+    print("="*70)
+    
+    image_folder = Path(image_folder)
+    
+    # Lista e ordena imagens
+    image_files = sorted(list(image_folder.glob('*.png')))
+    
+    if len(image_files) == 0:
+        print(f"⚠️  Nenhuma imagem encontrada em: {image_folder}")
+        return None
+    
+    print(f"📂 Pasta: {image_folder}")
+    print(f"📸 Total de imagens: {len(image_files)}")
+    
+    # Processa cada imagem
+    results = []
+    
+    for img_path in image_files:
+        try:
+            # Extrai timestamp do nome do arquivo (formato: O6_XX_YYYYMMDD_HHMMSS.png)
+            match = re.search(r'(\d{8})_(\d{6})', img_path.name)
+            if match:
+                date_str = match.group(1)
+                time_str = match.group(2)
+                timestamp = datetime.strptime(f"{date_str}_{time_str}", "%Y%m%d_%H%M%S")
+            else:
+                timestamp = None
+            
+            # Carrega e processa imagem
+            img = Image.open(img_path).convert('L')
+            img = np.array(img.resize(target_size))
+            img_processed = preprocess_epb_image(img)
+            
+            # Faz predição
+            prob = system.predict_proba(img_processed.reshape(1, *img_processed.shape))[0]
+            pred = system.predict(img_processed.reshape(1, *img_processed.shape))[0]
+            
+            results.append({
+                'filename': img_path.name,
+                'filepath': str(img_path),
+                'timestamp': timestamp,
+                'prob_no_epb': prob[0],
+                'prob_epb': prob[1],
+                'prediction': pred,
+                'prediction_label': 'EPB' if pred == 1 else 'Sem EPB'
+            })
+            
+        except Exception as e:
+            print(f"   ⚠️  Erro em {img_path.name}: {str(e)}")
+    
+    # Cria DataFrame
+    df = pd.DataFrame(results)
+    
+    if df.empty:
+        print("❌ Nenhuma imagem processada com sucesso.")
+        return None
+    
+    # Estatísticas
+    n_epb = (df['prediction'] == 1).sum()
+    n_no_epb = (df['prediction'] == 0).sum()
+    
+    print(f"\n📊 Resumo das predições:")
+    print(f"   • Com EPB: {n_epb} imagens ({n_epb/len(df)*100:.1f}%)")
+    print(f"   • Sem EPB: {n_no_epb} imagens ({n_no_epb/len(df)*100:.1f}%)")
+    print(f"   • Probabilidade média de EPB: {df['prob_epb'].mean()*100:.1f}%")
+    print(f"   • Probabilidade máxima de EPB: {df['prob_epb'].max()*100:.1f}%")
+    print(f"   • Probabilidade mínima de EPB: {df['prob_epb'].min()*100:.1f}%")
+    
+    # Identifica transições (mudanças de estado)
+    df['state_change'] = df['prediction'].diff().fillna(0).abs()
+    transitions = df[df['state_change'] == 1]
+    
+    if len(transitions) > 0:
+        print(f"\n🔄 Transições detectadas ({len(transitions)}):")
+        for _, row in transitions.iterrows():
+            time_str = row['timestamp'].strftime('%H:%M:%S') if row['timestamp'] else 'N/A'
+            print(f"   • {time_str} - Mudou para: {row['prediction_label']} ({row['prob_epb']*100:.1f}%)")
+    
+    # =========================================================================
+    # VISUALIZAÇÃO ELEGANTE - Estilo moderno e profissional
+    # =========================================================================
+    
+    # Configuração de estilo
+    plt.style.use('default')
+    
+    # Paleta de cores elegante
+    COLORS = {
+        'background': '#0d1117',
+        'card_bg': '#161b22',
+        'text': '#e6edf3',
+        'text_secondary': '#8b949e',
+        'line_main': '#58a6ff',
+        'fill_gradient_top': '#58a6ff',
+        'fill_gradient_bottom': '#1f6feb',
+        'threshold': '#3fb950',
+        'confidence_medium': '#d29922',
+        'confidence_high': '#f85149',
+        'transition': '#a371f7',
+        'grid': '#30363d',
+        'epb_positive': '#f85149',
+        'epb_negative': '#3fb950',
+    }
+    
+    # Cria figura com fundo escuro
+    fig = plt.figure(figsize=(18, 11), facecolor=COLORS['background'])
+    
+    if show_thumbnails:
+        gs = fig.add_gridspec(3, 1, height_ratios=[2.5, 0.8, 1], hspace=1,
+                              left=0.06, right=0.94, top=0.88, bottom=0.08)
+    else:
+        gs = fig.add_gridspec(2, 1, height_ratios=[2.5, 0.8], hspace=1,
+                              left=0.06, right=0.94, top=0.88, bottom=0.08)
+    
+    # -------------------------------------------------------------------------
+    # GRÁFICO PRINCIPAL: Probabilidade ao longo do tempo
+    # -------------------------------------------------------------------------
+    ax1 = fig.add_subplot(gs[0], facecolor=COLORS['card_bg'])
+    
+    if df['timestamp'].notna().all():
+        x_values = df['timestamp']
+        x_label = 'Horário (UT)'
+    else:
+        x_values = range(len(df))
+        x_label = 'Índice da Imagem'
+    
+    prob_values = df['prob_epb'] * 100
+    
+    # Gradiente de preenchimento usando múltiplas camadas
+    from matplotlib.colors import LinearSegmentedColormap
+    
+    # Cria preenchimento com gradiente simulado
+    ax1.fill_between(x_values, 0, prob_values, alpha=0.15, color=COLORS['fill_gradient_top'])
+    ax1.fill_between(x_values, 0, prob_values * 0.7, alpha=0.15, color=COLORS['fill_gradient_bottom'])
+    ax1.fill_between(x_values, 0, prob_values * 0.4, alpha=0.15, color=COLORS['fill_gradient_bottom'])
+    
+    # Linha principal com efeito de brilho (glow)
+    ax1.plot(x_values, prob_values, color=COLORS['line_main'], linewidth=3.5, alpha=0.3)  # Glow
+    ax1.plot(x_values, prob_values, color=COLORS['line_main'], linewidth=2, 
+             label='Probabilidade de EPB', zorder=5)
+    
+    # Pontos nos dados com efeito sutil
+    scatter_colors = [COLORS['epb_positive'] if p > 50 else COLORS['epb_negative'] for p in prob_values]
+    ax1.scatter(x_values, prob_values, c=scatter_colors, s=8, alpha=0.6, zorder=6, edgecolors='none')
+    
+    # Linhas de referência com estilo elegante
+    ax1.axhline(y=50, color=COLORS['threshold'], linestyle='--', linewidth=2, 
+                label='Threshold (50%)', alpha=0.9)
+    ax1.axhline(y=70, color=COLORS['confidence_medium'], linestyle=':', linewidth=1.8, 
+                label='Confiança Média (70%)', alpha=0.8)
+    ax1.axhline(y=90, color=COLORS['confidence_high'], linestyle=':', linewidth=1.8, 
+                label='Confiança Alta (90%)', alpha=0.8)
+    
+    # Marca transições com estilo sutil
+    for _, row in transitions.iterrows():
+        if df['timestamp'].notna().all():
+            x_pos = row['timestamp']
+        else:
+            x_pos = df[df['filename'] == row['filename']].index[0]
+        ax1.axvline(x=x_pos, color=COLORS['transition'], linestyle='-', alpha=0.4, linewidth=1.5)
+    
+    # Estilização dos eixos
+    ax1.set_xlabel(x_label, fontsize=12, color=COLORS['text'], fontweight='medium', labelpad=10)
+    ax1.set_ylabel('Probabilidade de EPB (%)', fontsize=12, color=COLORS['text'], 
+                   fontweight='medium', labelpad=10)
+    ax1.set_ylim(-2, 105)
+    ax1.set_xlim(x_values.iloc[0] if hasattr(x_values, 'iloc') else x_values[0], 
+                 x_values.iloc[-1] if hasattr(x_values, 'iloc') else x_values[-1])
+    
+    # Grid elegante
+    ax1.grid(True, linestyle='-', alpha=0.2, color=COLORS['grid'], linewidth=0.5)
+    ax1.set_axisbelow(True)
+    
+    # Personaliza ticks
+    ax1.tick_params(axis='both', colors=COLORS['text_secondary'], labelsize=10)
+    for spine in ax1.spines.values():
+        spine.set_color(COLORS['grid'])
+        spine.set_linewidth(0.5)
+    
+    # Rotaciona labels do eixo X se forem timestamps
+    if df['timestamp'].notna().all():
+        plt.setp(ax1.xaxis.get_majorticklabels(), rotation=45, ha='right')
+    
+    # Legenda elegante - posicionada fora da área do gráfico
+    legend = ax1.legend(loc='upper left', fontsize=10, framealpha=0.95,
+                        facecolor=COLORS['card_bg'], edgecolor=COLORS['grid'],
+                        labelcolor=COLORS['text'], bbox_to_anchor=(0.01, 0.99))
+    legend.get_frame().set_linewidth(0.5)
+    
+    # Título do subplot
+    ax1.set_title('Evolução Temporal da Probabilidade de EPB', fontsize=14, 
+                  color=COLORS['text'], fontweight='bold', pad=15, loc='left')
+    
+    # -------------------------------------------------------------------------
+    # GRÁFICO SECUNDÁRIO: Timeline de classificação
+    # -------------------------------------------------------------------------
+    ax2 = fig.add_subplot(gs[1], facecolor=COLORS['card_bg'])
+    
+    # Cria barras com cores baseadas na predição
+    bar_colors = [COLORS['epb_negative'] if p == 0 else COLORS['epb_positive'] for p in df['prediction']]
+    bars = ax2.bar(range(len(df)), [1] * len(df), color=bar_colors, alpha=0.85, width=1.0, 
+                   edgecolor='none')
+    
+    # Adiciona indicador de intensidade (opacidade baseada na probabilidade)
+    for i, (bar, prob) in enumerate(zip(bars, df['prob_epb'])):
+        bar.set_alpha(0.3 + 0.6 * abs(prob - 0.5) * 2)  # Mais opaco = mais certeza
+    
+    ax2.set_ylabel('Status', fontsize=11, color=COLORS['text'], fontweight='medium', labelpad=10)
+    ax2.set_yticks([0.5])
+    ax2.set_yticklabels([''])
+    ax2.set_xlabel('Sequência de Imagens', fontsize=11, color=COLORS['text'], 
+                   fontweight='medium', labelpad=10)
+    ax2.set_xlim(-0.5, len(df) - 0.5)
+    ax2.set_ylim(0, 1)
+    
+    # Estilização
+    ax2.tick_params(axis='both', colors=COLORS['text_secondary'], labelsize=9)
+    for spine in ax2.spines.values():
+        spine.set_color(COLORS['grid'])
+        spine.set_linewidth(0.5)
+    
+    # Título com legenda integrada
+    ax2.set_title('Classificação ao Longo do Tempo', fontsize=12, 
+                  color=COLORS['text'], fontweight='bold', pad=10, loc='left')
+    
+    # Adiciona mini-legenda no gráfico
+    from matplotlib.patches import Patch
+    legend_elements = [
+        Patch(facecolor=COLORS['epb_negative'], alpha=0.8, label='Sem EPB'),
+        Patch(facecolor=COLORS['epb_positive'], alpha=0.8, label='Com EPB')
+    ]
+    ax2.legend(handles=legend_elements, loc='upper right', fontsize=9, framealpha=0.9,
+               facecolor=COLORS['card_bg'], edgecolor=COLORS['grid'], labelcolor=COLORS['text'])
+    
+    # -------------------------------------------------------------------------
+    # THUMBNAILS (se habilitado)
+    # -------------------------------------------------------------------------
+    if show_thumbnails:
+        ax3 = fig.add_subplot(gs[2], facecolor=COLORS['background'])
+        ax3.axis('off')
+        ax3.set_title('Amostra de Imagens', fontsize=12, 
+                      color=COLORS['text'], fontweight='bold', pad=10, loc='left')
+        
+        # Seleciona imagens para mostrar
+        indices = list(range(0, len(df), thumbnail_interval))
+        if len(indices) > 14:
+            step = len(indices) // 14
+            indices = indices[::step][:14]
+        
+        n_thumbs = len(indices)
+        thumb_width = 1.0 / n_thumbs
+        
+        for i, idx in enumerate(indices):
+            row_data = df.iloc[idx]
+            try:
+                img = Image.open(row_data['filepath']).convert('L')
+                img = np.array(img.resize((64, 64)))
+                
+                # Cria sub-eixo para thumbnail
+                left = i * thumb_width + 0.005
+                bottom = 0.15
+                width = thumb_width - 0.01
+                height = 0.65
+                
+                ax_thumb = ax3.inset_axes([left, bottom, width, height])
+                ax_thumb.imshow(img, cmap='gray', aspect='equal')
+                ax_thumb.axis('off')
+                
+                # Borda colorida baseada na classificação
+                border_color = COLORS['epb_positive'] if row_data['prediction'] == 1 else COLORS['epb_negative']
+                for spine in ax_thumb.spines.values():
+                    spine.set_edgecolor(border_color)
+                    spine.set_linewidth(2.5)
+                    spine.set_visible(True)
+                
+                # Label com horário - estilo elegante
+                time_label = row_data['timestamp'].strftime('%H:%M') if row_data['timestamp'] else str(idx)
+                prob_label = f"{row_data['prob_epb']*100:.0f}%"
+                
+                ax_thumb.text(0.5, -0.08, time_label, transform=ax_thumb.transAxes,
+                             fontsize=8, color=COLORS['text'], ha='center', va='top',
+                             fontweight='medium')
+                ax_thumb.text(0.5, -0.28, prob_label, transform=ax_thumb.transAxes,
+                             fontsize=7, color=COLORS['text_secondary'], ha='center', va='top')
+                
+            except Exception:
+                pass
+    
+    # -------------------------------------------------------------------------
+    # TÍTULO GERAL
+    # -------------------------------------------------------------------------
+    if df['timestamp'].notna().all():
+        date_str = df['timestamp'].iloc[0].strftime('%d/%m/%Y')
+        time_range = f"{df['timestamp'].iloc[0].strftime('%H:%M')} – {df['timestamp'].iloc[-1].strftime('%H:%M')} UT"
+        title_text = f'Análise Temporal de EPBs'
+        subtitle_text = f'{date_str}  •  {time_range}  •  {len(df)} imagens'
+    else:
+        title_text = 'Análise Temporal de EPBs'
+        subtitle_text = f'{len(df)} imagens analisadas'
+    
+    fig.text(0.5, 0.96, title_text, ha='center', va='top', fontsize=18, 
+             color=COLORS['text'], fontweight='bold')
+    fig.text(0.5, 0.925, subtitle_text, ha='center', va='top', fontsize=11, 
+             color=COLORS['text_secondary'], fontweight='normal')
+    
+    # Adiciona estatísticas no canto
+    stats_text = f"EPB: {(df['prediction'] == 1).sum()}/{len(df)}  |  Prob. média: {df['prob_epb'].mean()*100:.1f}%"
+    fig.text(0.94, 0.96, stats_text, ha='right', va='top', fontsize=10, 
+             color=COLORS['text_secondary'], fontweight='normal', 
+             bbox=dict(boxstyle='round,pad=0.4', facecolor=COLORS['card_bg'], 
+                      edgecolor=COLORS['grid'], linewidth=0.5))
+    
+    plt.show()
+    
+    print("\n" + "="*70)
+    print("✅ ANÁLISE TEMPORAL CONCLUÍDA")
+    print("="*70)
+    
+    return df
