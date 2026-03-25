@@ -25,14 +25,109 @@ from scipy.ndimage import gaussian_filter, rotate, shift
 from skimage.exposure import equalize_adapthist
 
 import re
+import logging
+import hashlib
 from datetime import datetime
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Tuple
+import joblib
+
+
+@dataclass
+class EPBModelData:
+    """Estrutura validada para persistência do modelo treinado."""
+    version: str
+    system: object  # EPBRecognitionSystem
+    n_components: int
+    target_size: Tuple[int, int]
+    test_metrics: Dict[str, float] = field(default_factory=dict)
+    
+    def to_dict(self) -> dict:
+        return {
+            'version': self.version,
+            'system': self.system,
+            'n_components': self.n_components,
+            'target_size': self.target_size,
+            'test_metrics': self.test_metrics,
+        }
+    
+    @classmethod
+    def from_dict(cls, data: dict) -> 'EPBModelData':
+        required = {'system', 'n_components', 'target_size'}
+        missing = required - set(data.keys())
+        if missing:
+            raise ValueError(f"Modelo inválido — campos obrigatórios em falta: {missing}")
+        return cls(
+            version=data.get('version', 'unknown'),
+            system=data['system'],
+            n_components=data['n_components'],
+            target_size=data['target_size'],
+            test_metrics=data.get('test_metrics', {}),
+        )
+
+
+logger = logging.getLogger(__name__)
+
+
+def save_model(model_data: EPBModelData, filepath: str) -> str:
+    """Salva o modelo com joblib e retorna o hash SHA-256 do ficheiro."""
+    joblib.dump(model_data.to_dict(), filepath, compress=3)
+    file_hash = _compute_file_hash(filepath)
+    
+    # Salva hash ao lado do modelo
+    hash_path = filepath + '.sha256'
+    with open(hash_path, 'w') as f:
+        f.write(file_hash)
+    
+    logger.info(f"Modelo salvo: {filepath} (SHA-256: {file_hash[:16]}...)")
+    return file_hash
+
+
+def load_model(filepath: str, verify_hash: bool = True) -> EPBModelData:
+    """Carrega o modelo com joblib e verifica integridade via SHA-256."""
+    if verify_hash:
+        hash_path = filepath + '.sha256'
+        try:
+            with open(hash_path, 'r') as f:
+                expected_hash = f.read().strip()
+            actual_hash = _compute_file_hash(filepath)
+            if actual_hash != expected_hash:
+                raise ValueError(
+                    f"Integridade do modelo comprometida!\n"
+                    f"  Esperado: {expected_hash[:16]}...\n"
+                    f"  Obtido:   {actual_hash[:16]}..."
+                )
+            logger.info(f"Integridade verificada (SHA-256: {actual_hash[:16]}...)")
+        except FileNotFoundError:
+            logger.warning(f"Ficheiro de hash não encontrado ({hash_path}). Verificacão ignorada.")
+    
+    data = joblib.load(filepath)
+    return EPBModelData.from_dict(data)
+
+
+def _compute_file_hash(filepath: str) -> str:
+    """Calcula o SHA-256 de um ficheiro."""
+    sha256 = hashlib.sha256()
+    with open(filepath, 'rb') as f:
+        for chunk in iter(lambda: f.read(8192), b''):
+            sha256.update(chunk)
+    return sha256.hexdigest()
+
+
+def setup_logging(level: int = logging.INFO) -> None:
+    """Configura logging para uso em notebooks."""
+    logging.basicConfig(
+        level=level,
+        format='%(levelname)s: %(message)s',
+    )
+    logger.setLevel(level)
 
 
 # ============================================================================
 # PARTE 1: PRÉ-PROCESSAMENTO E CARREGAMENTO DE DADOS
 # ============================================================================
 
-def load_epb_dataset(data_folder, label_file, target_size=(64, 64), apply_preprocessing=True):
+def load_epb_dataset(data_folder: str, label_file: str, target_size: Tuple[int, int] = (64, 64), apply_preprocessing: bool = True) -> Tuple[np.ndarray, np.ndarray, List[str]]:
     """
     Carrega dataset de imagens de EPB
     
@@ -59,7 +154,7 @@ def load_epb_dataset(data_folder, label_file, target_size=(64, 64), apply_prepro
         labels: array (n_samples,)
         filenames: lista de nomes dos arquivos
     """
-    print("📂 Carregando dataset de EPBs...")
+    logger.info("Carregando dataset de EPBs...")
     
     # Lê arquivo de labels
     df = pd.read_csv(label_file)
@@ -69,7 +164,7 @@ def load_epb_dataset(data_folder, label_file, target_size=(64, 64), apply_prepro
     if missing:
         raise ValueError(f"CSV faltando colunas obrigatórias: {missing}. Colunas encontradas: {list(df.columns)}")
     
-    print(f"   ✓ Labels carregados: {len(df)} registros")
+    logger.info(f"Labels carregados: {len(df)} registros")
     
     images = []
     labels = []
@@ -98,30 +193,30 @@ def load_epb_dataset(data_folder, label_file, target_size=(64, 64), apply_prepro
             errors.append((row['filename'], str(e)))
     
     if errors:
-        print(f"   ⚠️  {len(errors)} imagens com erro:")
+        logger.warning(f"{len(errors)} imagens com erro:")
         for fname, error in errors[:5]:  # Mostra primeiros 5
-            print(f"      • {fname}: {error}")
+            logger.warning(f"  {fname}: {error}")
     
     images = np.array(images)
     labels = np.array(labels)
     
-    print(f"   ✓ {len(images)} imagens carregadas com sucesso")
-    print(f"   ✓ Dimensão das imagens: {images.shape[1]}x{images.shape[2]}")
+    logger.info(f"{len(images)} imagens carregadas com sucesso")
+    logger.info(f"Dimensão das imagens: {images.shape[1]}x{images.shape[2]}")
     
     # Estatísticas do dataset
     n_epb = np.sum(labels)
     n_no_epb = len(labels) - n_epb
-    print(f"\n📊 Distribuição das classes:")
-    print(f"   • EPBs detectados: {n_epb} ({n_epb/len(labels)*100:.1f}%)")
-    print(f"   • Sem EPB: {n_no_epb} ({n_no_epb/len(labels)*100:.1f}%)")
+    logger.info("Distribuição das classes:")
+    logger.info(f"  EPBs detectados: {n_epb} ({n_epb/len(labels)*100:.1f}%)")
+    logger.info(f"  Sem EPB: {n_no_epb} ({n_no_epb/len(labels)*100:.1f}%)")
     
     if n_epb / len(labels) < 0.3 or n_epb / len(labels) > 0.7:
-        print(f"   ⚠️  Dataset desbalanceado! Será aplicado balanceamento.")
+        logger.warning("Dataset desbalanceado! Será aplicado balanceamento.")
     
     return images, labels, filenames
 
 
-def preprocess_epb_image(img, apply_background_removal=True, enhance_contrast=True):
+def preprocess_epb_image(img: np.ndarray, apply_background_removal: bool = True, enhance_contrast: bool = True) -> np.ndarray:
     """
     Pré-processamento específico para realçar estruturas de EPB
     
@@ -159,61 +254,72 @@ def preprocess_epb_image(img, apply_background_removal=True, enhance_contrast=Tr
     return img
 
 
-def augment_epb_data(images, labels, augment_factor=2):
+def augment_epb_data(images: np.ndarray, labels: np.ndarray, augment_factor: int = 2) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Data Augmentation para aumentar dataset
+    Data Augmentation estratificado para aumentar dataset.
     
-    Aplica transformações geométricas preservando características de EPB
+    Aplica mais augmentation na classe minoritária para ajudar no balanceamento
+    antes do SMOTE, preservando características de EPB.
     
     Args:
         images: array (n_samples, height, width)
         labels: array (n_samples,)
-        augment_factor: Fator de multiplicação do dataset
+        augment_factor: Fator base de multiplicação (a minoritária recebe o dobro)
     
     Returns:
         images_aug: array aumentado
         labels_aug: array de labels aumentado
     """
-    print(f"\n🔄 Aplicando Data Augmentation (fator={augment_factor})...")
+    logger.info(f"Aplicando Data Augmentation estratificado (fator base={augment_factor})...")
+    
+    # Calcula fator diferenciado por classe
+    n_class0 = np.sum(labels == 0)
+    n_class1 = np.sum(labels == 1)
+    minority_label = 1 if n_class1 < n_class0 else 0
+    
+    factor_majority = max(augment_factor - 1, 1)
+    factor_minority = factor_majority * 2  # Dobro para a classe minoritária
+    
+    logger.info(f"  Classe 0: {n_class0} imgs (fator={'x' + str(factor_minority + 1) if 0 == minority_label else 'x' + str(factor_majority + 1)})")
+    logger.info(f"  Classe 1: {n_class1} imgs (fator={'x' + str(factor_minority + 1) if 1 == minority_label else 'x' + str(factor_majority + 1)})")
     
     augmented_images = list(images)
     augmented_labels = list(labels)
     
     for img, label in zip(images, labels):
-        for _ in range(augment_factor - 1):
-            # Escolhe transformação aleatória
-            aug_type = np.random.choice(['flip', 'rotate', 'shift', 'noise'])
-            
-            if aug_type == 'flip':
-                # Flip horizontal (EPBs podem aparecer em qualquer longitude)
-                aug_img = np.fliplr(img)
-            
-            elif aug_type == 'rotate':
-                # Rotação leve (-10 a 10 graus)
-                angle = np.random.uniform(-10, 10)
-                aug_img = rotate(img, angle, reshape=False, mode='constant')
-            
-            elif aug_type == 'shift':
-                # Deslocamento leve
-                shift_x = np.random.randint(-5, 5)
-                shift_y = np.random.randint(-5, 5)
-                aug_img = shift(img, [shift_y, shift_x], mode='constant')
-            
-            elif aug_type == 'noise':
-                # Adiciona ruído gaussiano
-                noise = np.random.normal(0, 0.02, img.shape)
-                aug_img = img + noise
-                aug_img = np.clip(aug_img, 0, 1)
-            
+        n_augments = factor_minority if label == minority_label else factor_majority
+        for _ in range(n_augments):
+            aug_img = _apply_random_augmentation(img)
             augmented_images.append(aug_img)
             augmented_labels.append(label)
     
     augmented_images = np.array(augmented_images)
     augmented_labels = np.array(augmented_labels)
     
-    print(f"   ✓ Dataset expandido: {len(images)} → {len(augmented_images)} imagens")
+    n_new0 = np.sum(augmented_labels == 0)
+    n_new1 = np.sum(augmented_labels == 1)
+    logger.info(f"Dataset expandido: {len(images)} → {len(augmented_images)} imagens "
+                f"(classe 0: {n_class0}→{n_new0}, classe 1: {n_class1}→{n_new1})")
     
     return augmented_images, augmented_labels
+
+
+def _apply_random_augmentation(img: np.ndarray) -> np.ndarray:
+    """Aplica uma transformação aleatória preservando características de EPB."""
+    aug_type = np.random.choice(['flip', 'rotate', 'shift', 'noise'])
+    
+    if aug_type == 'flip':
+        return np.fliplr(img)
+    elif aug_type == 'rotate':
+        angle = np.random.uniform(-10, 10)
+        return rotate(img, angle, reshape=False, mode='constant')
+    elif aug_type == 'shift':
+        shift_x = np.random.randint(-5, 5)
+        shift_y = np.random.randint(-5, 5)
+        return shift(img, [shift_y, shift_x], mode='constant')
+    else:  # noise
+        noise = np.random.normal(0, 0.02, img.shape)
+        return np.clip(img + noise, 0, 1)
 
 
 # ============================================================================
@@ -223,14 +329,14 @@ def augment_epb_data(images, labels, augment_factor=2):
 class TwoDPCA:
     """2DPCA para extração de features de imagens de EPB"""
     
-    def __init__(self, n_components=10):
+    def __init__(self, n_components: int = 10):
         self.n_components = n_components
-        self.projection_matrix = None
-        self.mean_image = None
-        self.explained_variance = None
-        self.explained_variance_ratio = None
+        self.projection_matrix: Optional[np.ndarray] = None
+        self.mean_image: Optional[np.ndarray] = None
+        self.explained_variance: Optional[np.ndarray] = None
+        self.explained_variance_ratio: Optional[np.ndarray] = None
     
-    def fit(self, images):
+    def fit(self, images: np.ndarray) -> 'TwoDPCA':
         """Treina o 2DPCA"""
         n_samples, height, width = images.shape
         
@@ -260,30 +366,30 @@ class TwoDPCA:
         
         return self
     
-    def transform(self, images):
+    def transform(self, images: np.ndarray) -> np.ndarray:
         """Projeta imagens no espaço reduzido"""
         centered_images = images - self.mean_image
         projected = np.array([img @ self.projection_matrix 
                              for img in centered_images])
         return projected
     
-    def fit_transform(self, images):
+    def fit_transform(self, images: np.ndarray) -> np.ndarray:
         return self.fit(images).transform(images)
     
-    def inverse_transform(self, projected_images):
+    def inverse_transform(self, projected_images: np.ndarray) -> np.ndarray:
         """Reconstrói imagens (útil para visualização)"""
         reconstructed = np.array([proj @ self.projection_matrix.T 
                                  for proj in projected_images])
         return reconstructed + self.mean_image
 
 
-def optimize_n_components(X_train, y_train, max_components=30, cv_folds=5):
+def optimize_n_components(X_train: np.ndarray, y_train: np.ndarray, max_components: int = 30, cv_folds: int = 5) -> Tuple[int, List[dict]]:
     """
     Otimiza número de componentes 2DPCA via validação cruzada
     
     Testa diferentes valores e retorna o melhor baseado em accuracy
     """
-    print(f"\n🔬 Otimizando número de componentes (máx={max_components})...")
+    logger.info(f"Otimizando número de componentes (máx={max_components})...")
     
     results = []
     test_range = range(5, min(max_components + 1, X_train.shape[2]), 5)
@@ -318,16 +424,16 @@ def optimize_n_components(X_train, y_train, max_components=30, cv_folds=5):
             'variance_explained': var_explained
         })
         
-        print(f"   • {n_comp:2d} comp: F1={mean_score:.4f}±{std_score:.4f} | "
-              f"Var={var_explained:.2%}")
+        logger.info(f"  {n_comp:2d} comp: F1={mean_score:.4f}±{std_score:.4f} | "
+                    f"Var={var_explained:.2%}")
     
     # Encontra melhor configuração
     best_result = max(results, key=lambda x: x['f1_score'])
     best_n = best_result['n_components']
     
-    print(f"\n🏆 Melhor configuração: {best_n} componentes")
-    print(f"   • F1-Score: {best_result['f1_score']:.4f}")
-    print(f"   • Variância explicada: {best_result['variance_explained']:.2%}")
+    logger.info(f"Melhor configuração: {best_n} componentes")
+    logger.info(f"  F1-Score: {best_result['f1_score']:.4f}")
+    logger.info(f"  Variância explicada: {best_result['variance_explained']:.2%}")
     
     return best_n, results
 
@@ -344,7 +450,7 @@ class EPBRecognitionSystem:
     - Ensemble de classificadores
     """
     
-    def __init__(self, n_components=15, balance_data=True, balance_method='smote'):
+    def __init__(self, n_components: int = 15, balance_data: bool = True, balance_method: str = 'smote'):
         """
         Args:
             n_components: Número de componentes 2DPCA
@@ -362,7 +468,7 @@ class EPBRecognitionSystem:
         # Configura classificador
         self.classifier = None
     
-    def _create_ensemble(self, y_train):
+    def _create_ensemble(self, y_train: np.ndarray) -> VotingClassifier:
         """Ensemble otimizado para detecção de EPBs"""
         
         # Calcula ratio de classes para XGBoost
@@ -425,34 +531,34 @@ class EPBRecognitionSystem:
             from imblearn.combine import SMOTEENN
             return SMOTEENN(random_state=42)
     
-    def extract_features(self, images):
+    def extract_features(self, images: np.ndarray) -> np.ndarray:
         """Extrai features usando 2DPCA"""
         projected = self.tdpca.transform(images)
         features = projected.reshape(projected.shape[0], -1)
         return features
     
-    def fit(self, X_train, y_train):
+    def fit(self, X_train: np.ndarray, y_train: np.ndarray) -> 'EPBRecognitionSystem':
         """Treina o sistema completo"""
-        print("\n🔹 Iniciando treinamento do sistema...")
+        logger.info("Iniciando treinamento do sistema...")
         
         # 1. Treina 2DPCA
-        print("   • Treinando 2DPCA para extração de features...")
+        logger.info("Treinando 2DPCA para extração de features...")
         self.tdpca.fit(X_train)
         var_explained = np.sum(self.tdpca.explained_variance_ratio)
-        print(f"     ✓ Variância explicada: {var_explained:.2%}")
+        logger.info(f"Variância explicada: {var_explained:.2%}")
         
         # 2. Extrai features
-        print("   • Extraindo features...")
+        logger.info("Extraindo features...")
         features_train = self.extract_features(X_train)
-        print(f"     ✓ Shape das features: {features_train.shape}")
+        logger.info(f"Shape das features: {features_train.shape}")
         
         # 3. Normaliza
-        print("   • Normalizando features...")
+        logger.info("Normalizando features...")
         features_train = self.scaler.fit_transform(features_train)
         
         # 4. Balanceia dados se necessário
         if self.balance_data:
-            print(f"   • Aplicando balanceamento ({self.balance_method})...")
+            logger.info(f"Aplicando balanceamento ({self.balance_method})...")
             original_dist = np.bincount(y_train)
             
             self.sampler = self._setup_balancing()
@@ -461,30 +567,30 @@ class EPBRecognitionSystem:
             )
             
             new_dist = np.bincount(y_train)
-            print(f"     ✓ Classe 0: {original_dist[0]} → {new_dist[0]}")
-            print(f"     ✓ Classe 1: {original_dist[1]} → {new_dist[1]}")
+            logger.info(f"Classe 0: {original_dist[0]} → {new_dist[0]}")
+            logger.info(f"Classe 1: {original_dist[1]} → {new_dist[1]}")
         
         # 5. Treina classificador
-        print(f"   • Treinando classificador ensemble...")
+        logger.info("Treinando classificador ensemble...")
         self.classifier = self._create_ensemble(y_train)
         self.classifier.fit(features_train, y_train)
-        print("     ✓ Treinamento concluído!")
+        logger.info("Treinamento concluído!")
         
         return self
     
-    def predict(self, X_test):
+    def predict(self, X_test: np.ndarray) -> np.ndarray:
         """Prediz se há EPB"""
         features_test = self.extract_features(X_test)
         features_test = self.scaler.transform(features_test)
         return self.classifier.predict(features_test)
     
-    def predict_proba(self, X_test):
+    def predict_proba(self, X_test: np.ndarray) -> np.ndarray:
         """Retorna probabilidades"""
         features_test = self.extract_features(X_test)
         features_test = self.scaler.transform(features_test)
         return self.classifier.predict_proba(features_test)
     
-    def get_feature_importance(self, X_sample):
+    def get_feature_importance(self, X_sample: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         Analisa quais regiões da imagem são mais importantes
         
@@ -507,8 +613,10 @@ class EPBRecognitionSystem:
 # PARTE 4: VISUALIZAÇÃO E INTERPRETAÇÃO
 # ============================================================================
 
-def plot_comprehensive_analysis(system, X_train, X_test, y_train, y_test, 
-                                y_pred, y_proba, filenames_test=None):
+def plot_comprehensive_analysis(system: 'EPBRecognitionSystem', X_train: np.ndarray, X_test: np.ndarray,
+                                y_train: np.ndarray, y_test: np.ndarray,
+                                y_pred: np.ndarray, y_proba: np.ndarray,
+                                filenames_test: Optional[List[str]] = None) -> plt.Figure:
     """Análise visual completa do sistema"""
     
     fig = plt.figure(figsize=(20, 16))
@@ -655,195 +763,185 @@ def plot_comprehensive_analysis(system, X_train, X_test, y_train, y_test,
     
     return fig
 
-def explain_feature_importance(system, X_sample, y_sample, filename=None):
+def explain_feature_importance(system: 'EPBRecognitionSystem', X_sample: np.ndarray, y_sample: int,
+                               filename: Optional[str] = None,
+                               mode: str = 'full', image_folder: str = 'img-teste') -> np.ndarray:
     """
-    Explica quais regiões da imagem contribuem para a classificação
-    """
-    print("\n" + "="*70)
-    print("🔍 INTERPRETAÇÃO DAS FEATURES")
-    print("="*70)
+    Explica quais regiões da imagem contribuem para a classificação.
     
+    Args:
+        system: EPBRecognitionSystem treinado
+        X_sample: Imagem pré-processada (2D array)
+        y_sample: Label real (0 ou 1)
+        filename: Nome do ficheiro da imagem
+        mode: Modo de visualização:
+              'full'       — Análise textual completa + 3 painéis (original processada,
+                             mapa de importância, reconstrução 2DPCA)
+              'simple'     — 2 painéis (imagem original do disco + mapa de importância)
+              'comparison' — 3 painéis (imagem original do disco, processada, mapa de importância)
+        image_folder: Pasta onde procurar a imagem original (usado por 'simple' e 'comparison')
+    
+    Returns:
+        importance_map: Mapa de importância (2D array)
+    """
     importance_map, reconstructed = system.get_feature_importance(X_sample)
     
-    # Predição
+    # Predição (uma só chamada)
     prob = system.predict_proba(X_sample.reshape(1, *X_sample.shape))[0]
-    pred = system.predict(X_sample.reshape(1, *X_sample.shape))[0]
+    pred = np.argmax(prob)
     
-    print(f"\n📸 Imagem: {filename if filename else 'N/A'}")
-    print(f"   • Classe real: {'EPB' if y_sample == 1 else 'Sem EPB'}")
-    print(f"   • Predição: {'EPB' if pred == 1 else 'Sem EPB'}")
-    print(f"   • Probabilidade EPB: {prob[1]*100:.2f}%")
-    print(f"   • Confiança: {'Alta' if max(prob) > 0.8 else 'Média' if max(prob) > 0.6 else 'Baixa'}")
+    suptitle = (f'Interpretação: {"EPB" if y_sample == 1 else "Sem EPB"} '
+                f'(Predição: {"EPB" if pred == 1 else "Sem EPB"}, {prob[1]*100:.1f}%)')
     
-    # Analisa regiões importantes
-    threshold = np.percentile(importance_map, 90)  # Top 10% pixels
-    important_pixels = importance_map > threshold
+    # --- Modo FULL: análise textual + visualização completa ---
+    if mode == 'full':
+        print("\n" + "="*70)
+        print("🔍 INTERPRETAÇÃO DAS FEATURES")
+        print("="*70)
+        
+        print(f"\n📸 Imagem: {filename if filename else 'N/A'}")
+        print(f"   • Classe real: {'EPB' if y_sample == 1 else 'Sem EPB'}")
+        print(f"   • Predição: {'EPB' if pred == 1 else 'Sem EPB'}")
+        print(f"   • Probabilidade EPB: {prob[1]*100:.2f}%")
+        print(f"   • Confiança: {'Alta' if max(prob) > 0.8 else 'Média' if max(prob) > 0.6 else 'Baixa'}")
+        
+        threshold = np.percentile(importance_map, 90)
+        important_pixels = importance_map > threshold
+        
+        h, w = importance_map.shape
+        quadrants = {
+            'Superior Esquerdo': important_pixels[:h//2, :w//2].sum(),
+            'Superior Direito': important_pixels[:h//2, w//2:].sum(),
+            'Inferior Esquerdo': important_pixels[h//2:, :w//2].sum(),
+            'Inferior Direito': important_pixels[h//2:, w//2:].sum()
+        }
+        
+        print(f"\n📊 Regiões mais importantes (pixels críticos):")
+        total = sum(quadrants.values())
+        for region, count in sorted(quadrants.items(), key=lambda x: x[1], reverse=True):
+            percentage = (count / total * 100) if total > 0 else 0
+            print(f"   • {region}: {count} pixels ({percentage:.1f}%)")
+        
+        print(f"\n💡 Interpretação:")
+        if pred == 1:
+            print("   ✓ O modelo identificou padrões característicos de EPB:")
+            print("     - Estruturas verticais/irregulares")
+            print("     - Deplecções localizadas de plasma")
+            print("     - Distribuição espacial típica de bolhas")
+        else:
+            print("   ✓ O modelo NÃO detectou padrões de EPB:")
+            print("     - Distribuição uniforme de plasma")
+            print("     - Ausência de estruturas irregulares")
+            print("     - Características de ionosfera quieta")
+        
+        fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+        
+        axes[0].imshow(X_sample, cmap='plasma')
+        axes[0].set_title('Imagem Original', fontsize=12, fontweight='bold')
+        axes[0].axis('off')
+        
+        im = axes[1].imshow(importance_map, cmap='hot')
+        axes[1].set_title('Mapa de Importância\n(Regiões críticas para classificação)',
+                         fontsize=12, fontweight='bold')
+        axes[1].axis('off')
+        plt.colorbar(im, ax=axes[1], fraction=0.046, label='Importância')
+        
+        axes[2].imshow(reconstructed, cmap='plasma')
+        axes[2].set_title('Reconstrução 2DPCA\n(Features capturadas)',
+                         fontsize=12, fontweight='bold')
+        axes[2].axis('off')
+        
+        fig.suptitle(suptitle, fontsize=14, fontweight='bold')
+        plt.tight_layout()
+        plt.show()
     
-    # Divide imagem em quadrantes
-    h, w = importance_map.shape
-    quadrants = {
-        'Superior Esquerdo': important_pixels[:h//2, :w//2].sum(),
-        'Superior Direito': important_pixels[:h//2, w//2:].sum(),
-        'Inferior Esquerdo': important_pixels[h//2:, :w//2].sum(),
-        'Inferior Direito': important_pixels[h//2:, w//2:].sum()
-    }
+    # --- Modo SIMPLE: imagem do disco + mapa de importância ---
+    elif mode == 'simple':
+        fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+        
+        img = _load_disk_image(filename, image_folder)
+        if img is None:
+            img = X_sample
+        
+        axes[0].imshow(img, cmap='gray')
+        axes[0].set_title(filename, fontsize=12, fontweight='bold')
+        axes[0].axis('off')
+        
+        im = axes[1].imshow(importance_map, cmap='hot')
+        axes[1].set_title('Mapa de Importância\n(Regiões críticas para classificação)',
+                         fontsize=12, fontweight='bold')
+        axes[1].axis('off')
+        plt.colorbar(im, ax=axes[1], fraction=0.046, label='Importância')
+        
+        fig.suptitle(suptitle, fontsize=14, fontweight='bold')
+        plt.tight_layout()
+        plt.show()
     
-    print(f"\n📊 Regiões mais importantes (pixels críticos):")
-    total = sum(quadrants.values())
-    for region, count in sorted(quadrants.items(), key=lambda x: x[1], reverse=True):
-        percentage = (count / total * 100) if total > 0 else 0
-        print(f"   • {region}: {count} pixels ({percentage:.1f}%)")
+    # --- Modo COMPARISON: disco + processada + mapa ---
+    elif mode == 'comparison':
+        fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+        
+        img_disk = _load_disk_image(filename, image_folder)
+        if img_disk is None:
+            img_disk = X_sample
+        
+        axes[0].imshow(img_disk, cmap='gray')
+        axes[0].set_title(f'{filename}\n(Imagem Pré-Processada)', fontsize=12, fontweight='bold')
+        axes[0].axis('off')
+        
+        axes[1].imshow(X_sample, cmap='plasma')
+        axes[1].set_title('Features extraídas pelo 2DPCA\n(Usada pelo modelo)',
+                         fontsize=12, fontweight='bold')
+        axes[1].axis('off')
+        
+        im = axes[2].imshow(importance_map, cmap='hot')
+        axes[2].set_title('Mapa de Importância\n(Regiões críticas para classificação)',
+                         fontsize=12, fontweight='bold')
+        axes[2].axis('off')
+        plt.colorbar(im, ax=axes[2], fraction=0.046, label='Importância')
+        
+        fig.suptitle(suptitle, fontsize=14, fontweight='bold')
+        plt.tight_layout()
+        plt.show()
     
-    # Interpretação
-    print(f"\n💡 Interpretação:")
-    if pred == 1:  # EPB detectado
-        print("   ✓ O modelo identificou padrões característicos de EPB:")
-        print("     - Estruturas verticais/irregulares")
-        print("     - Deplecções localizadas de plasma")
-        print("     - Distribuição espacial típica de bolhas")
-    else:  # Sem EPB
-        print("   ✓ O modelo NÃO detectou padrões de EPB:")
-        print("     - Distribuição uniforme de plasma")
-        print("     - Ausência de estruturas irregulares")
-        print("     - Características de ionosfera quieta")
-    
-    # Visualiza
-    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-    
-    axes[0].imshow(X_sample, cmap='plasma')
-    axes[0].set_title('Imagem Original', fontsize=12, fontweight='bold')
-    axes[0].axis('off')
-    
-    im = axes[1].imshow(importance_map, cmap='hot')
-    axes[1].set_title('Mapa de Importância\n(Regiões críticas para classificação)', 
-                     fontsize=12, fontweight='bold')
-    axes[1].axis('off')
-    plt.colorbar(im, ax=axes[1], fraction=0.046, label='Importância')
-    
-    axes[2].imshow(reconstructed, cmap='plasma')
-    axes[2].set_title('Reconstrução 2DPCA\n(Features capturadas)', 
-                     fontsize=12, fontweight='bold')
-    axes[2].axis('off')
-    
-    fig.suptitle(f'Interpretação: {"EPB" if y_sample == 1 else "Sem EPB"} '
-                f'(Predição: {"EPB" if pred == 1 else "Sem EPB"}, {prob[1]*100:.1f}%)',
-                fontsize=14, fontweight='bold')
-    
-    plt.tight_layout()
-    plt.show()
+    else:
+        raise ValueError(f"Modo inválido: '{mode}'. Use 'full', 'simple' ou 'comparison'.")
     
     return importance_map
 
-def explain_feature_importance_2(system, X_sample, y_sample, filename=None, image_folder='img-teste'):
-    """
-    Comparativo simplificado da importância das features
-    """
-    importance_map, _ = system.get_feature_importance(X_sample)
-    
-    # Predição
-    prob = system.predict_proba(X_sample.reshape(1, *X_sample.shape))[0]
-    pred = system.predict(X_sample.reshape(1, *X_sample.shape))[0]
 
-    # Visualiza — mostra a imagem ORIGINAL do diretório `<image_folder>/<filename>`
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+def _load_disk_image(filename: Optional[str], image_folder: str) -> Optional[np.ndarray]:
+    """Carrega a imagem original do disco (sem pré-processamento)."""
+    if not filename:
+        return None
+    candidate = Path(image_folder) / filename
+    if candidate.exists():
+        try:
+            return np.array(Image.open(candidate).convert('L'))
+        except Exception:
+            return None
+    return None
 
-    img = None
-    if filename:
-        candidate = Path(image_folder) / filename
-        if candidate.exists():
-            try:
-                img = Image.open(candidate).convert('L')
-                # NÃO redimensionar e NÃO pré-processar: queremos a imagem exata do disco
-                img = np.array(img)
-            except Exception:
-                img = None
 
-    if img is None:
-        # fallback: usa X_sample (pré-processada) mas avisa claramente
-        img = X_sample
+# Aliases para retrocompatibilidade
+def explain_feature_importance_2(system: 'EPBRecognitionSystem', X_sample: np.ndarray, y_sample: int,
+                                 filename: Optional[str] = None, image_folder: str = 'img-teste') -> np.ndarray:
+    return explain_feature_importance(system, X_sample, y_sample, filename,
+                                      mode='simple', image_folder=image_folder)
 
-    axes[0].imshow(img, cmap='gray')
-    axes[0].set_title(filename, fontsize=12, fontweight='bold')
-    axes[0].axis('off')
-
-    im = axes[1].imshow(importance_map, cmap='hot')
-    axes[1].set_title('Mapa de Importância\n(Regiões críticas para classificação)',
-                     fontsize=12, fontweight='bold')
-    axes[1].axis('off')
-    plt.colorbar(im, ax=axes[1], fraction=0.046, label='Importância')
-
-    fig.suptitle(f'Interpretação: {"EPB" if y_sample == 1 else "Sem EPB"} '
-                 f'(Predição: {"EPB" if pred == 1 else "Sem EPB"}, {prob[1]*100:.1f}%)',
-                 fontsize=14, fontweight='bold')
-
-    plt.tight_layout()
-    plt.show()
-
-    return importance_map
-
-def explain_feature_importance_3(system, X_sample, y_sample, filename=None, image_folder='img-teste'):
-    """
-    Visualização completa com 3 imagens:
-    1. Imagem original do disco (sem processamento)
-    2. Imagem processada (cmap plasma)
-    3. Mapa de importância das features
-    """
-    importance_map, _ = system.get_feature_importance(X_sample)
-    
-    # Predição
-    prob = system.predict_proba(X_sample.reshape(1, *X_sample.shape))[0]
-    pred = system.predict(X_sample.reshape(1, *X_sample.shape))[0]
-
-    # Visualiza 3 imagens lado a lado
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
-
-    # 1. Imagem ORIGINAL do disco (sem pré-processamento)
-    img_disk = None
-    if filename:
-        candidate = Path(image_folder) / filename
-        if candidate.exists():
-            try:
-                img_disk = Image.open(candidate).convert('L')
-                img_disk = np.array(img_disk)
-            except Exception:
-                img_disk = None
-
-    if img_disk is None:
-        # fallback: usa X_sample se não encontrar no disco
-        img_disk = X_sample
-
-    axes[0].imshow(img_disk, cmap='gray')
-    axes[0].set_title(f'{filename}\n(Imagem Pré-Processada)', fontsize=12, fontweight='bold')
-    axes[0].axis('off')
-
-    # 2. Imagem processada (plasma)
-    axes[1].imshow(X_sample, cmap='plasma')
-    axes[1].set_title('Features extraídas pelo 2DPCA\n(Usada pelo modelo)', fontsize=12, fontweight='bold')
-    axes[1].axis('off')
-
-    # 3. Mapa de importância
-    im = axes[2].imshow(importance_map, cmap='hot')
-    axes[2].set_title('Mapa de Importância\n(Regiões críticas para classificação)',
-                     fontsize=12, fontweight='bold')
-    axes[2].axis('off')
-    plt.colorbar(im, ax=axes[2], fraction=0.046, label='Importância')
-
-    fig.suptitle(f'Interpretação: {"EPB" if y_sample == 1 else "Sem EPB"} '
-                 f'(Predição: {"EPB" if pred == 1 else "Sem EPB"}, {prob[1]*100:.1f}%)',
-                 fontsize=14, fontweight='bold')
-
-    plt.tight_layout()
-    plt.show()
-
-    return importance_map
+def explain_feature_importance_3(system: 'EPBRecognitionSystem', X_sample: np.ndarray, y_sample: int,
+                                 filename: Optional[str] = None, image_folder: str = 'img-teste') -> np.ndarray:
+    return explain_feature_importance(system, X_sample, y_sample, filename,
+                                      mode='comparison', image_folder=image_folder)
 
 
 # ============================================================================
 # PARTE 5: ANÁLISE TEMPORAL DE SEQUÊNCIA DE IMAGENS
 # ============================================================================
 
-def analyze_temporal_sequence(system, image_folder, target_size=(64, 64), 
-                              show_thumbnails=True, thumbnail_interval=10):
+def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
+                              target_size: Tuple[int, int] = (64, 64),
+                              show_thumbnails: bool = True, thumbnail_interval: int = 10) -> Optional[pd.DataFrame]:
     """
     Analisa uma sequência temporal de imagens e plota a evolução da probabilidade de EPB.
     
@@ -912,13 +1010,13 @@ def analyze_temporal_sequence(system, image_folder, target_size=(64, 64),
             })
             
         except Exception as e:
-            print(f"   ⚠️  Erro em {img_path.name}: {str(e)}")
+            logger.warning(f"Erro em {img_path.name}: {str(e)}")
     
     # Cria DataFrame
     df = pd.DataFrame(results)
     
     if df.empty:
-        print("❌ Nenhuma imagem processada com sucesso.")
+        logger.error("Nenhuma imagem processada com sucesso.")
         return None
     
     # Estatísticas
@@ -1186,7 +1284,7 @@ def analyze_temporal_sequence(system, image_folder, target_size=(64, 64),
     return df
 
 
-def analyze_critical_periods(df_temporal):
+def analyze_critical_periods(df_temporal: pd.DataFrame) -> None:
     """
     Analisa períodos críticos de um DataFrame temporal retornado por analyze_temporal_sequence.
     
