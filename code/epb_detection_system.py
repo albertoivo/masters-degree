@@ -63,6 +63,12 @@ def load_epb_dataset(data_folder, label_file, target_size=(64, 64), apply_prepro
     
     # Lê arquivo de labels
     df = pd.read_csv(label_file)
+    
+    required_cols = {'filename', 'has_epb'}
+    missing = required_cols - set(df.columns)
+    if missing:
+        raise ValueError(f"CSV faltando colunas obrigatórias: {missing}. Colunas encontradas: {list(df.columns)}")
+    
     print(f"   ✓ Labels carregados: {len(df)} registros")
     
     images = []
@@ -645,6 +651,8 @@ def plot_comprehensive_analysis(system, X_train, X_test, y_train, y_test,
     plt.suptitle('🌌 Análise Completa: Sistema de Reconhecimento de EPBs', 
                  fontsize=16, fontweight='bold', y=0.995)
     
+    plt.show()
+    
     return fig
 
 def explain_feature_importance(system, X_sample, y_sample, filename=None):
@@ -726,7 +734,7 @@ def explain_feature_importance(system, X_sample, y_sample, filename=None):
     
     return importance_map
 
-def explain_feature_importance_2(system, X_sample, y_sample, filename=None):
+def explain_feature_importance_2(system, X_sample, y_sample, filename=None, image_folder='img-teste'):
     """
     Comparativo simplificado da importância das features
     """
@@ -736,12 +744,12 @@ def explain_feature_importance_2(system, X_sample, y_sample, filename=None):
     prob = system.predict_proba(X_sample.reshape(1, *X_sample.shape))[0]
     pred = system.predict(X_sample.reshape(1, *X_sample.shape))[0]
 
-    # Visualiza — mostra a imagem ORIGINAL do diretório `img-teste/<filename>`
+    # Visualiza — mostra a imagem ORIGINAL do diretório `<image_folder>/<filename>`
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
     img = None
     if filename:
-        candidate = Path('img-teste') / filename
+        candidate = Path(image_folder) / filename
         if candidate.exists():
             try:
                 img = Image.open(candidate).convert('L')
@@ -773,7 +781,7 @@ def explain_feature_importance_2(system, X_sample, y_sample, filename=None):
 
     return importance_map
 
-def explain_feature_importance_3(system, X_sample, y_sample, filename=None):
+def explain_feature_importance_3(system, X_sample, y_sample, filename=None, image_folder='img-teste'):
     """
     Visualização completa com 3 imagens:
     1. Imagem original do disco (sem processamento)
@@ -792,7 +800,7 @@ def explain_feature_importance_3(system, X_sample, y_sample, filename=None):
     # 1. Imagem ORIGINAL do disco (sem pré-processamento)
     img_disk = None
     if filename:
-        candidate = Path('img-teste') / filename
+        candidate = Path(image_folder) / filename
         if candidate.exists():
             try:
                 img_disk = Image.open(candidate).convert('L')
@@ -938,7 +946,8 @@ def analyze_temporal_sequence(system, image_folder, target_size=(64, 64),
     # VISUALIZAÇÃO ELEGANTE - Estilo moderno e profissional
     # =========================================================================
     
-    # Configuração de estilo
+    # Configuração de estilo (contexto isolado para não afetar outros gráficos)
+    _rc_backup = plt.rcParams.copy()
     plt.style.use('default')
     
     # Paleta de cores elegante
@@ -1168,9 +1177,153 @@ def analyze_temporal_sequence(system, image_folder, target_size=(64, 64),
                       edgecolor=COLORS['grid'], linewidth=0.5))
     
     plt.show()
+    plt.rcParams.update(_rc_backup)
     
     print("\n" + "="*70)
     print("✅ ANÁLISE TEMPORAL CONCLUÍDA")
     print("="*70)
     
     return df
+
+
+def analyze_critical_periods(df_temporal):
+    """
+    Analisa períodos críticos de um DataFrame temporal retornado por analyze_temporal_sequence.
+    
+    Detecta transições, analisa o início de eventos EPB e gera estatísticas da noite.
+    
+    Args:
+        df_temporal: DataFrame retornado por analyze_temporal_sequence (deve conter
+                     colunas: timestamp, prob_epb, prediction, prediction_label, state_change)
+    """
+    from datetime import timedelta
+    
+    if df_temporal is None or df_temporal.empty:
+        print("⚠️  DataFrame vazio. Execute analyze_temporal_sequence primeiro.")
+        return
+    
+    print("="*70)
+    print("🔍 ANÁLISE DE PERÍODOS CRÍTICOS")
+    print("="*70)
+    
+    # Detecta a data da observação
+    if df_temporal['timestamp'].notna().all():
+        obs_date = df_temporal['timestamp'].iloc[0].strftime('%d/%m/%Y')
+        time_start = df_temporal['timestamp'].iloc[0].strftime('%H:%M')
+        time_end = df_temporal['timestamp'].iloc[-1].strftime('%H:%M')
+        print(f"📅 Data: {obs_date} | Período: {time_start} - {time_end} UT\n")
+    
+    # -------------------------------------------------------------------------
+    # 1. Detecta TRANSIÇÕES (mudanças de estado Sem EPB <-> Com EPB)
+    # -------------------------------------------------------------------------
+    transitions = df_temporal[df_temporal['state_change'] == 1].copy()
+    
+    if len(transitions) > 0:
+        print("🔄 TRANSIÇÕES DETECTADAS")
+        print("-"*70)
+        print("   Momentos onde o modelo mudou de classificação:\n")
+        
+        for i, (idx, row) in enumerate(transitions.iterrows()):
+            time_str = row['timestamp'].strftime('%H:%M:%S') if row['timestamp'] else 'N/A'
+            prob = row['prob_epb'] * 100
+            
+            if row['prediction'] == 1:
+                direction = "Sem EPB → COM EPB 🔴"
+            else:
+                direction = "Com EPB → SEM EPB 🟢"
+            
+            print(f"   {i+1}. {time_str} UT | {direction} | Prob: {prob:.1f}%")
+        
+        print()
+    
+    # -------------------------------------------------------------------------
+    # 2. Análise da PRIMEIRA TRANSIÇÃO para EPB (início do evento)
+    # -------------------------------------------------------------------------
+    first_epb_transition = transitions[transitions['prediction'] == 1]
+    
+    if len(first_epb_transition) > 0:
+        first_epb = first_epb_transition.iloc[0]
+        first_epb_time = first_epb['timestamp']
+        
+        print("⚡ ANÁLISE DO INÍCIO DO EVENTO EPB")
+        print("-"*70)
+        print(f"   Primeira detecção de EPB: {first_epb_time.strftime('%H:%M:%S')} UT\n")
+        
+        window_before = timedelta(minutes=15)
+        window_after = timedelta(minutes=15)
+        
+        start_window = first_epb_time - window_before
+        end_window = first_epb_time + window_after
+        
+        mask = (df_temporal['timestamp'] >= start_window) & (df_temporal['timestamp'] <= end_window)
+        df_window = df_temporal[mask].copy()
+        
+        print(f"   Janela de análise: {start_window.strftime('%H:%M')} - {end_window.strftime('%H:%M')} UT")
+        print(f"   Imagens na janela: {len(df_window)}\n")
+        
+        print("   Detalhamento:")
+        print("   " + "-"*60)
+        
+        for _, row in df_window.iterrows():
+            time_str = row['timestamp'].strftime('%H:%M:%S')
+            prob = row['prob_epb'] * 100
+            pred = row['prediction_label']
+            
+            if prob > 90:
+                emoji = "🔴"
+            elif prob > 70:
+                emoji = "🟠"
+            elif prob > 50:
+                emoji = "🟡"
+            else:
+                emoji = "🟢"
+            
+            marker = " ◄── TRANSIÇÃO" if row['timestamp'] == first_epb_time else ""
+            
+            print(f"   {time_str} UT | {emoji} {prob:5.1f}% | {pred}{marker}")
+        
+        print("   " + "-"*60)
+        
+        # Análise de detecção precoce
+        pre_transition = df_temporal[df_temporal['timestamp'] < first_epb_time].tail(5)
+        if len(pre_transition) > 0:
+            avg_prob_before = pre_transition['prob_epb'].mean() * 100
+            max_prob_before = pre_transition['prob_epb'].max() * 100
+            
+            print(f"\n   📊 Estatísticas pré-transição (últimas 5 imagens):")
+            print(f"      • Probabilidade média: {avg_prob_before:.1f}%")
+            print(f"      • Probabilidade máxima: {max_prob_before:.1f}%")
+            
+            if max_prob_before > 40:
+                print(f"\n   💡 INSIGHT: O modelo já indicava {max_prob_before:.1f}% de probabilidade")
+                print(f"      ANTES da classificação mudar para EPB!")
+                print(f"      Isso sugere detecção precoce de perturbações ionosféricas.")
+        
+        print()
+    
+    # -------------------------------------------------------------------------
+    # 3. Estatísticas gerais da noite
+    # -------------------------------------------------------------------------
+    print("📈 ESTATÍSTICAS GERAIS DA NOITE")
+    print("-"*70)
+    
+    n_total = len(df_temporal)
+    n_epb = (df_temporal['prediction'] == 1).sum()
+    n_no_epb = (df_temporal['prediction'] == 0).sum()
+    
+    print(f"   • Total de imagens: {n_total}")
+    print(f"   • Com EPB detectada: {n_epb} ({n_epb/n_total*100:.1f}%)")
+    print(f"   • Sem EPB detectada: {n_no_epb} ({n_no_epb/n_total*100:.1f}%)")
+    print(f"   • Número de transições: {len(transitions)}")
+    print(f"\n   • Probabilidade média de EPB: {df_temporal['prob_epb'].mean()*100:.1f}%")
+    print(f"   • Probabilidade máxima: {df_temporal['prob_epb'].max()*100:.1f}%")
+    print(f"   • Probabilidade mínima: {df_temporal['prob_epb'].min()*100:.1f}%")
+    
+    idx_max = df_temporal['prob_epb'].idxmax()
+    peak = df_temporal.loc[idx_max]
+    if peak['timestamp']:
+        print(f"\n   🎯 Pico de atividade: {peak['timestamp'].strftime('%H:%M:%S')} UT ({peak['prob_epb']*100:.1f}%)")
+    
+    print("\n" + "="*70)
+    print("✅ ANÁLISE CONCLUÍDA")
+    print("="*70)
