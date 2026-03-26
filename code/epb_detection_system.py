@@ -15,7 +15,7 @@ from sklearn.model_selection import cross_val_score, StratifiedKFold
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import (confusion_matrix, roc_curve, auc, precision_recall_curve)
+from sklearn.metrics import (confusion_matrix, roc_curve, auc, precision_recall_curve, f1_score)
 from xgboost import XGBClassifier
 from imblearn.over_sampling import SMOTE
 from imblearn.under_sampling import RandomUnderSampler
@@ -759,8 +759,6 @@ def plot_comprehensive_analysis(system: 'EPBRecognitionSystem', X_train: np.ndar
     plt.suptitle('🌌 Análise Completa: Sistema de Reconhecimento de EPBs', 
                  fontsize=16, fontweight='bold', y=0.995)
     
-    plt.show()
-    
     return fig
 
 def explain_feature_importance(system: 'EPBRecognitionSystem', X_sample: np.ndarray, y_sample: int,
@@ -1425,3 +1423,153 @@ def analyze_critical_periods(df_temporal: pd.DataFrame) -> None:
     print("\n" + "="*70)
     print("✅ ANÁLISE CONCLUÍDA")
     print("="*70)
+
+
+# ============================================================================
+# PARTE 7: ANÁLISE DE SENSIBILIDADE AO THRESHOLD
+# ============================================================================
+
+def analyze_threshold_sensitivity(y_true: np.ndarray, y_proba: np.ndarray,
+                                   thresholds: Optional[np.ndarray] = None) -> Tuple[plt.Figure, pd.DataFrame]:
+    """
+    Analisa como sensitivity, specificity, precision, F1 e accuracy variam
+    em função do threshold de decisão.
+
+    Gera um gráfico de curvas threshold vs. métricas e retorna um DataFrame
+    com os valores para cada threshold testado.
+
+    Args:
+        y_true: Labels reais (0 ou 1)
+        y_proba: Probabilidades preditas para a classe positiva (shape (n,) ou (n,2))
+        thresholds: Array de thresholds a testar. Se None, usa np.arange(0.05, 1.0, 0.01)
+
+    Returns:
+        fig: Figura matplotlib com o gráfico
+        df_thresholds: DataFrame com colunas [threshold, sensitivity, specificity,
+                        precision, f1, accuracy]
+    """
+    # Aceita tanto (n,) como (n, 2)
+    if y_proba.ndim == 2:
+        probs = y_proba[:, 1]
+    else:
+        probs = y_proba
+
+    if thresholds is None:
+        thresholds = np.arange(0.05, 1.0, 0.01)
+
+    records = []
+    for t in thresholds:
+        y_pred_t = (probs >= t).astype(int)
+        cm = confusion_matrix(y_true, y_pred_t, labels=[0, 1])
+        tn, fp, fn, tp = cm.ravel()
+
+        sens = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+        spec = tn / (tn + fp) if (tn + fp) > 0 else 0.0
+        prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+        f1 = 2 * prec * sens / (prec + sens) if (prec + sens) > 0 else 0.0
+        acc = (tp + tn) / (tp + tn + fp + fn)
+
+        records.append({
+            'threshold': round(float(t), 4),
+            'sensitivity': round(sens, 4),
+            'specificity': round(spec, 4),
+            'precision': round(prec, 4),
+            'f1': round(f1, 4),
+            'accuracy': round(acc, 4),
+        })
+
+    df_thresholds = pd.DataFrame(records)
+
+    # ---------- Plot ----------
+    fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+
+    # Subplot 1: Todas as métricas vs threshold
+    ax = axes[0]
+    ax.plot(df_thresholds['threshold'], df_thresholds['sensitivity'],
+            label='Sensitivity (Recall)', linewidth=2, color='tab:red')
+    ax.plot(df_thresholds['threshold'], df_thresholds['specificity'],
+            label='Specificity', linewidth=2, color='tab:blue')
+    ax.plot(df_thresholds['threshold'], df_thresholds['precision'],
+            label='Precision (PPV)', linewidth=2, color='tab:green')
+    ax.plot(df_thresholds['threshold'], df_thresholds['f1'],
+            label='F1-Score', linewidth=2, color='tab:purple')
+    ax.plot(df_thresholds['threshold'], df_thresholds['accuracy'],
+            label='Accuracy', linewidth=2, color='tab:orange', linestyle='--')
+
+    ax.axvline(x=0.5, color='gray', linestyle=':', linewidth=1.5, label='Threshold padrão (0.5)')
+
+    # Marca o threshold que maximiza F1
+    best_f1_idx = df_thresholds['f1'].idxmax()
+    best_t = df_thresholds.loc[best_f1_idx, 'threshold']
+    best_f1 = df_thresholds.loc[best_f1_idx, 'f1']
+    ax.axvline(x=best_t, color='purple', linestyle='--', linewidth=1.5, alpha=0.7)
+    ax.scatter([best_t], [best_f1], color='purple', s=80, zorder=5,
+              label=f'Melhor F1={best_f1:.3f} (t={best_t:.2f})')
+
+    ax.set_xlabel('Threshold', fontsize=12)
+    ax.set_ylabel('Métrica', fontsize=12)
+    ax.set_title('Sensibilidade ao Threshold de Decisão', fontsize=13, fontweight='bold')
+    ax.legend(loc='center left', fontsize=9)
+    ax.set_xlim(0, 1)
+    ax.set_ylim(-0.02, 1.05)
+    ax.grid(alpha=0.3)
+
+    # Subplot 2: Sensitivity vs Specificity (trade-off direto)
+    ax2 = axes[1]
+    ax2.plot(df_thresholds['threshold'], df_thresholds['sensitivity'],
+             label='Sensitivity', linewidth=2.5, color='tab:red')
+    ax2.plot(df_thresholds['threshold'], df_thresholds['specificity'],
+             label='Specificity', linewidth=2.5, color='tab:blue')
+
+    # Ponto de cruzamento (equilíbrio)
+    diff = np.abs(df_thresholds['sensitivity'].values - df_thresholds['specificity'].values)
+    eq_idx = diff.argmin()
+    eq_t = df_thresholds.loc[eq_idx, 'threshold']
+    eq_val = (df_thresholds.loc[eq_idx, 'sensitivity'] + df_thresholds.loc[eq_idx, 'specificity']) / 2
+
+    ax2.axvline(x=eq_t, color='gray', linestyle='--', linewidth=1.5, alpha=0.7)
+    ax2.scatter([eq_t], [eq_val], color='black', s=100, zorder=5, marker='X',
+               label=f'Equilíbrio (t={eq_t:.2f}, ≈{eq_val:.3f})')
+    ax2.axvline(x=0.5, color='gray', linestyle=':', linewidth=1.5, alpha=0.5)
+
+    ax2.set_xlabel('Threshold', fontsize=12)
+    ax2.set_ylabel('Métrica', fontsize=12)
+    ax2.set_title('Trade-off Sensitivity vs. Specificity', fontsize=13, fontweight='bold')
+    ax2.legend(fontsize=10)
+    ax2.set_xlim(0, 1)
+    ax2.set_ylim(-0.02, 1.05)
+    ax2.grid(alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
+
+    # ---------- Resumo textual ----------
+    row_default = df_thresholds.loc[(df_thresholds['threshold'] - 0.5).abs().idxmin()]
+    row_best_f1 = df_thresholds.loc[best_f1_idx]
+    row_eq = df_thresholds.loc[eq_idx]
+
+    print("\n" + "="*70)
+    print("📊 ANÁLISE DE SENSIBILIDADE AO THRESHOLD")
+    print("="*70)
+    print(f"\n   {'Métrica':<20} {'t=0.50':>10} {'Melhor F1':>12} {'Equilíbrio':>12}")
+    print("   " + "-"*56)
+    print(f"   {'Threshold':<20} {row_default['threshold']:>10.2f} {row_best_f1['threshold']:>12.2f} {row_eq['threshold']:>12.2f}")
+    print(f"   {'Sensitivity':<20} {row_default['sensitivity']:>10.4f} {row_best_f1['sensitivity']:>12.4f} {row_eq['sensitivity']:>12.4f}")
+    print(f"   {'Specificity':<20} {row_default['specificity']:>10.4f} {row_best_f1['specificity']:>12.4f} {row_eq['specificity']:>12.4f}")
+    print(f"   {'Precision':<20} {row_default['precision']:>10.4f} {row_best_f1['precision']:>12.4f} {row_eq['precision']:>12.4f}")
+    print(f"   {'F1-Score':<20} {row_default['f1']:>10.4f} {row_best_f1['f1']:>12.4f} {row_eq['f1']:>12.4f}")
+    print(f"   {'Accuracy':<20} {row_default['accuracy']:>10.4f} {row_best_f1['accuracy']:>12.4f} {row_eq['accuracy']:>12.4f}")
+
+    print(f"\n   💡 Recomendação:")
+    if best_t < 0.5:
+        print(f"      O melhor F1 ocorre em t={best_t:.2f} (< 0.50) — o threshold padrão")
+        print(f"      é conservador. Baixar o threshold aumenta a detecção de EPBs.")
+    elif best_t > 0.5:
+        print(f"      O melhor F1 ocorre em t={best_t:.2f} (> 0.50) — o threshold padrão")
+        print(f"      gera falsos positivos desnecessários. Subir o threshold melhora a precisão.")
+    else:
+        print(f"      O threshold padrão (0.50) já maximiza o F1-Score.")
+
+    print("\n" + "="*70)
+
+    return fig, df_thresholds
