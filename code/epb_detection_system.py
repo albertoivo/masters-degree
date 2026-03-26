@@ -16,6 +16,7 @@ from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import (confusion_matrix, roc_curve, auc, precision_recall_curve, f1_score)
+from sklearn.calibration import calibration_curve, CalibratedClassifierCV
 from xgboost import XGBClassifier
 from imblearn.over_sampling import SMOTE
 from imblearn.under_sampling import RandomUnderSampler
@@ -1573,3 +1574,152 @@ def analyze_threshold_sensitivity(y_true: np.ndarray, y_proba: np.ndarray,
     print("\n" + "="*70)
 
     return fig, df_thresholds
+
+
+# ============================================================================
+# PARTE 8: ANÁLISE DE CALIBRAÇÃO DE PROBABILIDADES
+# ============================================================================
+
+def plot_calibration_analysis(y_true: np.ndarray, y_proba: np.ndarray,
+                              n_bins: int = 10,
+                              system: Optional['EPBRecognitionSystem'] = None,
+                              X_train_features: Optional[np.ndarray] = None,
+                              y_train: Optional[np.ndarray] = None,
+                              X_test_features: Optional[np.ndarray] = None) -> Tuple[plt.Figure, dict]:
+    """
+    Gera um reliability diagram (calibration plot) e, opcionalmente,
+    compara com probabilidades calibradas via CalibratedClassifierCV.
+
+    Args:
+        y_true: Labels reais do conjunto de teste (0 ou 1)
+        y_proba: Probabilidades preditas (shape (n,) ou (n, 2))
+        n_bins: Número de bins para o reliability diagram
+        system: (Opcional) EPBRecognitionSystem treinado — se fornecido junto com
+                X_train_features e y_train, calibra o classificador e compara
+        X_train_features: Features de treino já normalizadas (para calibrar)
+        y_train: Labels de treino (para calibrar)
+        X_test_features: Features de teste já normalizadas (para gerar probs calibradas)
+
+    Returns:
+        fig: Figura matplotlib
+        stats: Dict com ECE (Expected Calibration Error) antes e depois
+    """
+    # Aceita tanto (n,) como (n, 2)
+    if y_proba.ndim == 2:
+        probs = y_proba[:, 1]
+    else:
+        probs = y_proba
+
+    # --- Calibration curve original ---
+    fraction_pos, mean_predicted = calibration_curve(y_true, probs, n_bins=n_bins, strategy='uniform')
+
+    # ECE (Expected Calibration Error)
+    bin_counts = np.histogram(probs, bins=n_bins, range=(0, 1))[0]
+    total = len(probs)
+    ece = 0.0
+    for i in range(len(fraction_pos)):
+        weight = bin_counts[i] / total if total > 0 else 0
+        ece += weight * abs(fraction_pos[i] - mean_predicted[i])
+
+    stats = {'ece_original': round(float(ece), 4)}
+
+    # --- Calibração opcional ---
+    has_calibration = (system is not None and X_train_features is not None
+                       and y_train is not None and X_test_features is not None)
+    cal_fraction_pos = cal_mean_predicted = cal_probs = None
+    if has_calibration:
+        cal_clf = CalibratedClassifierCV(system.classifier, cv=5, method='isotonic')
+        cal_clf.fit(X_train_features, y_train)
+        cal_proba = cal_clf.predict_proba(X_test_features)[:, 1]
+        cal_fraction_pos, cal_mean_predicted = calibration_curve(
+            y_true, cal_proba, n_bins=n_bins, strategy='uniform'
+        )
+        cal_probs = cal_proba
+
+        cal_bin_counts = np.histogram(cal_proba, bins=n_bins, range=(0, 1))[0]
+        ece_cal = 0.0
+        for i in range(len(cal_fraction_pos)):
+            w = cal_bin_counts[i] / total if total > 0 else 0
+            ece_cal += w * abs(cal_fraction_pos[i] - cal_mean_predicted[i])
+        stats['ece_calibrated'] = round(float(ece_cal), 4)
+
+    # --- Plot ---
+    n_cols = 2 if not has_calibration else 3
+    fig, axes = plt.subplots(1, n_cols, figsize=(6 * n_cols, 5))
+
+    # Subplot 1: Reliability diagram
+    ax = axes[0]
+    ax.plot([0, 1], [0, 1], 'k--', linewidth=1.5, label='Perfeitamente calibrado')
+    ax.plot(mean_predicted, fraction_pos, 's-', color='tab:red', linewidth=2,
+            label=f'Modelo original (ECE={ece:.3f})')
+    if has_calibration:
+        ax.plot(cal_mean_predicted, cal_fraction_pos, 'o-', color='tab:blue', linewidth=2,
+                label=f'Após calibração (ECE={stats["ece_calibrated"]:.3f})')
+    ax.set_xlabel('Probabilidade média predita', fontsize=11)
+    ax.set_ylabel('Fração de positivos reais', fontsize=11)
+    ax.set_title('Reliability Diagram (Calibration Plot)', fontsize=12, fontweight='bold')
+    ax.legend(loc='upper left', fontsize=9)
+    ax.set_xlim(-0.02, 1.02)
+    ax.set_ylim(-0.02, 1.02)
+    ax.grid(alpha=0.3)
+
+    # Subplot 2: Histograma de probabilidades
+    ax2 = axes[1]
+    ax2.hist(probs, bins=n_bins, range=(0, 1), alpha=0.7, color='tab:red',
+             edgecolor='black', label='Original')
+    if has_calibration:
+        ax2.hist(cal_probs, bins=n_bins, range=(0, 1), alpha=0.5, color='tab:blue',
+                 edgecolor='black', label='Calibrado')
+    ax2.set_xlabel('Probabilidade predita', fontsize=11)
+    ax2.set_ylabel('Frequência', fontsize=11)
+    ax2.set_title('Distribuição das Probabilidades', fontsize=12, fontweight='bold')
+    ax2.legend(fontsize=9)
+    ax2.grid(alpha=0.3)
+
+    # Subplot 3 (opcional): Comparação por classe
+    if has_calibration:
+        ax3 = axes[2]
+        for label_val, label_name, color in [(0, 'Sem EPB', 'tab:blue'), (1, 'EPB', 'tab:red')]:
+            mask = y_true == label_val
+            ax3.hist(probs[mask], bins=n_bins, range=(0, 1), alpha=0.4,
+                     color=color, label=f'{label_name} (original)', edgecolor='black')
+            ax3.hist(cal_probs[mask], bins=n_bins, range=(0, 1), alpha=0.4,
+                     color=color, linestyle='--', histtype='step', linewidth=2,
+                     label=f'{label_name} (calibrado)')
+        ax3.set_xlabel('Probabilidade predita', fontsize=11)
+        ax3.set_ylabel('Frequência', fontsize=11)
+        ax3.set_title('Original vs. Calibrado por Classe', fontsize=12, fontweight='bold')
+        ax3.legend(fontsize=8)
+        ax3.grid(alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
+
+    # --- Resumo textual ---
+    print("\n" + "="*70)
+    print("📊 ANÁLISE DE CALIBRAÇÃO DE PROBABILIDADES")
+    print("="*70)
+    print(f"\n   ECE original (Expected Calibration Error): {ece:.4f}")
+    if ece < 0.05:
+        print("   ✓ Probabilidades bem calibradas")
+    elif ece < 0.10:
+        print("   ⚠️  Calibração razoável — considere CalibratedClassifierCV")
+    else:
+        print("   ❌ Probabilidades mal calibradas — calibração recomendada")
+
+    if has_calibration:
+        print(f"   ECE após calibração isotónica:              {stats['ece_calibrated']:.4f}")
+        improvement = ece - stats['ece_calibrated']
+        if improvement > 0.005:
+            print(f"   ✓ Calibração melhorou o ECE em {improvement:.4f}")
+        else:
+            print(f"   ⚠️  Calibração não trouxe melhoria significativa (Δ={improvement:.4f})")
+
+    print("\n   💡 Interpretação do reliability diagram:")
+    print("      Se os pontos ficam ACIMA da diagonal: modelo é subconfiante")
+    print("        (diz 60%, mas na verdade 80% são positivos)")
+    print("      Se os pontos ficam ABAIXO da diagonal: modelo é sobreconfiante")
+    print("        (diz 80%, mas na verdade só 60% são positivos)")
+    print("\n" + "="*70)
+
+    return fig, stats
