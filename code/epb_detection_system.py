@@ -11,18 +11,23 @@ from pathlib import Path
 from PIL import Image
 
 # Sklearn imports
-from sklearn.model_selection import cross_val_score, StratifiedKFold
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.model_selection import cross_val_score, StratifiedKFold, RandomizedSearchCV
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (confusion_matrix, roc_curve, auc, precision_recall_curve, f1_score)
 from sklearn.calibration import calibration_curve, CalibratedClassifierCV
 from xgboost import XGBClassifier
 from imblearn.over_sampling import SMOTE
 from imblearn.under_sampling import RandomUnderSampler
+from imblearn.pipeline import Pipeline as ImbPipeline
 
 # Processamento de imagem
 from scipy.ndimage import gaussian_filter, rotate, shift
+from scipy.stats import spearmanr
 from skimage.exposure import equalize_adapthist
 
 import re
@@ -217,6 +222,131 @@ def load_epb_dataset(data_folder: str, label_file: str, target_size: Tuple[int, 
     return images, labels, filenames
 
 
+def temporal_train_test_split(
+    images: np.ndarray, labels: np.ndarray, filenames: List[str],
+    test_size: float = 0.25, date_pattern: str = r'(\d{8})',
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, List[str], List[str]]:
+    """
+    Divisão treino/teste baseada em noites de observação (temporal split).
+
+    Agrupa imagens por noite (extraída do nome do ficheiro), ordena
+    cronologicamente, e aloca as noites mais recentes para teste —
+    separadamente para cada classe — garantindo representação de ambas
+    em treino e teste e respeitando a proporção test_size.
+
+    Args:
+        images: array (n_samples, height, width)
+        labels: array (n_samples,)
+        filenames: lista de nomes de ficheiros
+        test_size: Fracção desejada de imagens para teste (aprox.)
+        date_pattern: Regex para extrair a data (YYYYMMDD) do filename
+
+    Returns:
+        X_train, X_test, y_train, y_test, files_train, files_test
+    """
+    # 1. Extrai data de cada ficheiro
+    dates = []
+    for fn in filenames:
+        match = re.search(date_pattern, fn)
+        if match:
+            dates.append(match.group(1))
+        else:
+            dates.append('00000000')
+    dates = np.array(dates)
+
+    # 2. Agrupa noites e ordena cronologicamente
+    unique_nights = sorted(set(dates))
+    night_info = []
+    for night in unique_nights:
+        mask = dates == night
+        night_labels = labels[mask]
+        night_info.append({
+            'night': night,
+            'count': int(mask.sum()),
+            'class': 'epb' if night_labels.sum() > 0 else 'no_epb',
+        })
+
+    logger.info(f"Temporal split: {len(unique_nights)} noites encontradas")
+    for ni in night_info:
+        logger.info(f"  {ni['night']}: {ni['count']} imgs "
+                     f"({'EPB' if ni['class'] == 'epb' else 'Sem EPB'})")
+
+    # 3. Separa noites por classe (mantendo ordem cronológica)
+    epb_nights = [ni for ni in night_info if ni['class'] == 'epb']
+    no_epb_nights = [ni for ni in night_info if ni['class'] == 'no_epb']
+
+    # 4. Para cada classe, aloca as noites mais recentes para teste (~test_size)
+    def _select_test_nights(nights: List[dict], target_frac: float) -> set:
+        """Selecciona noites mais recentes para teste, respeitando a fracção."""
+        total_cls = sum(n['count'] for n in nights)
+        target = int(total_cls * target_frac)
+        selected = set()
+        count = 0
+        # Pelo menos 1 noite no treino
+        for ni in reversed(nights[:-1] if len(nights) > 1 else []):
+            # Para com tolerância de 30%
+            if count + ni['count'] > target * 1.5 and count > 0:
+                break
+            selected.add(ni['night'])
+            count += ni['count']
+            if count >= target:
+                break
+        # Se não seleccionou nenhuma e há ≥2 noites, pega a última
+        if not selected and len(nights) >= 2:
+            selected.add(nights[-1]['night'])
+        return selected
+
+    test_nights = set()
+    if len(epb_nights) >= 2:
+        test_nights |= _select_test_nights(epb_nights, test_size)
+    elif len(epb_nights) == 1:
+        logger.warning("Apenas 1 noite com EPB — ficará no treino")
+    else:
+        logger.warning("Sem noites com EPB!")
+
+    if len(no_epb_nights) >= 2:
+        test_nights |= _select_test_nights(no_epb_nights, test_size)
+    elif len(no_epb_nights) == 1:
+        logger.warning("Apenas 1 noite sem EPB — ficará no treino")
+    else:
+        logger.warning("Sem noites sem EPB!")
+
+    # 5. Monta máscaras
+    test_mask = np.isin(dates, list(test_nights))
+    train_mask = ~test_mask
+
+    X_train = images[train_mask]
+    X_test = images[test_mask]
+    y_train = labels[train_mask]
+    y_test = labels[test_mask]
+    files_train = [f for f, m in zip(filenames, train_mask) if m]
+    files_test = [f for f, m in zip(filenames, test_mask) if m]
+
+    # 6. Log final
+    train_nights_sorted = sorted({dates[i] for i in range(len(dates)) if train_mask[i]})
+    test_nights_sorted = sorted({dates[i] for i in range(len(dates)) if test_mask[i]})
+
+    logger.info(f"\n📅 Temporal Split (estratificado por classe):")
+    logger.info(f"  Treino: {len(X_train)} imgs de {len(train_nights_sorted)} noites "
+                f"({train_nights_sorted[0]}–{train_nights_sorted[-1]})")
+    logger.info(f"  Teste:  {len(X_test)} imgs de {len(test_nights_sorted)} noites "
+                f"({test_nights_sorted[0]}–{test_nights_sorted[-1]})")
+
+    n_epb_train = int(y_train.sum())
+    n_epb_test = int(y_test.sum())
+    logger.info(f"  Treino — EPB: {n_epb_train}, Sem EPB: {len(y_train) - n_epb_train}")
+    logger.info(f"  Teste  — EPB: {n_epb_test}, Sem EPB: {len(y_test) - n_epb_test}")
+
+    actual_test_ratio = len(X_test) / len(images)
+    logger.info(f"  Ratio teste: {actual_test_ratio:.1%} (objectivo: {test_size:.0%})")
+
+    if n_epb_test == 0 or n_epb_test == len(y_test):
+        logger.warning("⚠️  ATENÇÃO: Teste sem representação de ambas as classes! "
+                       "Considere adicionar mais noites de observação.")
+
+    return X_train, X_test, y_train, y_test, files_train, files_test
+
+
 def preprocess_epb_image(img: np.ndarray, apply_background_removal: bool = True, enhance_contrast: bool = True) -> np.ndarray:
     """
     Pré-processamento específico para realçar estruturas de EPB
@@ -384,39 +514,97 @@ class TwoDPCA:
         return reconstructed + self.mean_image
 
 
-def optimize_n_components(X_train: np.ndarray, y_train: np.ndarray, max_components: int = 30, cv_folds: int = 5) -> Tuple[int, List[dict]]:
+class TwoDPCATransformer(BaseEstimator, TransformerMixin):
+    """Wrapper sklearn-compatible para TwoDPCA.
+
+    Aceita dados achatados (n_samples, h*w) na interface sklearn,
+    reconstrói as imagens 2D internamente, aplica 2DPCA e devolve
+    features achatadas (n_samples, h * n_components).
     """
-    Otimiza número de componentes 2DPCA via validação cruzada
-    
-    Testa diferentes valores e retorna o melhor baseado em accuracy
+
+    def __init__(self, n_components: int = 15,
+                 image_shape: Tuple[int, int] = (64, 64)):
+        self.n_components = n_components
+        self.image_shape = image_shape
+
+    def fit(self, X: np.ndarray, y=None) -> 'TwoDPCATransformer':
+        images = X.reshape(-1, *self.image_shape)
+        self.tdpca_ = TwoDPCA(n_components=self.n_components)
+        self.tdpca_.fit(images)
+        return self
+
+    def transform(self, X: np.ndarray) -> np.ndarray:
+        images = X.reshape(-1, *self.image_shape)
+        projected = self.tdpca_.transform(images)
+        return projected.reshape(len(X), -1)
+
+
+def optimize_n_components(X_train: np.ndarray, y_train: np.ndarray,
+                          max_components: int = 30, cv_folds: int = 5,
+                          use_augmentation: bool = False,
+                          augment_factor: int = 3) -> Tuple[int, List[dict]]:
+    """
+    Otimiza número de componentes 2DPCA via validação cruzada.
+
+    O augmentation (se activado) é aplicado **dentro** de cada fold para evitar
+    data leakage — imagens aumentadas nunca aparecem no fold de validação.
+
+    Args:
+        X_train: Imagens originais (sem augmentation)
+        y_train: Labels originais
+        max_components: Número máximo de componentes a testar
+        cv_folds: Número de folds para validação cruzada
+        use_augmentation: Aplicar augmentation dentro de cada fold
+        augment_factor: Fator de augmentation (usado se use_augmentation=True)
     """
     logger.info(f"Otimizando número de componentes (máx={max_components})...")
+    if use_augmentation:
+        logger.info(f"  Augmentation dentro dos folds: fator={augment_factor}")
     
     results = []
     test_range = range(5, min(max_components + 1, X_train.shape[2]), 5)
+    skf = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=42)
     
     for n_comp in test_range:
-        # Treina 2DPCA
-        tdpca = TwoDPCA(n_components=n_comp)
-        tdpca.fit(X_train)
+        fold_scores = []
         
-        # Extrai features
-        features = tdpca.transform(X_train)
-        features = features.reshape(features.shape[0], -1)
+        for train_idx, val_idx in skf.split(X_train, y_train):
+            X_fold_train, X_fold_val = X_train[train_idx], X_train[val_idx]
+            y_fold_train, y_fold_val = y_train[train_idx], y_train[val_idx]
+            
+            # Augmentation apenas no treino do fold
+            if use_augmentation:
+                X_fold_train, y_fold_train = augment_epb_data(
+                    X_fold_train, y_fold_train, augment_factor=augment_factor
+                )
+            
+            # 2DPCA
+            tdpca = TwoDPCA(n_components=n_comp)
+            tdpca.fit(X_fold_train)
+            
+            features_train = tdpca.transform(X_fold_train).reshape(len(X_fold_train), -1)
+            features_val = tdpca.transform(X_fold_val).reshape(len(X_fold_val), -1)
+            
+            # Normaliza
+            scaler = StandardScaler()
+            features_train = scaler.fit_transform(features_train)
+            features_val = scaler.transform(features_val)
+            
+            # Treina e avalia
+            clf = SVC(kernel='rbf', gamma='scale', class_weight='balanced', random_state=42)
+            clf.fit(features_train, y_fold_train)
+            y_pred_fold = clf.predict(features_val)
+            fold_f1 = f1_score(y_fold_val, y_pred_fold, zero_division=0)
+            fold_scores.append(fold_f1)
         
-        # Normaliza
-        scaler = StandardScaler()
-        features = scaler.fit_transform(features)
-        
-        # Validação cruzada com SVM
-        clf = SVC(kernel='rbf', gamma='scale', class_weight='balanced')
-        scores = cross_val_score(clf, features, y_train, cv=StratifiedKFold(cv_folds), scoring='f1')
-        
+        scores = np.array(fold_scores)
         mean_score = scores.mean()
         std_score = scores.std()
         
-        # Calcula variância explicada
-        var_explained = np.sum(tdpca.explained_variance_ratio)
+        # Calcula variância explicada (no dataset completo)
+        tdpca_full = TwoDPCA(n_components=n_comp)
+        tdpca_full.fit(X_train)
+        var_explained = np.sum(tdpca_full.explained_variance_ratio)
         
         results.append({
             'n_components': n_comp,
@@ -439,6 +627,194 @@ def optimize_n_components(X_train: np.ndarray, y_train: np.ndarray, max_componen
     return best_n, results
 
 
+def optimize_hyperparameters(
+    X_train: np.ndarray, y_train: np.ndarray,
+    image_shape: Tuple[int, int] = (64, 64),
+    n_iter: int = 30,
+    cv_folds: int = 5,
+    scoring: str = 'f1',
+    random_state: int = 42,
+) -> Tuple[dict, pd.DataFrame, plt.Figure]:
+    """
+    Otimização conjunta de hiperparâmetros via RandomizedSearchCV.
+
+    Constrói um pipeline completo (2DPCA → Scaler → SMOTE → Ensemble)
+    e busca os melhores hiperparâmetros por busca aleatória com CV
+    estratificada.
+
+    Parâmetros otimizados:
+      - n_components (2DPCA)
+      - C, gamma (SVM RBF)
+      - n_estimators, max_depth, learning_rate (XGBoost)
+      - n_estimators, max_depth (Random Forest)
+      - weights (VotingClassifier)
+
+    Args:
+        X_train: Imagens de treino (n, h, w) — sem augmentation
+        y_train: Labels
+        image_shape: Forma das imagens (height, width)
+        n_iter: Combinações aleatórias a testar
+        cv_folds: Folds de validação cruzada
+        scoring: Métrica de otimização ('f1', 'accuracy', 'roc_auc')
+        random_state: Seed para reprodutibilidade
+
+    Returns:
+        best_params: Dict com os melhores hiperparâmetros (nomes limpos)
+        df_results: DataFrame com resultados de todas as combinações
+        fig: Figura com visualização dos resultados
+    """
+    print(f"\n{'='*70}")
+    print(f"🔧 OTIMIZAÇÃO CONJUNTA DE HIPERPARÂMETROS")
+    print(f"{'='*70}")
+    print(f"   Combinações a testar: {n_iter}")
+    print(f"   Folds CV: {cv_folds}")
+    print(f"   Métrica: {scoring}")
+    print(f"   Amostras: {len(X_train)}\n")
+
+    # Flatten images para interface sklearn
+    X_flat = X_train.reshape(len(X_train), -1)
+
+    # Ratio de classes para XGBoost
+    n_neg = int(np.sum(y_train == 0))
+    n_pos = int(np.sum(y_train == 1))
+    spw = n_neg / n_pos if n_pos > 0 else 1.0
+
+    # Pipeline completo
+    pipe = ImbPipeline([
+        ('tdpca', TwoDPCATransformer(image_shape=image_shape)),
+        ('scaler', StandardScaler()),
+        ('smote', SMOTE(random_state=random_state)),
+        ('clf', VotingClassifier(
+            estimators=[
+                ('svm_rbf', SVC(kernel='rbf', probability=True,
+                                class_weight='balanced',
+                                random_state=random_state)),
+                ('xgboost', XGBClassifier(eval_metric='logloss',
+                                          scale_pos_weight=spw,
+                                          random_state=random_state)),
+                ('rf', RandomForestClassifier(class_weight='balanced',
+                                              min_samples_split=5,
+                                              random_state=random_state)),
+            ],
+            voting='soft',
+        )),
+    ])
+
+    # Espaço de busca
+    param_distributions = {
+        'tdpca__n_components': [5, 10, 15, 20, 25],
+        'clf__svm_rbf__C': [0.5, 1.0, 5.0, 10.0, 20.0],
+        'clf__svm_rbf__gamma': ['scale', 'auto'],
+        'clf__xgboost__n_estimators': [100, 200, 300],
+        'clf__xgboost__max_depth': [3, 6, 9],
+        'clf__xgboost__learning_rate': [0.05, 0.1, 0.2],
+        'clf__rf__n_estimators': [100, 200, 300],
+        'clf__rf__max_depth': [10, 15, 20, None],
+        'clf__weights': [[1, 1, 1], [2, 3, 2], [1, 2, 1], [2, 2, 3], [1, 3, 1]],
+    }
+
+    cv = StratifiedKFold(n_splits=cv_folds, shuffle=True,
+                         random_state=random_state)
+
+    search = RandomizedSearchCV(
+        pipe,
+        param_distributions=param_distributions,
+        n_iter=n_iter,
+        cv=cv,
+        scoring=scoring,
+        random_state=random_state,
+        n_jobs=1,
+        verbose=1,
+        return_train_score=True,
+        error_score='raise',
+    )
+
+    search.fit(X_flat, y_train)
+
+    # Monta dict com nomes limpos
+    best = search.best_params_
+    best_params = {
+        'n_components': best.get('tdpca__n_components', 15),
+        'svm_C': best.get('clf__svm_rbf__C', 5.0),
+        'svm_gamma': best.get('clf__svm_rbf__gamma', 'scale'),
+        'xgb_n_estimators': best.get('clf__xgboost__n_estimators', 200),
+        'xgb_max_depth': best.get('clf__xgboost__max_depth', 6),
+        'xgb_learning_rate': best.get('clf__xgboost__learning_rate', 0.1),
+        'rf_n_estimators': best.get('clf__rf__n_estimators', 200),
+        'rf_max_depth': best.get('clf__rf__max_depth', 15),
+        'voting_weights': list(best.get('clf__weights', [2, 3, 2])),
+    }
+    best_score = search.best_score_
+
+    print(f"\n{'='*70}")
+    print(f"🏆 MELHORES HIPERPARÂMETROS ({scoring}={best_score:.4f})")
+    print(f"{'='*70}")
+    for k, v in best_params.items():
+        print(f"   {k}: {v}")
+
+    # Resultados
+    df_results = pd.DataFrame(search.cv_results_).sort_values('rank_test_score')
+
+    print(f"\n📊 Top 5 combinações:")
+    param_cols = [c for c in df_results.columns if c.startswith('param_')]
+    for _, row in df_results.head(5).iterrows():
+        print(f"   #{int(row['rank_test_score'])} | "
+              f"Test: {row['mean_test_score']:.4f}±{row['std_test_score']:.4f} | "
+              f"Train: {row['mean_train_score']:.4f}")
+        for pc in param_cols:
+            short = pc.replace('param_clf__', '').replace('param_tdpca__', '')
+            short = short.replace('param_', '')
+            print(f"       {short}: {row[pc]}")
+
+    # --- Visualização ---
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+
+    # 1. Score vs n_components
+    ax = axes[0]
+    for nc in sorted(df_results['param_tdpca__n_components'].dropna().unique()):
+        mask = df_results['param_tdpca__n_components'] == nc
+        scores = df_results.loc[mask, 'mean_test_score']
+        ax.scatter([nc] * len(scores), scores, alpha=0.5, s=30)
+    ax.set_xlabel('n_components (2DPCA)', fontsize=11)
+    ax.set_ylabel(f'{scoring} (teste)', fontsize=11)
+    ax.set_title('Score vs. Componentes 2DPCA', fontsize=12, fontweight='bold')
+    ax.grid(alpha=0.3)
+
+    # 2. Distribuição dos scores
+    ax = axes[1]
+    ax.hist(df_results['mean_test_score'], bins=15,
+            edgecolor='black', alpha=0.7, color='steelblue')
+    ax.axvline(best_score, color='red', linestyle='--', linewidth=2,
+               label=f'Melhor: {best_score:.4f}')
+    ax.set_xlabel(f'{scoring} (teste)', fontsize=11)
+    ax.set_ylabel('Contagem', fontsize=11)
+    ax.set_title('Distribuição dos Scores', fontsize=12, fontweight='bold')
+    ax.legend()
+    ax.grid(alpha=0.3)
+
+    # 3. Treino vs Teste (diagnóstico de overfitting)
+    ax = axes[2]
+    ax.scatter(df_results['mean_train_score'],
+               df_results['mean_test_score'],
+               alpha=0.5, s=30, c='steelblue')
+    lims = [min(df_results['mean_test_score'].min(),
+                df_results['mean_train_score'].min()) - 0.02, 1.02]
+    ax.plot(lims, lims, 'r--', alpha=0.5, label='Treino = Teste')
+    ax.set_xlabel(f'{scoring} (treino)', fontsize=11)
+    ax.set_ylabel(f'{scoring} (teste)', fontsize=11)
+    ax.set_title('Treino vs. Teste (Overfitting?)', fontsize=12,
+                 fontweight='bold')
+    ax.legend()
+    ax.grid(alpha=0.3)
+
+    plt.suptitle(f'Otimização de Hiperparâmetros — Melhor {scoring}: '
+                 f'{best_score:.4f}', fontsize=13, fontweight='bold')
+    plt.tight_layout()
+    plt.show()
+
+    return best_params, df_results, fig
+
+
 # ============================================================================
 # PARTE 3: SISTEMA COMPLETO COM ENSEMBLE E BALANCEAMENTO
 # ============================================================================
@@ -451,67 +827,79 @@ class EPBRecognitionSystem:
     - Ensemble de classificadores
     """
     
-    def __init__(self, n_components: int = 15, balance_data: bool = True, balance_method: str = 'smote'):
+    def __init__(self, n_components: int = 15, balance_data: bool = True,
+                 balance_method: str = 'smote',
+                 ensemble_params: Optional[dict] = None):
         """
         Args:
             n_components: Número de componentes 2DPCA
             balance_data: Aplicar balanceamento de classes
             balance_method: 'smote', 'undersample', ou 'combined'
+            ensemble_params: Dict com hiperparâmetros do ensemble
+                             (produzido por optimize_hyperparameters).
+                             Se None, usa valores padrão.
         """
         self.n_components = n_components
         self.balance_data = balance_data
         self.balance_method = balance_method
+        self.ensemble_params = ensemble_params or {}
         
         self.tdpca = TwoDPCA(n_components=n_components)
         self.scaler = StandardScaler()
         self.sampler = None
         
-        # Configura classificador
+        # Pipeline imblearn (sampler + classificador)
+        self.pipeline_ = None
         self.classifier = None
     
     def _create_ensemble(self, y_train: np.ndarray) -> VotingClassifier:
-        """Ensemble otimizado para detecção de EPBs"""
-        
+        """Ensemble otimizado para detecção de EPBs.
+
+        Se self.ensemble_params estiver preenchido (de optimize_hyperparameters),
+        usa os hiperparâmetros otimizados; caso contrário, usa defaults.
+        """
+        p = getattr(self, 'ensemble_params', {}) or {}
+
         # Calcula ratio de classes para XGBoost
         n_neg = np.sum(y_train == 0)
         n_pos = np.sum(y_train == 1)
         scale_pos_weight = n_neg / n_pos if n_pos > 0 else 1.0
-        
+
+        if p:
+            logger.info("Usando hiperparâmetros otimizados do ensemble:")
+            for k, v in p.items():
+                logger.info(f"  {k}: {v}")
+
         estimators = [
-            # Kernel-based: captura padrões suaves/irregulares
             ('svm_rbf', SVC(
-                kernel='rbf', 
-                probability=True, 
-                gamma='scale',              # ou tunar com GridSearch
-                C=5.0,                      # aumentado para capturar mais complexidade
-                class_weight='balanced', 
+                kernel='rbf',
+                probability=True,
+                gamma=p.get('svm_gamma', 'scale'),
+                C=p.get('svm_C', 5.0),
+                class_weight='balanced',
                 random_state=42
             )),
-            
-            # Gradient Boosting: captura interações complexas
             ('xgboost', XGBClassifier(
-                n_estimators=200,           # mais árvores = mais estabilidade
-                max_depth=6,                # evita overfitting
-                learning_rate=0.1,
+                n_estimators=p.get('xgb_n_estimators', 200),
+                max_depth=p.get('xgb_max_depth', 6),
+                learning_rate=p.get('xgb_learning_rate', 0.1),
                 scale_pos_weight=scale_pos_weight,
                 random_state=42,
                 eval_metric='logloss'
             )),
-            
-            # Tree-based robusto: resistente a ruído
             ('rf', RandomForestClassifier(
-                n_estimators=200,           # mais árvores para robustez 
-                max_depth=15,               # maior capacidade
-                min_samples_split=5,        # evita overfitting
-                class_weight='balanced', 
+                n_estimators=p.get('rf_n_estimators', 200),
+                max_depth=p.get('rf_max_depth', 15),
+                min_samples_split=5,
+                class_weight='balanced',
                 random_state=42
             ))
         ]
-        
+
         return VotingClassifier(
-            estimators=estimators, 
+            estimators=estimators,
             voting='soft',
-            weights=[2, 3, 2]  # Mais peso para XGBoost (geralmente melhor)
+            weights=p.get('voting_weights', [2, 3, 2])
         )
     
     def _setup_balancing(self):
@@ -557,24 +945,41 @@ class EPBRecognitionSystem:
         logger.info("Normalizando features...")
         features_train = self.scaler.fit_transform(features_train)
         
-        # 4. Balanceia dados se necessário
+        # 4. Cria ensemble
+        logger.info("Criando classificador ensemble...")
+        ensemble = self._create_ensemble(y_train)
+        
+        # 5. Monta pipeline imblearn (sampler + classificador)
+        #    Garante que o SMOTE só é aplicado no fit, nunca no predict,
+        #    e durante CV interna o SMOTE atua apenas nos folds de treino.
         if self.balance_data:
-            logger.info(f"Aplicando balanceamento ({self.balance_method})...")
+            logger.info(f"Montando pipeline com balanceamento ({self.balance_method})...")
             original_dist = np.bincount(y_train)
             
             self.sampler = self._setup_balancing()
-            features_train, y_train = self.sampler.fit_resample(
-                features_train, y_train
-            )
             
-            new_dist = np.bincount(y_train)
+            # Log distribuição esperada após SMOTE
+            _, resampled_y = self.sampler.fit_resample(features_train, y_train)
+            new_dist = np.bincount(resampled_y)
             logger.info(f"Classe 0: {original_dist[0]} → {new_dist[0]}")
             logger.info(f"Classe 1: {original_dist[1]} → {new_dist[1]}")
+            
+            # Pipeline imblearn: sampler + classificador
+            # O sampler é re-criado para garantir estado limpo no pipeline
+            self.sampler = self._setup_balancing()
+            self.pipeline_ = ImbPipeline([
+                ('sampler', self.sampler),
+                ('classifier', ensemble),
+            ])
+            self.pipeline_.fit(features_train, y_train)
+        else:
+            self.pipeline_ = ImbPipeline([
+                ('classifier', ensemble),
+            ])
+            self.pipeline_.fit(features_train, y_train)
         
-        # 5. Treina classificador
-        logger.info("Treinando classificador ensemble...")
-        self.classifier = self._create_ensemble(y_train)
-        self.classifier.fit(features_train, y_train)
+        # Referência directa ao classificador (retrocompatibilidade)
+        self.classifier = self.pipeline_.named_steps['classifier']
         logger.info("Treinamento concluído!")
         
         return self
@@ -583,13 +988,13 @@ class EPBRecognitionSystem:
         """Prediz se há EPB"""
         features_test = self.extract_features(X_test)
         features_test = self.scaler.transform(features_test)
-        return self.classifier.predict(features_test)
+        return self.pipeline_.predict(features_test)
     
     def predict_proba(self, X_test: np.ndarray) -> np.ndarray:
         """Retorna probabilidades"""
         features_test = self.extract_features(X_test)
         features_test = self.scaler.transform(features_test)
-        return self.classifier.predict_proba(features_test)
+        return self.pipeline_.predict_proba(features_test)
     
     def get_feature_importance(self, X_sample: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
@@ -608,6 +1013,115 @@ class EPBRecognitionSystem:
         importance_map = np.abs(X_sample - reconstructed)
         
         return importance_map, reconstructed
+
+    def get_shap_importance(self, X_sample: np.ndarray,
+                            X_background: np.ndarray,
+                            method: str = 'tree',
+                            n_background: int = 100) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Mapa de importância baseado em SHAP (contribuição real para a classificação).
+
+        Calcula SHAP values no espaço de features do classificador e retro-projeta
+        para o espaço da imagem via componentes do 2DPCA:
+            shap_map = shap_features_2d @ projection_matrix.T
+
+        Isto mostra quais regiões da imagem realmente influenciam a decisão,
+        ao contrário do erro de reconstrução (get_feature_importance).
+
+        Args:
+            X_sample: Imagem pré-processada (H, W)
+            X_background: Imagens de referência para SHAP (N, H, W)
+            method: 'tree' (rápido, usa XGBoost) ou 'kernel' (preciso, usa ensemble)
+            n_background: Máximo de amostras de background (usado em 'kernel')
+
+        Returns:
+            shap_map: Atribuição SHAP no espaço da imagem (H, W) — com sinal:
+                      positivo → evidência a favor de EPB,
+                      negativo → evidência contra EPB
+            shap_features: Valores SHAP no espaço de features (n_features,)
+        """
+        try:
+            import shap
+        except ImportError:
+            raise ImportError(
+                "O pacote 'shap' é necessário para esta funcionalidade. "
+                "Instale com: pip install shap"
+            )
+
+        # Extrai e normaliza features da amostra
+        features_sample = self.scaler.transform(
+            self.extract_features(X_sample.reshape(1, *X_sample.shape))
+        )
+
+        if method == 'tree':
+            # TreeExplainer num modelo tree-based do ensemble.
+            # Tenta XGBoost primeiro (peso mais alto); se falhar por
+            # incompatibilidade de versão, usa RandomForest.
+            tree_models = [
+                ('xgboost', self.classifier.named_estimators_['xgboost']),
+                ('rf', self.classifier.named_estimators_['rf']),
+            ]
+            for model_name, tree_model in tree_models:
+                try:
+                    explainer = shap.TreeExplainer(tree_model)
+                    shap_values = explainer.shap_values(features_sample)
+                    break
+                except (ValueError, TypeError):
+                    logger.warning(
+                        f"TreeExplainer falhou com {model_name}, "
+                        f"tentando próximo modelo..."
+                    )
+                    continue
+            else:
+                raise RuntimeError(
+                    "TreeExplainer falhou com todos os modelos do ensemble. "
+                    "Use method='kernel' como alternativa."
+                )
+            # shap_values: lista [class0, class1] ou ndarray (várias formas)
+            n_feats = features_sample.shape[1]
+            if isinstance(shap_values, list):
+                sv = np.asarray(shap_values[1]).flatten()[:n_feats]
+            elif isinstance(shap_values, np.ndarray):
+                if shap_values.ndim == 3:
+                    # (n_classes, n_samples, n_features) ou (n_samples, n_features, n_classes)
+                    if shap_values.shape[0] == 2:
+                        sv = shap_values[1][0]
+                    elif shap_values.shape[-1] == 2:
+                        sv = shap_values[0, :, 1]
+                    else:
+                        sv = shap_values[0].flatten()[:n_feats]
+                else:
+                    sv = shap_values.flatten()[:n_feats]
+            else:
+                sv = np.asarray(shap_values).flatten()[:n_feats]
+
+        elif method == 'kernel':
+            # KernelExplainer no ensemble completo (mais preciso, mais lento)
+            if X_background is None:
+                raise ValueError("X_background é obrigatório para method='kernel'")
+            features_bg = self.scaler.transform(self.extract_features(X_background))
+            if len(features_bg) > n_background:
+                rng = np.random.RandomState(42)
+                idx = rng.choice(len(features_bg), n_background, replace=False)
+                features_bg = features_bg[idx]
+            bg_summary = shap.kmeans(features_bg, min(50, len(features_bg)))
+            explainer = shap.KernelExplainer(
+                self.classifier.predict_proba, bg_summary
+            )
+            shap_values = explainer.shap_values(features_sample, nsamples='auto')
+            sv = shap_values[1][0]  # classe 1 (EPB)
+
+        else:
+            raise ValueError(f"Método SHAP inválido: '{method}'. Use 'tree' ou 'kernel'.")
+
+        # Retro-projeção para espaço da imagem
+        # features = image_row @ projection_matrix → (H, n_comp)
+        # shap_map = shap_2d @ projection_matrix.T → (H, W)
+        H = X_sample.shape[0]
+        sv_2d = sv.reshape(H, self.n_components)
+        shap_map = sv_2d @ self.tdpca.projection_matrix.T
+
+        return shap_map, sv
 
 
 # ============================================================================
@@ -1723,3 +2237,500 @@ def plot_calibration_analysis(y_true: np.ndarray, y_proba: np.ndarray,
     print("\n" + "="*70)
 
     return fig, stats
+
+
+# ============================================================================
+# PARTE 9: AVALIAÇÃO COM K-FOLD CROSS-VALIDATION
+# ============================================================================
+
+def evaluate_kfold_cv(X: np.ndarray, y: np.ndarray,
+                      n_components: int = 15,
+                      n_folds: int = 5,
+                      balance_method: str = 'smote',
+                      use_augmentation: bool = True,
+                      augment_factor: int = 3) -> Tuple[plt.Figure, pd.DataFrame]:
+    """
+    Avaliação com k-fold cross-validation estratificado do pipeline completo.
+
+    Para cada fold, treina um EPBRecognitionSystem do zero (2DPCA + SMOTE + ensemble)
+    e avalia no fold de validação. Reporta métricas com intervalos de confiança.
+
+    Args:
+        X: Imagens originais (antes de augmentation), shape (n, h, w)
+        y: Labels originais
+        n_components: Número de componentes 2DPCA
+        n_folds: Número de folds (recomendado: 5 ou 10)
+        balance_method: Método de balanceamento ('smote', 'undersample', 'combined')
+        use_augmentation: Aplicar data augmentation no treino de cada fold
+        augment_factor: Fator de augmentation
+
+    Returns:
+        fig: Figura com boxplots das métricas por fold
+        df_results: DataFrame com métricas de cada fold
+    """
+    skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=42)
+
+    fold_metrics = []
+
+    print(f"\n{'='*70}")
+    print(f"📊 AVALIAÇÃO K-FOLD CROSS-VALIDATION ({n_folds} folds)")
+    print(f"{'='*70}")
+    print(f"   Componentes: {n_components} | Balanceamento: {balance_method}")
+    print(f"   Augmentation: {'Sim (fator={})'.format(augment_factor) if use_augmentation else 'Não'}")
+    print(f"   Total de amostras: {len(X)} ({int(np.sum(y))} EPB, {int(len(y) - np.sum(y))} Sem EPB)\n")
+
+    for fold_idx, (train_idx, val_idx) in enumerate(skf.split(X, y)):
+        X_fold_train, X_fold_val = X[train_idx], X[val_idx]
+        y_fold_train, y_fold_val = y[train_idx], y[val_idx]
+
+        # Augmentation no treino do fold
+        if use_augmentation:
+            X_fold_train, y_fold_train = augment_epb_data(
+                X_fold_train, y_fold_train, augment_factor=augment_factor
+            )
+
+        # Treina sistema completo
+        sys_fold = EPBRecognitionSystem(
+            n_components=n_components,
+            balance_data=True,
+            balance_method=balance_method,
+        )
+        sys_fold.fit(X_fold_train, y_fold_train)
+
+        # Avalia
+        y_pred_fold = sys_fold.predict(X_fold_val)
+        y_proba_fold = sys_fold.predict_proba(X_fold_val)[:, 1]
+
+        cm = confusion_matrix(y_fold_val, y_pred_fold, labels=[0, 1])
+        tn, fp, fn, tp = cm.ravel()
+
+        sens = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+        spec = tn / (tn + fp) if (tn + fp) > 0 else 0.0
+        prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+        f1 = 2 * prec * sens / (prec + sens) if (prec + sens) > 0 else 0.0
+        acc = (tp + tn) / (tp + tn + fp + fn)
+
+        fpr, tpr, _ = roc_curve(y_fold_val, y_proba_fold)
+        roc_auc_val = auc(fpr, tpr)
+
+        fold_metrics.append({
+            'fold': fold_idx + 1,
+            'accuracy': round(acc, 4),
+            'sensitivity': round(sens, 4),
+            'specificity': round(spec, 4),
+            'precision': round(prec, 4),
+            'f1': round(f1, 4),
+            'auc': round(roc_auc_val, 4),
+        })
+
+        print(f"   Fold {fold_idx + 1}/{n_folds}: "
+              f"Acc={acc:.4f} | Sens={sens:.4f} | Spec={spec:.4f} | "
+              f"F1={f1:.4f} | AUC={roc_auc_val:.4f}")
+
+    df_results = pd.DataFrame(fold_metrics)
+
+    # --- Resumo estatístico ---
+    metrics_cols = ['accuracy', 'sensitivity', 'specificity', 'precision', 'f1', 'auc']
+
+    print(f"\n{'='*70}")
+    print(f"📈 RESULTADOS {n_folds}-FOLD CROSS-VALIDATION")
+    print(f"{'='*70}")
+    print(f"\n   {'Métrica':<20} {'Média':>10} {'± Std':>10} {'Mín':>10} {'Máx':>10}")
+    print(f"   {'-'*60}")
+
+    for col in metrics_cols:
+        mean_val = df_results[col].mean()
+        std_val = df_results[col].std()
+        min_val = df_results[col].min()
+        max_val = df_results[col].max()
+        print(f"   {col.capitalize():<20} {mean_val:>10.4f} {std_val:>10.4f} {min_val:>10.4f} {max_val:>10.4f}")
+
+    print(f"\n   💡 Para reportar na dissertação:")
+    f1_mean = df_results['f1'].mean()
+    f1_std = df_results['f1'].std()
+    auc_mean = df_results['auc'].mean()
+    auc_std = df_results['auc'].std()
+    sens_mean = df_results['sensitivity'].mean()
+    sens_std = df_results['sensitivity'].std()
+    print(f"      F1-Score: {f1_mean:.4f} ± {f1_std:.4f}")
+    print(f"      AUC:      {auc_mean:.4f} ± {auc_std:.4f}")
+    print(f"      Sens.:    {sens_mean:.4f} ± {sens_std:.4f}")
+    print(f"{'='*70}")
+
+    # --- Plot ---
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+    # Subplot 1: Boxplot de todas as métricas
+    ax = axes[0]
+    df_melt = df_results[metrics_cols].melt(var_name='Métrica', value_name='Valor')
+    sns.boxplot(data=df_melt, x='Métrica', y='Valor', ax=ax, palette='Set2')
+    sns.stripplot(data=df_melt, x='Métrica', y='Valor', ax=ax,
+                  color='black', size=5, alpha=0.6)
+    ax.set_title(f'Distribuição das Métricas ({n_folds}-Fold CV)', fontsize=12, fontweight='bold')
+    ax.set_ylim(0, 1.05)
+    ax.set_xticklabels([c.capitalize() for c in metrics_cols], rotation=30, ha='right')
+    ax.grid(alpha=0.3, axis='y')
+
+    # Subplot 2: Métricas por fold
+    ax2 = axes[1]
+    for col in ['sensitivity', 'specificity', 'f1', 'auc']:
+        ax2.plot(df_results['fold'], df_results[col], 'o-', label=col.capitalize(), linewidth=2)
+    ax2.set_xlabel('Fold', fontsize=11)
+    ax2.set_ylabel('Valor', fontsize=11)
+    ax2.set_title('Métricas por Fold', fontsize=12, fontweight='bold')
+    ax2.set_xticks(df_results['fold'])
+    ax2.set_ylim(0, 1.05)
+    ax2.legend(fontsize=9)
+    ax2.grid(alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
+
+    return fig, df_results
+
+
+# ============================================================================
+# PARTE 10: BENCHMARKING CONTRA BASELINES
+# ============================================================================
+
+def benchmark_baselines(X_train: np.ndarray, y_train: np.ndarray,
+                        X_test: np.ndarray, y_test: np.ndarray,
+                        n_components: int = 15,
+                        balance_method: str = 'smote') -> Tuple[plt.Figure, pd.DataFrame]:
+    """
+    Compara o sistema 2DPCA+Ensemble contra baselines mais simples.
+
+    Baselines testados:
+      1. Flatten + Logistic Regression
+      2. PCA (linear) + Logistic Regression
+      3. PCA (linear) + SVM RBF
+      4. Flatten + Random Forest
+      5. 2DPCA + SVM RBF (único)
+      6. 2DPCA + Ensemble (sistema completo)
+
+    Args:
+        X_train: Imagens de treino (n, h, w)
+        y_train: Labels de treino
+        X_test: Imagens de teste (n, h, w)
+        y_test: Labels de teste
+        n_components: Componentes para 2DPCA
+        balance_method: Método de balanceamento
+
+    Returns:
+        fig: Figura com barplot comparativo
+        df_results: DataFrame com métricas de cada baseline
+    """
+    print(f"\n{'='*70}")
+    print(f"📊 BENCHMARKING CONTRA BASELINES")
+    print(f"{'='*70}")
+    print(f"   Treino: {len(X_train)} | Teste: {len(X_test)} | Componentes: {n_components}\n")
+
+    n_samples_train, h, w = X_train.shape
+    n_samples_test = X_test.shape[0]
+
+    # Flatten
+    X_train_flat = X_train.reshape(n_samples_train, -1)
+    X_test_flat = X_test.reshape(n_samples_test, -1)
+
+    # 2DPCA features
+    tdpca = TwoDPCA(n_components=n_components)
+    tdpca.fit(X_train)
+    X_train_2dpca = tdpca.transform(X_train).reshape(n_samples_train, -1)
+    X_test_2dpca = tdpca.transform(X_test).reshape(n_samples_test, -1)
+
+    # PCA features (mesmo nº de dimensões que 2DPCA output)
+    n_pca_components = min(X_train_2dpca.shape[1], X_train_flat.shape[1], n_samples_train)
+    pca = PCA(n_components=n_pca_components, random_state=42)
+    X_train_pca = pca.fit_transform(X_train_flat)
+    X_test_pca = pca.transform(X_test_flat)
+
+    baselines = [
+        ('Flatten + LogReg', X_train_flat, X_test_flat,
+         LogisticRegression(max_iter=1000, class_weight='balanced', random_state=42)),
+        ('PCA + LogReg', X_train_pca, X_test_pca,
+         LogisticRegression(max_iter=1000, class_weight='balanced', random_state=42)),
+        ('PCA + SVM RBF', X_train_pca, X_test_pca,
+         SVC(kernel='rbf', probability=True, class_weight='balanced', random_state=42)),
+        ('Flatten + RF', X_train_flat, X_test_flat,
+         RandomForestClassifier(n_estimators=200, class_weight='balanced', random_state=42)),
+        ('2DPCA + SVM RBF', X_train_2dpca, X_test_2dpca,
+         SVC(kernel='rbf', C=5.0, probability=True, class_weight='balanced', random_state=42)),
+    ]
+
+    results = []
+
+    for name, X_tr, X_te, clf in baselines:
+        scaler = StandardScaler()
+        X_tr_s = scaler.fit_transform(X_tr)
+        X_te_s = scaler.transform(X_te)
+
+        # Pipeline imblearn: SMOTE integrado no pipeline
+        pipe = ImbPipeline([
+            ('smote', SMOTE(random_state=42)),
+            ('clf', clf),
+        ])
+        pipe.fit(X_tr_s, y_train)
+        y_pred_b = pipe.predict(X_te_s)
+        y_proba_b = pipe.predict_proba(X_te_s)[:, 1]
+
+        cm = confusion_matrix(y_test, y_pred_b, labels=[0, 1])
+        tn, fp, fn, tp = cm.ravel()
+
+        sens = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+        spec = tn / (tn + fp) if (tn + fp) > 0 else 0.0
+        prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+        f1 = 2 * prec * sens / (prec + sens) if (prec + sens) > 0 else 0.0
+        acc = (tp + tn) / (tp + tn + fp + fn)
+        fpr_b, tpr_b, _ = roc_curve(y_test, y_proba_b)
+        auc_val = auc(fpr_b, tpr_b)
+
+        results.append({
+            'model': name,
+            'accuracy': round(acc, 4),
+            'sensitivity': round(sens, 4),
+            'specificity': round(spec, 4),
+            'precision': round(prec, 4),
+            'f1': round(f1, 4),
+            'auc': round(auc_val, 4),
+        })
+        print(f"   {name:<22} Acc={acc:.4f} | Sens={sens:.4f} | Spec={spec:.4f} | F1={f1:.4f} | AUC={auc_val:.4f}")
+
+    # Sistema completo (2DPCA + Ensemble)
+    sys_full = EPBRecognitionSystem(
+        n_components=n_components, balance_data=True, balance_method=balance_method
+    )
+    sys_full.fit(X_train, y_train)
+    y_pred_full = sys_full.predict(X_test)
+    y_proba_full = sys_full.predict_proba(X_test)[:, 1]
+
+    cm = confusion_matrix(y_test, y_pred_full, labels=[0, 1])
+    tn, fp, fn, tp = cm.ravel()
+    sens = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+    spec = tn / (tn + fp) if (tn + fp) > 0 else 0.0
+    prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+    f1 = 2 * prec * sens / (prec + sens) if (prec + sens) > 0 else 0.0
+    acc = (tp + tn) / (tp + tn + fp + fn)
+    fpr_f, tpr_f, _ = roc_curve(y_test, y_proba_full)
+    auc_val = auc(fpr_f, tpr_f)
+
+    results.append({
+        'model': '2DPCA + Ensemble ★',
+        'accuracy': round(acc, 4),
+        'sensitivity': round(sens, 4),
+        'specificity': round(spec, 4),
+        'precision': round(prec, 4),
+        'f1': round(f1, 4),
+        'auc': round(auc_val, 4),
+    })
+    print(f"   {'2DPCA + Ensemble ★':<22} Acc={acc:.4f} | Sens={sens:.4f} | Spec={spec:.4f} | F1={f1:.4f} | AUC={auc_val:.4f}")
+
+    df_results = pd.DataFrame(results)
+
+    # --- Tabela formatada ---
+    print(f"\n{'='*70}")
+    print(f"{'Modelo':<24} {'Acc':>8} {'Sens':>8} {'Spec':>8} {'Prec':>8} {'F1':>8} {'AUC':>8}")
+    print(f"{'-'*72}")
+    for _, row in df_results.iterrows():
+        marker = ' ★' if '★' in row['model'] else ''
+        name_clean = row['model'].replace(' ★', '')
+        print(f"{name_clean + marker:<24} {row['accuracy']:>8.4f} {row['sensitivity']:>8.4f} "
+              f"{row['specificity']:>8.4f} {row['precision']:>8.4f} {row['f1']:>8.4f} {row['auc']:>8.4f}")
+    print(f"{'='*72}")
+
+    # Vantagem do sistema completo
+    best_baseline_f1 = df_results[~df_results['model'].str.contains('★')]['f1'].max()
+    our_f1 = df_results[df_results['model'].str.contains('★')]['f1'].values[0]
+    delta = our_f1 - best_baseline_f1
+    print(f"\n   💡 Vantagem do 2DPCA+Ensemble sobre o melhor baseline:")
+    print(f"      ΔF1 = {delta:+.4f} ({'melhora' if delta > 0 else 'pior'})")
+    if delta > 0.02:
+        print(f"      ✓ O ensemble justifica a complexidade adicional.")
+    elif delta > 0:
+        print(f"      ⚠️  Melhoria marginal — considere se a complexidade compensa.")
+    else:
+        print(f"      ❌ O baseline é melhor — reveja a arquitetura.")
+    print(f"{'='*70}")
+
+    # --- Plot ---
+    fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+
+    # Subplot 1: Barplot comparativo (F1, AUC, Sensitivity)
+    ax = axes[0]
+    x = np.arange(len(df_results))
+    bar_w = 0.25
+    colors_our = ['#2ecc71' if '★' in m else '#3498db' for m in df_results['model']]
+
+    ax.barh(x - bar_w, df_results['f1'], bar_w, label='F1-Score',
+            color=[c if '★' not in m else '#27ae60' for c, m in zip(['#3498db']*len(df_results), df_results['model'])])
+    ax.barh(x, df_results['auc'], bar_w, label='AUC',
+            color=[c if '★' not in m else '#e67e22' for c, m in zip(['#e74c3c']*len(df_results), df_results['model'])])
+    ax.barh(x + bar_w, df_results['sensitivity'], bar_w, label='Sensitivity',
+            color=[c if '★' not in m else '#8e44ad' for c, m in zip(['#9b59b6']*len(df_results), df_results['model'])])
+
+    ax.set_yticks(x)
+    ax.set_yticklabels(df_results['model'], fontsize=9)
+    ax.set_xlabel('Valor', fontsize=11)
+    ax.set_title('Comparação de Modelos', fontsize=12, fontweight='bold')
+    ax.set_xlim(0, 1.05)
+    ax.legend(loc='lower right', fontsize=9)
+    ax.grid(alpha=0.3, axis='x')
+
+    # Subplot 2: Heatmap de todas as métricas
+    ax2 = axes[1]
+    metrics_cols = ['accuracy', 'sensitivity', 'specificity', 'precision', 'f1', 'auc']
+    heatmap_data = df_results.set_index('model')[metrics_cols]
+    sns.heatmap(heatmap_data, annot=True, fmt='.3f', cmap='YlGnBu',
+                ax=ax2, vmin=0, vmax=1, linewidths=0.5,
+                cbar_kws={'label': 'Valor'})
+    ax2.set_title('Métricas por Modelo', fontsize=12, fontweight='bold')
+    ax2.set_xticklabels([c.capitalize() for c in metrics_cols], rotation=30, ha='right')
+
+    plt.tight_layout()
+    plt.show()
+
+    return fig, df_results
+
+
+# ============================================================================
+# PARTE 11: ANÁLISE DE IMPORTÂNCIA BASEADA EM SHAP
+# ============================================================================
+
+def explain_shap_importance(system: 'EPBRecognitionSystem',
+                            X_sample: np.ndarray, y_sample: int,
+                            X_background: np.ndarray,
+                            filename: Optional[str] = None,
+                            method: str = 'tree',
+                            image_folder: str = 'img-teste') -> np.ndarray:
+    """
+    Explicação baseada em SHAP: quais regiões da imagem contribuem para a
+    decisão de classificação.
+
+    Diferença em relação ao mapa de erro de reconstrução (get_feature_importance):
+    - SHAP mostra a contribuição **real** de cada pixel para a decisão do
+      classificador, não apenas o erro de reconstrução do 2DPCA.
+    - Valores positivos (vermelho) → evidência a favor de EPB
+    - Valores negativos (azul) → evidência contra EPB
+
+    Gera um painel com 4 visualizações:
+      1. Imagem + overlay SHAP
+      2. Mapa SHAP com sinal (vermelho=EPB, azul=não-EPB)
+      3. |SHAP| — magnitude da importância
+      4. Erro de reconstrução 2DPCA (método anterior, para comparação)
+
+    Args:
+        system: EPBRecognitionSystem treinado
+        X_sample: Imagem pré-processada (2D array)
+        y_sample: Label real (0 ou 1)
+        X_background: Imagens de referência para SHAP (N, H, W), tipicamente X_train
+        filename: Nome do ficheiro da imagem (opcional)
+        method: 'tree' (rápido, usa XGBoost) ou 'kernel' (preciso, usa ensemble)
+        image_folder: Pasta onde procurar a imagem original do disco
+
+    Returns:
+        shap_map: Mapa SHAP no espaço da imagem (H, W)
+    """
+    # 1. Calcula SHAP
+    shap_map, _ = system.get_shap_importance(
+        X_sample, X_background, method=method
+    )
+    abs_shap_map = np.abs(shap_map)
+
+    # 2. Importância antiga (erro de reconstrução)
+    old_importance, _ = system.get_feature_importance(X_sample)
+
+    # 3. Predição
+    prob = system.predict_proba(X_sample.reshape(1, *X_sample.shape))[0]
+    pred = np.argmax(prob)
+
+    # 4. Análise textual
+    print(f"\n{'='*70}")
+    print(f"🔬 ANÁLISE SHAP — Importância Real para Classificação")
+    print(f"{'='*70}")
+    print(f"\n📸 Imagem: {filename or 'N/A'}")
+    print(f"   • Classe real: {'EPB' if y_sample == 1 else 'Sem EPB'}")
+    print(f"   • Predição: {'EPB' if pred == 1 else 'Sem EPB'} ({prob[1]*100:.1f}%)")
+    print(f"   • Método SHAP: {'TreeExplainer (tree-based)' if method == 'tree' else 'KernelExplainer (Ensemble)'}")
+
+    # Análise por quadrante
+    H, W = shap_map.shape
+    quadrants = {
+        'Superior Esquerdo': (slice(None, H // 2), slice(None, W // 2)),
+        'Superior Direito':  (slice(None, H // 2), slice(W // 2, None)),
+        'Inferior Esquerdo': (slice(H // 2, None), slice(None, W // 2)),
+        'Inferior Direito':  (slice(H // 2, None), slice(W // 2, None)),
+    }
+
+    quadrant_values = {}
+    for region, (rs, cs) in quadrants.items():
+        quadrant_values[region] = (
+            abs_shap_map[rs, cs].sum(),
+            shap_map[rs, cs].mean(),
+        )
+
+    total_abs = abs_shap_map.sum()
+    print(f"\n📊 Contribuição SHAP por quadrante:")
+    for region in sorted(quadrant_values,
+                         key=lambda r: quadrant_values[r][0], reverse=True):
+        val, mean_signed = quadrant_values[region]
+        pct = (val / total_abs * 100) if total_abs > 0 else 0
+        dir_str = '↑ EPB' if mean_signed > 0 else '↓ Sem EPB'
+        print(f"   • {region}: {pct:.1f}% ({dir_str})")
+
+    # Correlação entre SHAP e erro de reconstrução
+    corr, _ = spearmanr(abs_shap_map.ravel(), old_importance.ravel())
+    print(f"\n📐 Correlação |SHAP| vs. Erro de Reconstrução: {corr:.3f} (Spearman)")
+    if corr > 0.7:
+        print(f"   → Alta correlação: o erro de reconstrução já refletia a decisão")
+    elif corr > 0.4:
+        print(f"   → Correlação moderada: SHAP revela regiões adicionais")
+    else:
+        print(f"   → Baixa correlação: SHAP e reconstrução focam em regiões distintas")
+
+    # Interpretação física
+    print(f"\n💡 Interpretação:")
+    if pred == 1:
+        print(f"   As regiões vermelhas no mapa SHAP mostram onde o modelo")
+        print(f"   encontra evidência de EPB (estruturas verticais, deplecções).")
+    else:
+        print(f"   As regiões azuis no mapa SHAP mostram evidência de ionosfera")
+        print(f"   quieta (ausência de estruturas irregulares).")
+
+    # 5. Visualização — 4 painéis
+    fig, axes = plt.subplots(1, 4, figsize=(22, 5))
+
+    # Painel 1: Imagem com overlay SHAP
+    axes[0].imshow(X_sample, cmap='gray')
+    axes[0].imshow(abs_shap_map, cmap='hot', alpha=0.5)
+    axes[0].set_title('Imagem + SHAP overlay', fontsize=11, fontweight='bold')
+    axes[0].axis('off')
+
+    # Painel 2: SHAP com sinal (colormap divergente)
+    vmax = max(abs(shap_map.min()), abs(shap_map.max()))
+    if vmax == 0:
+        vmax = 1e-10
+    im1 = axes[1].imshow(shap_map, cmap='RdBu_r', vmin=-vmax, vmax=vmax)
+    axes[1].set_title('Atribuição SHAP\n(🔴 EPB  |  🔵 Sem EPB)',
+                      fontsize=11, fontweight='bold')
+    axes[1].axis('off')
+    plt.colorbar(im1, ax=axes[1], fraction=0.046, label='SHAP value')
+
+    # Painel 3: |SHAP| — magnitude
+    im2 = axes[2].imshow(abs_shap_map, cmap='hot')
+    axes[2].set_title('|SHAP| — Magnitude\nda Importância', fontsize=11, fontweight='bold')
+    axes[2].axis('off')
+    plt.colorbar(im2, ax=axes[2], fraction=0.046, label='|SHAP|')
+
+    # Painel 4: Erro de reconstrução (método anterior)
+    im3 = axes[3].imshow(old_importance, cmap='hot')
+    axes[3].set_title('Erro de Reconstrução\n(método anterior)', fontsize=11, fontweight='bold')
+    axes[3].axis('off')
+    plt.colorbar(im3, ax=axes[3], fraction=0.046, label='|Original − Reconstruída|')
+
+    suptitle = (f'SHAP: {"EPB" if y_sample == 1 else "Sem EPB"} '
+                f'(Pred: {"EPB" if pred == 1 else "Sem EPB"}, {prob[1]*100:.1f}%)'
+                f'{" — " + filename if filename else ""}')
+    fig.suptitle(suptitle, fontsize=13, fontweight='bold')
+    plt.tight_layout()
+    plt.show()
+
+    return shap_map
