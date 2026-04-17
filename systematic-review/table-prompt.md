@@ -4,7 +4,8 @@ Analyze the provided documents and extract ONLY relevant information for a syste
 
 For each article, fill in the following structure:
 
-- Author(s):
+Author(s):
+
 - Year:
 - Study objective:
 - Problem type (classification, detection, prediction, etc.):
@@ -15,7 +16,6 @@ For each article, fill in the following structure:
 - Main results:
 - Study limitations:
 
-
 Rules:
 
 - Be objective and direct
@@ -25,6 +25,6 @@ Rules:
 
 ---
 
-After extracting the information, convert the extracted information into a table with the columns:
+Convert the previously extracted information into a table with the following columns:
 
-| Autor | Ano | Objetivo | Tipo de Problema | Dataset | Técnica ML | Métrica | Resultado | Limitação |
+Author | Year | Objective | Problem Type | Dataset | ML Technique | Metric | Result | Limitation
