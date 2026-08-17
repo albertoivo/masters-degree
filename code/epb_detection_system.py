@@ -40,6 +40,29 @@ import joblib
 
 
 @dataclass
+class SkyQualityResult:
+    """Resultado da análise de qualidade de céu e detecção de nuvens (Estágio 1 - QC)."""
+    condition: str          # 'CLEAR', 'CLOUDY', 'DEGRADED'
+    is_valid_sky: bool      # True se apto para análise ionosférica
+    star_pixels: int        # Picos de alta frequência correspondentes a estrelas
+    raw_mean: float         # Intensidade média da imagem bruta
+    raw_std: float          # Desvio padrão bruto da imagem
+    confidence_qc: float    # Confiança da classificação de céu [0, 1]
+    reason: str             # Explicação diagnóstica do estado
+
+
+@dataclass
+class CascadedPredictionResult:
+    """Resultado da predição em cascata (Estágio 1 QC + Estágio 2 2DPCA)."""
+    qc: SkyQualityResult
+    has_epb: Optional[int]       # 1 (EPB), 0 (No EPB), None (se Céu Nublado)
+    prob_epb: float              # Probabilidade de EPB (0.0 se nublado)
+    status: str                  # 'EPB_DETECTED', 'QUIET_CLEAR', 'CLOUDY_OBSCURED', 'DEGRADED_EPB', 'DEGRADED_QUIET'
+    status_label: str            # Texto amigável em português
+    is_reliable: bool            # True se a classificação de EPB é confiável
+
+
+@dataclass
 class EPBModelData:
     """Estrutura validada para persistência do modelo treinado."""
     version: str
@@ -345,6 +368,98 @@ def temporal_train_test_split(
                        "Considere adicionar mais noites de observação.")
 
     return X_train, X_test, y_train, y_test, files_train, files_test
+
+
+def detect_stars(
+    img_raw: np.ndarray,
+    sigma: float = 2.0,
+    threshold_diff: float = 8.0,
+    min_intensity: float = 30.0
+) -> Tuple[int, np.ndarray]:
+    """
+    Detecta fontes pontuais brilhantes de alta frequência (estrelas) no campo de visão.
+    
+    Estrelas no céu noturno operam como testemunhas da transparência troposférica:
+    - Céu límpido: centenas a milhares de picos estelares pontuais são detectados.
+    - Céu nublado/obscurecido: as nuvens atenuam/bloqueiam as estrelas, derrubando a contagem.
+    
+    Args:
+        img_raw: Imagem em escala de cinza (uint8 ou float [0, 255])
+        sigma: Desvio padrão do filtro gaussiano para modelar fundo difuso
+        threshold_diff: Diferença mínima de intensidade para considerar pico estelar
+        min_intensity: Brilho absoluto mínimo para evitar ruído térmico em áreas pretas
+        
+    Returns:
+        star_pixels: Quantidade de pixels pertencentes a fontes estelares
+        star_mask: Máscara binária booleana com as estrelas identificadas
+    """
+    img_f = img_raw.astype(np.float32)
+    if img_f.max() <= 1.0:
+        img_f = img_f * 255.0
+        
+    smooth = gaussian_filter(img_f, sigma=sigma)
+    high_freq = img_f - smooth
+    
+    star_mask = (high_freq > threshold_diff) & (img_f > min_intensity)
+    star_pixels = int(np.sum(star_mask))
+    
+    return star_pixels, star_mask
+
+
+def assess_sky_quality(
+    img_raw: np.ndarray,
+    threshold_stars: int = 5500,
+    min_mean_brightness: float = 35.0,
+    degraded_stars: int = 7500
+) -> SkyQualityResult:
+    """
+    Avalia a condição do céu e a presença de nuvens (Estágio 1 - Quality Control).
+    
+    Analisa a transparência óptica antes da detecção ionosférica, evitando que imagens
+    obscurecidas por nuvens gerem falsos positivos causados pelo CLAHE.
+    
+    Args:
+        img_raw: Imagem bruta em escala de cinza (uint8 ou float)
+        threshold_stars: Limiar mínimo de pixels de estrelas para validar céu limpo
+        min_mean_brightness: Intensidade média mínima para descartar céu totalmente encoberto
+        degraded_stars: Limiar para alerta de visibilidade intermediária / degradada
+        
+    Returns:
+        SkyQualityResult com condição ('CLEAR', 'CLOUDY', 'DEGRADED'), métricas e validação.
+    """
+    img_f = img_raw.astype(np.float32)
+    if img_f.max() <= 1.0:
+        img_f = img_f * 255.0
+        
+    star_pixels, _ = detect_stars(img_f)
+    raw_mean = float(np.mean(img_f))
+    raw_std = float(np.std(img_f))
+    
+    if raw_mean < min_mean_brightness or star_pixels < threshold_stars:
+        condition = 'CLOUDY'
+        is_valid_sky = False
+        confidence_qc = max(0.0, 1.0 - (star_pixels / max(threshold_stars, 1)))
+        reason = f"Céu nublado / Obstruído (Estrelas: {star_pixels}, Brilho médio: {raw_mean:.1f})"
+    elif star_pixels < degraded_stars:
+        condition = 'DEGRADED'
+        is_valid_sky = True
+        confidence_qc = 0.5 + 0.5 * ((star_pixels - threshold_stars) / max(degraded_stars - threshold_stars, 1))
+        reason = f"Céu parcialmente limpo / Visibilidade degradada (Estrelas: {star_pixels}, Brilho médio: {raw_mean:.1f})"
+    else:
+        condition = 'CLEAR'
+        is_valid_sky = True
+        confidence_qc = min(1.0, 0.8 + 0.2 * (star_pixels / max(degraded_stars * 2, 1)))
+        reason = f"Céu limpo com alta visibilidade (Estrelas: {star_pixels}, Brilho médio: {raw_mean:.1f})"
+        
+    return SkyQualityResult(
+        condition=condition,
+        is_valid_sky=is_valid_sky,
+        star_pixels=star_pixels,
+        raw_mean=raw_mean,
+        raw_std=raw_std,
+        confidence_qc=confidence_qc,
+        reason=reason
+    )
 
 
 def preprocess_epb_image(img: np.ndarray, apply_background_removal: bool = True, enhance_contrast: bool = True) -> np.ndarray:
@@ -1007,6 +1122,67 @@ class EPBRecognitionSystem:
         features_test = self.scaler.transform(features_test)
         return self.pipeline_.predict_proba(features_test)
     
+    def predict_cascaded(self, img_raw: np.ndarray, target_size: Tuple[int, int] = (64, 64),
+                         threshold_stars: int = 5500, min_mean_brightness: float = 35.0) -> CascadedPredictionResult:
+        """
+        Predição em cascata com controle de qualidade de céu (QC + 2DPCA).
+        
+        Args:
+            img_raw: Imagem bruta (2D array, resolução original ou redimensionada)
+            target_size: Dimensão esperada pelo modelo 2DPCA
+            threshold_stars: Limiar de estrelas para validação de céu limpo
+            min_mean_brightness: Brilho médio mínimo para céu aberto
+            
+        Returns:
+            CascadedPredictionResult com status, probabilidades e diagnóstico QC.
+        """
+        qc = assess_sky_quality(img_raw, threshold_stars=threshold_stars,
+                                min_mean_brightness=min_mean_brightness)
+        
+        # Se céu estiver nublado/obstruído, evita inferência errônea
+        if not qc.is_valid_sky:
+            return CascadedPredictionResult(
+                qc=qc,
+                has_epb=None,
+                prob_epb=0.0,
+                status='CLOUDY_OBSCURED',
+                status_label='Céu Nublado / Obstruído',
+                is_reliable=False
+            )
+            
+        # Céu válido: pré-processa e infere com o ensemble 2DPCA
+        if img_raw.shape != target_size:
+            img_resized = np.array(Image.fromarray(img_raw).resize(target_size))
+        else:
+            img_resized = img_raw
+            
+        img_prep = preprocess_epb_image(img_resized)
+        prob = float(self.predict_proba(img_prep[np.newaxis, ...])[0, 1])
+        has_epb = int(prob >= 0.5)
+        
+        if qc.condition == 'DEGRADED':
+            status = 'DEGRADED_EPB' if has_epb == 1 else 'DEGRADED_QUIET'
+            status_label = "EPB Detectada (Visibilidade Parcial)" if has_epb == 1 else "Céu Quieto (Visibilidade Parcial)"
+            is_reliable = False
+        else:
+            status = 'EPB_DETECTED' if has_epb == 1 else 'QUIET_CLEAR'
+            status_label = "Bolha de Plasma (EPB) Detectada" if has_epb == 1 else "Céu Limpo Sem EPB (Quieto)"
+            is_reliable = True
+            
+        return CascadedPredictionResult(
+            qc=qc,
+            has_epb=has_epb,
+            prob_epb=prob,
+            status=status,
+            status_label=status_label,
+            is_reliable=is_reliable
+        )
+
+    def predict_proba_cascaded(self, img_raw: np.ndarray, target_size: Tuple[int, int] = (64, 64)) -> Tuple[float, SkyQualityResult]:
+        """Retorna (prob_epb, SkyQualityResult) via inferência em cascata."""
+        res = self.predict_cascaded(img_raw, target_size=target_size)
+        return res.prob_epb, res.qc
+    
     def get_feature_importance(self, X_sample: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         Analisa quais regiões da imagem são mais importantes
@@ -1178,7 +1354,7 @@ def plot_classification_examples(X_test: np.ndarray, y_test: np.ndarray,
         
         true_label = "EPB" if y_test[i] == 1 else "No EPB"
         pred_label = "EPB" if y_pred[i] == 1 else "No EPB"
-        prob = y_proba[i, 1] * 100
+        prob = (y_proba[i, 1] if y_proba.ndim == 2 else y_proba[i]) * 100
         
         color = 'green' if y_test[i] == y_pred[i] else 'red'
         title = f'Real: {true_label}\nPred: {pred_label} ({prob:.0f}%)'
@@ -1249,9 +1425,11 @@ def plot_performance_metrics(y_test: np.ndarray, y_proba: np.ndarray, axes=None)
     if axes is None:
         fig, axes = plt.subplots(1, 3, figsize=(18, 5))
         
+    y_p1 = y_proba[:, 1] if y_proba.ndim == 2 else y_proba
+    
     # ROC Curve
     ax = axes[0]
-    fpr, tpr, _ = roc_curve(y_test, y_proba[:, 1])
+    fpr, tpr, _ = roc_curve(y_test, y_p1)
     roc_auc = auc(fpr, tpr)
     ax.plot(fpr, tpr, color='darkorange', lw=2, 
             label=f'ROC (AUC = {roc_auc:.3f})')
@@ -1265,7 +1443,7 @@ def plot_performance_metrics(y_test: np.ndarray, y_proba: np.ndarray, axes=None)
     
     # Precision-Recall Curve
     ax = axes[1]
-    precision, recall, _ = precision_recall_curve(y_test, y_proba[:, 1])
+    precision, recall, _ = precision_recall_curve(y_test, y_p1)
     pr_auc = auc(recall, precision)
     ax.plot(recall, precision, color='purple', lw=2,
             label=f'PR (AUC = {pr_auc:.3f})')
@@ -1277,8 +1455,8 @@ def plot_performance_metrics(y_test: np.ndarray, y_proba: np.ndarray, axes=None)
     
     # Distribuição de probabilidades
     ax = axes[2]
-    epb_probs = y_proba[y_test == 1, 1]
-    no_epb_probs = y_proba[y_test == 0, 1]
+    epb_probs = y_p1[y_test == 1]
+    no_epb_probs = y_p1[y_test == 0]
     
     ax.hist(no_epb_probs, bins=20, alpha=0.6, label='No EPB (real)', 
             color='blue', density=True)
@@ -1572,12 +1750,15 @@ def explain_feature_importance_3(system: 'EPBRecognitionSystem', X_sample: np.nd
 
 def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
                               target_size: Tuple[int, int] = (64, 64),
-                              show_thumbnails: bool = True, thumbnail_interval: int = 10) -> Optional[pd.DataFrame]:
+                              show_thumbnails: bool = True, thumbnail_interval: int = 10,
+                              use_qc: bool = True, threshold_stars: int = 5500,
+                              min_mean_brightness: float = 35.0) -> Optional[pd.DataFrame]:
     """
-    Analisa uma sequência temporal de imagens e plota a evolução da probabilidade de EPB.
+    Analisa uma sequência temporal de imagens com suporte a controle de qualidade (QC) e detecção de EPB.
     
     Esta função é útil para:
     - Verificar se o modelo detecta EPBs antes de serem visíveis
+    - Filtrar noites/períodos nublados (Estágio 1 - QC) para evitar falsos positivos
     - Analisar a evolução temporal de eventos de EPB
     - Identificar o momento de início/fim de perturbações ionosféricas
     
@@ -1587,12 +1768,15 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
         target_size: Tamanho para redimensionar imagens (deve ser igual ao treino)
         show_thumbnails: Se True, mostra thumbnails das imagens no gráfico
         thumbnail_interval: Intervalo entre thumbnails (ex: 10 = mostra a cada 10 imagens)
+        use_qc: Se True, aplica Estágio 1 (QC) para descartar imagens nubladas
+        threshold_stars: Limiar de estrelas para validação de céu limpo
+        min_mean_brightness: Brilho médio mínimo para descartar céu totalmente encoberto
     
     Returns:
-        DataFrame com timestamps, probabilidades e predições
+        DataFrame com timestamps, probabilidades, predições e diagnósticos QC
     """
     print("="*70)
-    print("🕐 TEMPORAL SEQUENCE ANALYSIS OF IMAGES")
+    print("🕐 TEMPORAL SEQUENCE ANALYSIS OF IMAGES (Cascaded QC + 2DPCA)")
     print("="*70)
     
     image_folder = Path(image_folder)
@@ -1606,6 +1790,7 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
     
     print(f"📂 Folder: {image_folder}")
     print(f"📸 Total images: {len(image_files)}")
+    print(f"🛡️  Filtro de Qualidade de Céu (QC): {'Ativado' if use_qc else 'Desativado'}")
     
     # Processa cada imagem
     results = []
@@ -1621,14 +1806,34 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
             else:
                 timestamp = None
             
-            # Carrega e processa imagem
-            img = Image.open(img_path).convert('L')
-            img = np.array(img.resize(target_size))
-            img_processed = preprocess_epb_image(img)
+            # Carrega imagem bruta em resolução total para análise de estrelas
+            img_pil = Image.open(img_path).convert('L')
+            img_raw = np.array(img_pil)
             
-            # Faz predição
-            prob = system.predict_proba(img_processed.reshape(1, *img_processed.shape))[0]
-            pred = system.predict(img_processed.reshape(1, *img_processed.shape))[0]
+            if use_qc:
+                qc = assess_sky_quality(img_raw, threshold_stars=threshold_stars,
+                                        min_mean_brightness=min_mean_brightness)
+                
+                if not qc.is_valid_sky:
+                    prob = [1.0, 0.0]
+                    pred = 0
+                    pred_label = 'Céu Nublado (QC)'
+                    state_code = 2  # 0=Quiet, 1=EPB, 2=Cloudy
+                else:
+                    img_resized = np.array(img_pil.resize(target_size))
+                    img_processed = preprocess_epb_image(img_resized)
+                    prob = system.predict_proba(img_processed.reshape(1, *img_processed.shape))[0]
+                    pred = int(prob[1] >= 0.5)
+                    pred_label = 'EPB' if pred == 1 else 'No EPB'
+                    state_code = 1 if pred == 1 else 0
+            else:
+                qc = SkyQualityResult('NOT_EVALUATED', True, 0, float(np.mean(img_raw)), float(np.std(img_raw)), 1.0, '')
+                img_resized = np.array(img_pil.resize(target_size))
+                img_processed = preprocess_epb_image(img_resized)
+                prob = system.predict_proba(img_processed.reshape(1, *img_processed.shape))[0]
+                pred = int(prob[1] >= 0.5)
+                pred_label = 'EPB' if pred == 1 else 'No EPB'
+                state_code = 1 if pred == 1 else 0
             
             results.append({
                 'filename': img_path.name,
@@ -1637,7 +1842,12 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
                 'prob_no_epb': prob[0],
                 'prob_epb': prob[1],
                 'prediction': pred,
-                'prediction_label': 'EPB' if pred == 1 else 'No EPB'
+                'prediction_label': pred_label,
+                'state_code': state_code,
+                'sky_condition': qc.condition,
+                'is_valid_sky': qc.is_valid_sky,
+                'star_pixels': qc.star_pixels,
+                'raw_mean': qc.raw_mean,
             })
             
         except Exception as e:
@@ -1651,19 +1861,20 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
         return None
     
     # Estatísticas
-    n_epb = (df['prediction'] == 1).sum()
-    n_no_epb = (df['prediction'] == 0).sum()
+    n_epb = ((df['prediction'] == 1) & (df['state_code'] == 1)).sum()
+    n_no_epb = ((df['prediction'] == 0) & (df['state_code'] == 0)).sum()
+    n_cloudy = (df['state_code'] == 2).sum()
     
     print(f"\n📊 Prediction summary:")
-    print(f"   • With EPB: {n_epb} images ({n_epb/len(df)*100:.1f}%)")
-    print(f"   • No EPB: {n_no_epb} images ({n_no_epb/len(df)*100:.1f}%)")
-    print(f"   • Average EPB probability: {df['prob_epb'].mean()*100:.1f}%")
-    print(f"   • Maximum EPB probability: {df['prob_epb'].max()*100:.1f}%")
-    print(f"   • Minimum EPB probability: {df['prob_epb'].min()*100:.1f}%")
+    print(f"   • Céu Limpo com EPB: {n_epb} imagens ({n_epb/len(df)*100:.1f}%)")
+    print(f"   • Céu Limpo Sem EPB: {n_no_epb} imagens ({n_no_epb/len(df)*100:.1f}%)")
+    if use_qc:
+        print(f"   • Céu Nublado / Obstruído: {n_cloudy} imagens ({n_cloudy/len(df)*100:.1f}%)")
+    print(f"   • Average EPB probability (Céu Limpo): {df[df['state_code'] != 2]['prob_epb'].mean()*100:.1f}%" if (len(df) - n_cloudy) > 0 else "   • Sem imagens de céu limpo")
     
     # Identifica transições (mudanças de estado)
-    df['state_change'] = df['prediction'].diff().fillna(0).abs()
-    transitions = df[df['state_change'] == 1]
+    df['state_change'] = df['state_code'].diff().fillna(0).abs()
+    transitions = df[df['state_change'] > 0]
     
     if len(transitions) > 0:
         print(f"\n🔄 Detected transitions ({len(transitions)}):")
@@ -1675,11 +1886,9 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
     # VISUALIZAÇÃO ELEGANTE - Estilo moderno e profissional
     # =========================================================================
     
-    # Configuração de estilo (contexto isolado para não afetar outros gráficos)
     _rc_backup = plt.rcParams.copy()
     plt.style.use('default')
     
-    # Paleta de cores elegante
     COLORS = {
         'background': '#0d1117',
         'card_bg': '#161b22',
@@ -1695,9 +1904,9 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
         'grid': '#30363d',
         'epb_positive': '#f85149',
         'epb_negative': '#3fb950',
+        'cloudy': '#8b949e',
     }
     
-    # Cria figura com fundo escuro
     fig = plt.figure(figsize=(18, 11), facecolor=COLORS['background'])
     
     if show_thumbnails:
@@ -1721,24 +1930,28 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
     
     prob_values = df['prob_epb'] * 100
     
-    # Gradiente de preenchimento usando múltiplas camadas
-    from matplotlib.colors import LinearSegmentedColormap
-    
-    # Cria preenchimento com gradiente simulado
+    # Preenchimento
     ax1.fill_between(x_values, 0, prob_values, alpha=0.15, color=COLORS['fill_gradient_top'])
     ax1.fill_between(x_values, 0, prob_values * 0.7, alpha=0.15, color=COLORS['fill_gradient_bottom'])
-    ax1.fill_between(x_values, 0, prob_values * 0.4, alpha=0.15, color=COLORS['fill_gradient_bottom'])
     
-    # Linha principal com efeito de brilho (glow)
-    ax1.plot(x_values, prob_values, color=COLORS['line_main'], linewidth=3.5, alpha=0.3)  # Glow
+    # Linha principal
+    ax1.plot(x_values, prob_values, color=COLORS['line_main'], linewidth=3.5, alpha=0.3)
     ax1.plot(x_values, prob_values, color=COLORS['line_main'], linewidth=2, 
-             label='EPB Probability', zorder=5)
+             label='EPB Probability (Clear Sky)', zorder=5)
     
-    # Pontos nos dados com efeito sutil
-    scatter_colors = [COLORS['epb_positive'] if p > 50 else COLORS['epb_negative'] for p in prob_values]
-    ax1.scatter(x_values, prob_values, c=scatter_colors, s=8, alpha=0.6, zorder=6, edgecolors='none')
+    # Pontos coloridos por estado
+    point_colors = []
+    for sc, p in zip(df['state_code'], prob_values):
+        if sc == 2:
+            point_colors.append(COLORS['cloudy'])
+        elif p >= 50:
+            point_colors.append(COLORS['epb_positive'])
+        else:
+            point_colors.append(COLORS['epb_negative'])
+            
+    ax1.scatter(x_values, prob_values, c=point_colors, s=12, alpha=0.8, zorder=6, edgecolors='none')
     
-    # Linhas de referência com estilo elegante
+    # Linhas de referência
     ax1.axhline(y=50, color=COLORS['threshold'], linestyle='--', linewidth=2, 
                 label='Threshold (50%)', alpha=0.9)
     ax1.axhline(y=70, color=COLORS['confidence_medium'], linestyle=':', linewidth=1.8, 
@@ -1746,7 +1959,7 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
     ax1.axhline(y=90, color=COLORS['confidence_high'], linestyle=':', linewidth=1.8, 
                 label='High Confidence (90%)', alpha=0.8)
     
-    # Marca transições com estilo sutil
+    # Marca transições
     for _, row in transitions.iterrows():
         if df['timestamp'].notna().all():
             x_pos = row['timestamp']
@@ -1754,7 +1967,6 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
             x_pos = df[df['filename'] == row['filename']].index[0]
         ax1.axvline(x=x_pos, color=COLORS['transition'], linestyle='-', alpha=0.4, linewidth=1.5)
     
-    # Estilização dos eixos
     ax1.set_xlabel(x_label, fontsize=12, color=COLORS['text'], fontweight='medium', labelpad=10)
     ax1.set_ylabel('EPB Probability (%)', fontsize=12, color=COLORS['text'], 
                    fontweight='medium', labelpad=10)
@@ -1762,43 +1974,47 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
     ax1.set_xlim(x_values.iloc[0] if hasattr(x_values, 'iloc') else x_values[0], 
                  x_values.iloc[-1] if hasattr(x_values, 'iloc') else x_values[-1])
     
-    # Grid elegante
     ax1.grid(True, linestyle='-', alpha=0.2, color=COLORS['grid'], linewidth=0.5)
     ax1.set_axisbelow(True)
     
-    # Personaliza ticks
     ax1.tick_params(axis='both', colors=COLORS['text_secondary'], labelsize=10)
     for spine in ax1.spines.values():
         spine.set_color(COLORS['grid'])
         spine.set_linewidth(0.5)
     
-    # Rotaciona labels do eixo X se forem timestamps
     if df['timestamp'].notna().all():
         plt.setp(ax1.xaxis.get_majorticklabels(), rotation=45, ha='right')
     
-    # Legenda elegante - posicionada fora da área do gráfico
     legend = ax1.legend(loc='upper left', fontsize=10, framealpha=0.95,
                         facecolor=COLORS['card_bg'], edgecolor=COLORS['grid'],
                         labelcolor=COLORS['text'], bbox_to_anchor=(0.01, 0.99))
     legend.get_frame().set_linewidth(0.5)
     
-    # Título do subplot
-    ax1.set_title('Temporal Evolution of EPB Probability', fontsize=14, 
+    ax1.set_title('Temporal Evolution of EPB Probability (with Sky Quality Gatekeeper)', fontsize=14, 
                   color=COLORS['text'], fontweight='bold', pad=15, loc='left')
     
     # -------------------------------------------------------------------------
-    # GRÁFICO SECUNDÁRIO: Timeline de classificação
+    # GRÁFICO SECUNDÁRIO: Timeline de classificação (3 Estados)
     # -------------------------------------------------------------------------
     ax2 = fig.add_subplot(gs[1], facecolor=COLORS['card_bg'])
     
-    # Cria barras com cores baseadas na predição
-    bar_colors = [COLORS['epb_negative'] if p == 0 else COLORS['epb_positive'] for p in df['prediction']]
+    bar_colors = []
+    for sc in df['state_code']:
+        if sc == 2:
+            bar_colors.append(COLORS['cloudy'])
+        elif sc == 1:
+            bar_colors.append(COLORS['epb_positive'])
+        else:
+            bar_colors.append(COLORS['epb_negative'])
+            
     bars = ax2.bar(range(len(df)), [1] * len(df), color=bar_colors, alpha=0.85, width=1.0, 
                    edgecolor='none')
     
-    # Adiciona indicador de intensidade (opacidade baseada na probabilidade)
-    for i, (bar, prob) in enumerate(zip(bars, df['prob_epb'])):
-        bar.set_alpha(0.3 + 0.6 * abs(prob - 0.5) * 2)  # Mais opaco = mais certeza
+    for bar, sc, prob in zip(bars, df['state_code'], df['prob_epb']):
+        if sc == 2:
+            bar.set_alpha(0.6)
+        else:
+            bar.set_alpha(0.3 + 0.6 * abs(prob - 0.5) * 2)
     
     ax2.set_ylabel('Status', fontsize=11, color=COLORS['text'], fontweight='medium', labelpad=10)
     ax2.set_yticks([0.5])
@@ -1808,21 +2024,19 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
     ax2.set_xlim(-0.5, len(df) - 0.5)
     ax2.set_ylim(0, 1)
     
-    # Estilização
     ax2.tick_params(axis='both', colors=COLORS['text_secondary'], labelsize=9)
     for spine in ax2.spines.values():
         spine.set_color(COLORS['grid'])
         spine.set_linewidth(0.5)
     
-    # Título com legenda integrada
-    ax2.set_title('Classification Over Time', fontsize=12, 
+    ax2.set_title('Sky Condition & EPB Classification Timeline', fontsize=12, 
                   color=COLORS['text'], fontweight='bold', pad=10, loc='left')
     
-    # Adiciona mini-legenda no gráfico
     from matplotlib.patches import Patch
     legend_elements = [
-        Patch(facecolor=COLORS['epb_negative'], alpha=0.8, label='No EPB'),
-        Patch(facecolor=COLORS['epb_positive'], alpha=0.8, label='With EPB')
+        Patch(facecolor=COLORS['epb_negative'], alpha=0.85, label='Céu Limpo Sem EPB'),
+        Patch(facecolor=COLORS['epb_positive'], alpha=0.85, label='Céu Limpo Com EPB'),
+        Patch(facecolor=COLORS['cloudy'], alpha=0.85, label='Céu Nublado / Obstruído (QC)'),
     ]
     ax2.legend(handles=legend_elements, loc='upper right', fontsize=9, framealpha=0.9,
                facecolor=COLORS['card_bg'], edgecolor=COLORS['grid'], labelcolor=COLORS['text'])
@@ -1836,7 +2050,6 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
         ax3.set_title('Image Sample', fontsize=12, 
                       color=COLORS['text'], fontweight='bold', pad=10, loc='left')
         
-        # Seleciona imagens para mostrar
         indices = list(range(0, len(df), thumbnail_interval))
         if len(indices) > 14:
             step = len(indices) // 14
@@ -1851,7 +2064,6 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
                 img = Image.open(row_data['filepath']).convert('L')
                 img = np.array(img.resize((64, 64)))
                 
-                # Cria sub-eixo para thumbnail
                 left = i * thumb_width + 0.005
                 bottom = 0.15
                 width = thumb_width - 0.01
@@ -1861,16 +2073,23 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
                 ax_thumb.imshow(img, cmap='gray', aspect='equal')
                 ax_thumb.axis('off')
                 
-                # Borda colorida baseada na classificação
-                border_color = COLORS['epb_positive'] if row_data['prediction'] == 1 else COLORS['epb_negative']
+                if row_data['state_code'] == 2:
+                    border_color = COLORS['cloudy']
+                elif row_data['prediction'] == 1:
+                    border_color = COLORS['epb_positive']
+                else:
+                    border_color = COLORS['epb_negative']
+                    
                 for spine in ax_thumb.spines.values():
                     spine.set_edgecolor(border_color)
                     spine.set_linewidth(2.5)
                     spine.set_visible(True)
                 
-                # Label com horário - estilo elegante
                 time_label = row_data['timestamp'].strftime('%H:%M') if row_data['timestamp'] else str(idx)
-                prob_label = f"{row_data['prob_epb']*100:.0f}%"
+                if row_data['state_code'] == 2:
+                    prob_label = "NUVEM"
+                else:
+                    prob_label = f"{row_data['prob_epb']*100:.0f}%"
                 
                 ax_thumb.text(0.5, -0.08, time_label, transform=ax_thumb.transAxes,
                              fontsize=8, color=COLORS['text'], ha='center', va='top',
@@ -2366,7 +2585,10 @@ def evaluate_kfold_cv(X: np.ndarray, y: np.ndarray,
                       n_folds: int = 5,
                       balance_method: str = 'smote',
                       use_augmentation: bool = True,
-                      augment_factor: int = 3) -> Tuple[plt.Figure, pd.DataFrame]:
+                      augment_factor: int = 3,
+                      ensemble_params: Optional[dict] = None,
+                      n_splits: Optional[int] = None,
+                      random_state: int = 42) -> Tuple[plt.Figure, pd.DataFrame]:
     """
     Avaliação com k-fold cross-validation estratificado do pipeline completo.
 
@@ -2381,12 +2603,18 @@ def evaluate_kfold_cv(X: np.ndarray, y: np.ndarray,
         balance_method: Método de balanceamento ('smote', 'undersample', 'combined')
         use_augmentation: Aplicar data augmentation no treino de cada fold
         augment_factor: Fator de augmentation
+        ensemble_params: Hiperparâmetros customizados para o ensemble
+        n_splits: Alias para n_folds
+        random_state: Seed para divisão estratificada
 
     Returns:
         fig: Figura com boxplots das métricas por fold
         df_results: DataFrame com métricas de cada fold
     """
-    skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=42)
+    if n_splits is not None:
+        n_folds = n_splits
+        
+    skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=random_state)
 
     fold_metrics = []
 
@@ -2412,6 +2640,7 @@ def evaluate_kfold_cv(X: np.ndarray, y: np.ndarray,
             n_components=n_components,
             balance_data=True,
             balance_method=balance_method,
+            ensemble_params=ensemble_params
         )
         sys_fold.fit(X_fold_train, y_fold_train)
 
@@ -2842,3 +3071,57 @@ def explain_shap_importance(system: 'EPBRecognitionSystem',
     plt.show()
 
     return shap_map
+
+
+def predict_with_qc(
+    system: 'EPBRecognitionSystem',
+    img_raw: np.ndarray,
+    target_size: Tuple[int, int] = (64, 64),
+    threshold_stars: int = 5500,
+    min_mean_brightness: float = 35.0
+) -> CascadedPredictionResult:
+    """
+    Executa a inferência completa em 2 estágios para uma única imagem bruta.
+    
+    Estágio 1: Controle de Qualidade (QC) - Detecta nuvens e avalia transparência.
+    Estágio 2: Detecção Ionosférica (2DPCA + Stacking) - Apenas se o céu for válido.
+    
+    Args:
+        system: Instância treinada de EPBRecognitionSystem.
+        img_raw: Imagem em escala de cinza (numpy array).
+        target_size: Resolução esperada pelo modelo (default: 64x64).
+        threshold_stars: Limiar de estrelas para validação.
+        min_mean_brightness: Brilho médio mínimo.
+        
+    Returns:
+        CascadedPredictionResult com status, probabilidades e diagnóstico.
+    """
+    return system.predict_cascaded(
+        img_raw,
+        target_size=target_size,
+        threshold_stars=threshold_stars,
+        min_mean_brightness=min_mean_brightness
+    )
+
+
+def analyze_temporal_sequence_with_qc(
+    system: 'EPBRecognitionSystem',
+    image_folder: str,
+    target_size: Tuple[int, int] = (64, 64),
+    show_thumbnails: bool = True,
+    thumbnail_interval: int = 10,
+    threshold_stars: int = 5500,
+    min_mean_brightness: float = 35.0
+) -> Optional[pd.DataFrame]:
+    """Alias explícito para analyze_temporal_sequence com use_qc=True."""
+    return analyze_temporal_sequence(
+        system=system,
+        image_folder=image_folder,
+        target_size=target_size,
+        show_thumbnails=show_thumbnails,
+        thumbnail_interval=thumbnail_interval,
+        use_qc=True,
+        threshold_stars=threshold_stars,
+        min_mean_brightness=min_mean_brightness
+    )
+

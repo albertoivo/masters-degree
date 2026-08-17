@@ -5,7 +5,7 @@ OUTPUT_FILE="../data/epb_labels.csv"
 
 # Create header if file doesn't exist
 if [ ! -f "$OUTPUT_FILE" ]; then
-    echo "filename,has_epb" > "$OUTPUT_FILE"
+    echo "filename,has_epb,cloudy,site,datetime,filter,kp,dst,moon_illumination,moon_alt,bz_gsm,f107" > "$OUTPUT_FILE"
     echo "✓ Created new CSV file: $OUTPUT_FILE"
 else
     echo "✓ Using existing CSV file: $OUTPUT_FILE"
@@ -33,7 +33,7 @@ if [ -d "../data/has-epb" ]; then
                 echo "  - Skipped: $filename (already exists)"
                 ((skipped_entries++))
             else
-                echo "$filename,1" >> "$OUTPUT_FILE"
+                echo "$filename,1,0,,,,,,,,," >> "$OUTPUT_FILE"
                 echo "  + Added: $filename (has EPB)"
                 ((new_entries++))
             fi
@@ -52,8 +52,27 @@ if [ -d "../data/no-epb" ]; then
                 echo "  - Skipped: $filename (already exists)"
                 ((skipped_entries++))
             else
-                echo "$filename,0" >> "$OUTPUT_FILE"
+                echo "$filename,0,0,,,,,,,,," >> "$OUTPUT_FILE"
                 echo "  + Added: $filename (no EPB)"
+                ((new_entries++))
+            fi
+        fi
+    done
+fi
+
+# Process cloudy directory
+if [ -d "../data/cloudy" ]; then
+    echo "Processing cloudy directory..."
+    for file in ../data/cloudy/*; do
+        if [ -f "$file" ]; then
+            filename=$(basename "$file")
+            
+            if entry_exists "$filename"; then
+                echo "  - Skipped: $filename (already exists)"
+                ((skipped_entries++))
+            else
+                echo "$filename,0,1,,,,,,,,," >> "$OUTPUT_FILE"
+                echo "  + Added: $filename (cloudy)"
                 ((new_entries++))
             fi
         fi
@@ -99,7 +118,21 @@ if [ -d "../data/no-epb" ]; then
     fi
 fi
 
+# Move images from cloudy to all-images
+moved_cloudy=0
+if [ -d "../data/cloudy" ]; then
+    moved_cloudy=$(find ../data/cloudy -type f | wc -l)
+    if [ $moved_cloudy -gt 0 ]; then
+        if mv ../data/cloudy/* "../data/all-images/" 2>/dev/null; then
+            echo "✓ Moved $moved_cloudy images from cloudy to all-images"
+        else
+            echo "✗ Failed to move images from cloudy"
+            moved_cloudy=0
+        fi
+    fi
+fi
+
 echo ""
 echo "=========================================="
-echo "Total images moved: $((moved_has_epb + moved_no_epb))"
+echo "Total images moved: $((moved_has_epb + moved_no_epb + moved_cloudy))"
 echo "=========================================="
