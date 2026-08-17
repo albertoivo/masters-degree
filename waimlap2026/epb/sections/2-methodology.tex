@@ -1,0 +1,26 @@
+\section{Methodology}\label{sec:methodology}
+
+The methodology for the automated detection of Equatorial Plasma Bubbles integrates physics informed image preprocessing, advanced feature extraction, and ensemble machine learning. This pipeline is built to reliably spot plasma bubble signatures in all sky airglow imagery while naturally filtering out environmental noise and class imbalance.
+
+\subsection{Dataset Acquisition}
+All optical imagery used in this research was sourced directly from the EMBRACE project, which stands for Estudo e Monitoramento Brasileiro do Clima Espacial and is maintained by the Brazilian National Institute for Space Research. This dataset gives us a continuous view of ionospheric conditions across the Brazilian sector, capturing everything from perfectly clear nights to intense bubble events.
+
+\subsection{Physics Informed Image Preprocessing}
+Raw optical images of the night sky rarely offer perfect viewing conditions. They are often skewed by shifting lunar phases or sensor gradients. To counter this, we apply a domain specific preprocessing pipeline before any machine learning takes place. First, we model and remove the background illumination using a large Gaussian filter with a standard deviation of 10. Subtracting this diffuse modeled light from the original image effectively clears out environmental biases. Next, we use Contrast Limited Adaptive Histogram Equalization with a clip limit of 0.03. This localized tweak makes the dark, vertical tears of plasma depletions stand out sharply against the night sky. Finally, normalizing all pixel intensities to a standard zero to one range keeps the math stable during feature extraction.
+
+\subsection{Data Augmentation and Balancing}
+Since clear skies heavily outnumber plasma bubble events in nocturnal observations, we faced a substantially imbalanced dataset. Left unchecked, a model would simply learn to predict a clear sky every time. We approached this issue using a dual strategy. During initial preprocessing, we oversample the minority class by applying a duplication multiplier to the images containing bubbles, being careful to preserve their structural integrity. Later, just before classifier training, we bring in the Synthetic Minority Over sampling Technique to interpolate artificial samples in the feature space. Together, these steps guarantee the algorithm trains on a balanced perspective.
+
+\subsection{Feature Extraction via 2DPCA}
+Most standard dimensionality reduction methods, like traditional Principal Component Analysis, require flattening a 2D image into a long 1D vector. This process inevitably tears apart the natural spatial correlations within the picture. To keep that crucial two dimensional structure intact without paying the heavy computational price of deep convolutional neural networks, we opted for Two Dimensional Principal Component Analysis. Because it works directly on the image matrices, our tests showed that keeping just the first five principal components was entirely sufficient to capture the core visual signatures of the bubbles. This cuts down the data size dramatically, lowering both the risk of overfitting and the overall processing time.
+
+\subsection{Stacking Ensemble Classifier}
+Rather than relying on a single algorithm to act as the core classification engine, we built a stacking ensemble architecture. This lets us borrow the unique strengths of several different learners at once. We train three distinct base classifiers side by side on the extracted features. We used a Support Vector Classifier with a Radial Basis Function kernel to draw complex decision boundaries. We also brought in an XGBoost Classifier for its strong non linear feature extraction and gradient boosting capabilities. Finally, a Random Forest Classifier was added to reduce variance by building an ensemble of decision trees based on random subspaces.
+
+The predictions from these three models feed into a Logistic Regression meta classifier, which essentially learns how to weigh their output to make the final call. Because our preprocessing and feature extraction steps complemented each other so well, the architecture reached strong classification performance immediately, letting us skip exhaustive hyperparameter tuning entirely.
+
+\subsection{Model Interpretability and Validation}
+We wanted to be certain the model was actually seeing physical features, rather than just exploiting random artifacts like camera borders. To achieve this, we integrated the SHapley Additive exPlanations framework to map out exactly which regions of an image drive the classifier decisions. We also tested the model over continuous clear sky sequences to ensure its prediction probabilities hold steady during long operational shifts.
+
+\subsection{Evaluation Metrics}
+Given the original imbalance in the data, relying on just one metric would not be enough. We evaluated the model using Accuracy, Sensitivity, Specificity, and the F1 Score. Sensitivity tells us how many actual bubbles we caught, ensuring we do not miss critical events. Specificity tracks how well we identified clear skies, keeping false positives in check. Finally, the F1 Score blends precision and sensitivity to give a clear, balanced picture of the overall robustness of the model.

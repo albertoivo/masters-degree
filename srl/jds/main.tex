@@ -1,0 +1,71 @@
+% The `linenumber` option is necessary for ease of reviewer referencing
+\documentclass[linenumber]{jdsart}
+
+\volume{0}
+\issue{0}
+\pubyear{2026}
+\articletype{research-article}
+\doi{0000}
+
+%% Local definitions
+%\newtheorem{thm}{Theorem}
+%\newtheorem{prop}{Proposition}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{Detecting Equatorial Plasma Bubbles with Machine Learning}
+
+\author[1]{\inits{A.}\fnms{Alberto} \snm{Vieira}\thanksref{t1}\ead{albertoivo@gmail.com}}
+\author[2]{\inits{C.}\fnms{Cosme} \snm{Figueiredo}}
+\author[2]{\inits{R.}\fnms{Ricardo} \snm{Buriti}}
+\author[1]{\inits{T.}\fnms{Tiago} \snm{Maritan}}
+\thankstext[type=corresp,id=t1]{Corresponding author.}
+\address[1]{Jo\~ao Pessoa-PB, \institution{Federal University of Paraiba}, \cny{Brazil}}
+\address[2]{Campina Grande-PB, \institution{Federal University of Campina Grande}, \cny{Brazil}}
+
+\input{sections/abstract}
+
+\begin{keywords}
+\kwd{Equatorial Plasma Bubbles}
+\kwd{EPB}
+\kwd{Machine Learning}
+\kwd{Space Weather}
+\kwd{Deep Learning}
+\kwd{All-Sky Imager}
+\kwd{Ionospheric Irregularities}
+\end{keywords}
+
+\end{frontmatter}
+
+\input{sections/introduction}
+\input{sections/methodology}
+\input{sections/results}
+\input{sections/discussion}
+\input{sections/conclusion}
+
+%% Supplementary Material
+%\begin{esm}
+%\esmtitle{Supplementary Material}
+%\esmdescription{}
+%\esmfilename{}
+%\end{esm}
+
+%% Appendices
+%\begin{appendix}
+%\input{sections/appendix}
+%\end{appendix}
+
+%% Acknowledgements
+%\begin{acknowledgement}
+%\end{acknowledgement}
+
+%% Funding
+%\begin{funding}
+%\end{funding}
+
+\bibliographystyle{jds2}
+\bibliography{biblio}
+
+\end{document}

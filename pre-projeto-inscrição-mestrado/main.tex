@@ -1,0 +1,83 @@
+\documentclass[
+   12pt,
+   a4paper,
+   twocolumn
+]{article}
+
+% Codificação e fontes
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+% Microtipografia
+\usepackage{microtype}
+
+% Idioma
+\usepackage[brazil]{babel}
+
+% Margens compactas para caber em 2 páginas
+\usepackage[top=2cm, bottom=2cm, left=1.8cm, right=1.8cm]{geometry}
+
+% Figuras
+\usepackage{graphicx}
+\graphicspath{{sections/figs/}}
+
+% Matemática
+\usepackage{amsmath, amssymb}
+
+% Listas compactas
+\usepackage{enumitem}
+\setlist{nosep, leftmargin=*}
+
+% Espaçamento entre parágrafos e seções compactos
+\usepackage{titlesec}
+\titlespacing*{\section}{0pt}{6pt}{3pt}
+\titlespacing*{\subsection}{0pt}{4pt}{2pt}
+\titleformat{\section}{\normalfont\bfseries\normalsize}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\bfseries\small}{\thesubsection.}{0.5em}{}
+
+% Sem indentação, com espaço entre parágrafos
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+
+% Citações
+\usepackage[numbers, sort&compress]{natbib}
+\bibliographystyle{unsrtnat}
+
+% Hiperlinks
+\usepackage{hyperref}
+\hypersetup{
+  pdftitle={Detecção Automática de Bolhas de Plasma Equatoriais em Imagens de Luminescência Atmosférica Usando Técnicas de Aprendizado de Máquina},
+  pdfauthor={Alberto Ivo da Costa Vieira},
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=blue
+}
+
+\begin{document}
+
+% ===== TÍTULO E AUTOR =====
+\twocolumn[{%
+\begin{center}
+{\large\bfseries DETECÇÃO AUTOMÁTICA DE BOLHAS DE PLASMA EQUATORIAIS EM IMAGENS DE LUMINESCÊNCIA ATMOSFÉRICA USANDO TÉCNICAS DE APRENDIZADO DE MÁQUINA\par}
+\vspace{6pt}
+{\normalsize Alberto Ivo da Costa Vieira\par}
+\vspace{12pt}
+\end{center}
+}]
+
+% ===== SEÇÕES =====
+\input{sections/introduction}
+\input{sections/objectives}
+\input{sections/methodology}
+\input{sections/results}
+\input{sections/conclusion}
+
+% ===== REFERÊNCIAS =====
+\vspace{4pt}
+{\small
+\bibliography{sections/biblio}
+}
+
+\end{document}

@@ -1,0 +1,40 @@
+%% ------------------------------------------------------------------------- %%
+\chapter{Resultados}
+\label{chp:resultados}
+
+Esta seção pode conter os resultados do trabalho. Pode ser uma avaliação experimental, analisando as técnicas ou algoritmos propostos. Ela também pode se chamar Avaliação. O título e o conteúdo devem ser discutidos com o orientador. \lipsum[7]
+
+\section{Descrição dos dados}
+
+\lipsum[2]
+
+\section{Tempo de resposta}
+
+\begin{figure}[t]
+     \centering
+     \subfigure[Número de Resultados ($k$).]{
+            \label{fig:ktime}
+            \includegraphics[width=.44\textwidth]
+                {exp/KTime.eps}}
+     \subfigure[Variando a cardinalidade]{
+            \label{fig:datatime}
+            \includegraphics[width=.44\textwidth]
+                {exp/datasetsTime.eps}}
+     \caption{Resultado dos algoritmos em tempo de resposta.}
+     \label{fig:exptime}
+\end{figure}
+
+
+
+Esta seção avalia o tempo de resposta para realizar a consulta por cada algoritmo. O tempo de resposta está sendo medido em milissegundos (Figura~\ref{fig:exptime}). 
+
+
+A Figura \ref{fig:ktime} apresenta o tempo de resposta, variando o número de resultados $k$. SIA e SIA$^+$ apresentaram melhores resultados que o IFA. Entretanto a diferença entre o SIA o SIA$^+$ que ocorre em número de páginas lidas não se traduz plenamente no tempo de resposta. A principal razão é o que o SIA$^+$ requer maior processamento para processar dados concorrentemente, visto que nem todos os objetos de referência retornado para o grupo são relevantes, fazendo com quê mais cálculos de distância sejam executados.
+
+Finalmente, a Figura \ref{fig:datatime} apresenta o tempo de resposta para três diferentes bases de dados.  Este gráfico comprova a eficiência do SIA e SIA$^+$ em reduzir tempo de resposta. Demonstrando que quanto maior a base, maior o ganho destas abordagens.
+
+
+
+\section{Transferência de dados}
+
+\lipsum[4]

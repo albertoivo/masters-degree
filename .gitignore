@@ -47,3 +47,6 @@ imagens-de-bolhas/*.zip
 code/util/**/*.tif
 code/util/**/*.png
 code/util/**/*.mp4
+code/suggestion_order.md
+code/suggestion.md
+code/Attention.txt

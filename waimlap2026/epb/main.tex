@@ -1,0 +1,40 @@
+% This is a clean template for a Springer LNCS paper
+\documentclass[runningheads]{llncs}
+
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+% If you use the hyperref package, please uncomment the following two lines
+% to display URLs in blue roman font according to Springer's eBook style:
+%\usepackage{color}
+%\renewcommand\UrlFont{\color{blue}\rmfamily}
+%\urlstyle{rm}
+
+\begin{document}
+
+\title{Detecting Equatorial Plasma Bubbles with Machine Learning}
+
+% \titlerunning{Abbreviated paper title}
+% If the paper title is too long for the running head, you can set
+% an abbreviated paper title here
+
+\author{Alberto I C Vieira\inst{1}\orcidID{0009-0002-3711-9403} \and
+Cosme A O B Figueiredo\inst{2}\orcidID{0000-0003-4423-5111} \and
+Tiago M U Araújo\inst{1}\orcidID{0000-0002-5953-5435}}
+
+\authorrunning{A. I. C. Vieira et al.}
+
+\institute{Universidade Federal da Paraíba \and Universidade Federal de Campina Grande}
+
+\maketitle              % typeset the header of the contribution
+
+\input{sections/0-abstract}
+\input{sections/1-introduction}
+\input{sections/2-methodology}
+\input{sections/3-results}
+\input{sections/4-conclusion}
+
+% ---- Bibliography ----
+\bibliographystyle{splncs04}
+\bibliography{sections/biblio}
+
+\end{document}

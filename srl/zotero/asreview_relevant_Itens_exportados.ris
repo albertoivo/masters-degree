@@ -1,0 +1,402 @@
+1.
+TY  - CONF
+N1  - ASReview_relevant
+N1  - asreview_time: "2026-05-12 17:07:32"
+TI  - Equatorial Plasma Bubble Detection using the Convolutional Neural Network (CNN) and Support Vector Machine (SVM)
+AU  - Thanakulketsarat, Thananphat
+AU  - Supnithi, Pornchai
+AU  - Myint, Lin Min Min
+AU  - Hozumi, Kornyanat
+T2  - 2023 35th General Assembly and Scientific Symposium of the International Union of Radio Science, URSI GASS 2023
+AB  - Equatorial plasma bubbles (EPB) refer to the area of low electron density in the Earth's ionosphere near the equator during post sunset and post-midnight. They influence the radio communications and GPS signals. In this work, we study the EPB occurrences and characteristics using the VHF radar images observed at the Chumphon station, Thailand, near the magnetic equator.. We develop an EPB image detection system using a hybrid learning technique with convolutional neural network (CNN) and support vector machine (SVM) and evaluate the accuracy of the proposed CNN-SVM model using two kernels: polynomial kernel and radial basis function (RBF) kernel. © 2023 International Union of Radio Science.
+DA  - 2023///
+PY  - 2023
+DO  - 10.23919/URSIGASS57860.2023.10265497
+DP  - Scopus
+SP  - 1
+LA  - English
+PB  - Institute of Electrical and Electronics Engineers Inc.
+SN  - 978-94-63968-09-6
+L1  - https://ieeexplore-ieee-org.ez15.periodicos.capes.gov.br/stampPDF/getPDF.jsp?tp=&arnumber=10265497&ref=
+KW  - Convolutional neural networks
+KW  - Hybrid learning
+KW  - Kernel
+KW  - Magnetic resonance imaging
+KW  - Plasmas
+KW  - Radar
+KW  - Support vector machines
+EP  - 5
+C3  - Gen. Assem. Sci. Symp. Int. Union Radio Sci., URSI GASS
+UR  - https://ieeexplore.ieee.org/document/10265497/
+ER  - 
+
+2.
+TY  - JOUR
+N1  - ASReview_relevant
+N1  - asreview_time: "2026-05-12 17:08:29"
+TI  - Classification of the equatorial plasma bubbles using convolutional neural network and support vector machine techniques
+AU  - Thanakulketsarat, Thananphat
+AU  - Supnithi, Pornchai
+AU  - Myint, Lin Min Min
+AU  - Hozumi, Kornyanat
+AU  - Nishioka, Michi
+T2  - Earth Planets and Space
+AB  - Equatorial plasma bubble (EPB) is a phenomenon characterized by depletions in ionospheric plasma density being formed during post-sunset hours. The ionospheric irregularities can lead to disruptions in trans-ionospheric radio systems, navigation systems and satellite communications. Real-time detection and classification of EPBs are crucial for the space weather community. Since 2020, the Prachomklao radar station, a very high frequency (VHF) radar station, has been installed at Chumphon station (Geographic: 10.72 degrees N, 99.73 degrees E and Geomagnetic: 1.33 degrees N) and started to produce radar images ever since. In this work, we propose two real-time plasma bubble detection systems based on support vector machine techniques. Two designs are made with the convolutional neural network (CNN) and singular value decomposition (SVD) used for feature extraction, the connected to the support vector machine (SVM) for EPB classification. The proposed models are trained using quick look (QL) plot images from the VHF radar system at the Chumphon station, Thailand, in 2017. The experimental results show that the combined CNN-SVM model, using the RBF kernel, achieves the highest accuracy of 93.08% while the model using the polynomial kernel achieved an accuracy of 92.14%. On the other hand, the combined SVD-SVM models yield the accuracies of 88.37% and 85.00% for RBF and polynomial kernels of SVM, respectively.
+CY  - New York
+DA  - 2023///
+PY  - 2023
+DO  - 10.1186/s40623-023-01903-7
+DP  - Clarivate Analytics Web of Science
+VL  - 75
+IS  - 1
+SP  - 161
+J2  - Earth Planets Space
+LA  - English
+PB  - Springer
+SN  - 1880-5981
+L1  - https://earth-planets-space.springeropen.com/counter/pdf/10.1186/s40623-023-01903-7
+KW  - Support vector machine
+KW  - Convolutional neural network
+KW  - Equatorial plasma bubble
+KW  - Singular value decomposition
+ER  - 
+
+3.
+TY  - JOUR
+N1  - ASReview_relevant
+N1  - asreview_time: "2026-05-12 17:09:17"
+TI  - A Bootstrapping Convolutional Neural Network Technique for Optimizing Automated Detection of Equatorial Plasma Bubbles by Optical All-Sky Imagers
+AU  - Okoh, Daniel
+AU  - Cesaroni, Claudio
+AU  - Rabiu, Babatunde
+AU  - Shiokawa, Kazuo
+AU  - Otsuka, Yuichi
+AU  - Ogunjo, Samuel
+AU  - Akerele, Aderonke
+AU  - Habarulema, John Bosco
+AU  - Nava, Bruno
+AU  - Migoya-Orue, Yenca
+AU  - Jamjareegulgarn, Punyawi
+AU  - Seun, Adeniran
+AU  - Adama, Ogechi
+AU  - Ochieng, George
+AU  - Ameh, James
+AU  - Awuor, Adero
+AU  - Baki, Paul
+T2  - Earth and Space Science
+AB  - Equatorial plasma bubbles (EPBs) disrupt satellite-based communication and navigation systems, particularly in equatorial regions. Reliable detection and classification of EPBs from all-sky imager (ASI) images are essential for accurate space weather monitoring and forecasting. This study presents a novel bootstrapping convolutional neural network (CNN) approach to optimize automated EPB detection on ASI images for operational space weather monitoring applications, and overcoming challenges related to image variability and imbalanced data sets. Data used for CNN training were obtained from the optical mesosphere thermosphere imagers ASI installed at the Space Environment Research Laboratory, National Space Research and Development Agency, Abuja during the period from 2015 to 2020. Our method involved training three sub-models, and aggregating their predictions. The CNN trainings were conducted on three sub-datasets of 3,000 images each, categorized as "EPB," "Noisy/Cloudy" or "No EPB." Three corresponding sub-models were developed from the CNN trainings. The three sub-model classifications independently gave prediction accuracies of 98.67%, 98.33%, and 95.83% on a reserved test data set of 600 images. Ensemble models further improved the model prediction accuracies to 99.17% and 99.33% for methods based on the mean of sub-model probabilities and the mode of sub-model classifications respectively. Our results indicate that the bootstrapping CNN technique enhanced the EPB detection accuracy, providing a powerful tool for real-time space weather monitoring applications, and implications for improving operational reliability of satellite-based navigation and communication in the equatorial region.
+CY  - Washington
+DA  - 2025/06/11/
+PY  - 2025
+DO  - 10.1029/2024EA004117
+DP  - Web of Science Nextgen
+VL  - 12
+IS  - 6
+SP  - e2024EA004117
+J2  - Earth Space Sci.
+LA  - English
+PB  - Amer Geophysical Union
+SN  - 2333-5084
+KW  - airglow images
+KW  - all-sky imager
+KW  - bootstrapping
+KW  - convolutional neural networks
+KW  - equatorial plasma bubbles
+KW  - image processing
+KW  - machine learning
+KW  - DEEP
+KW  - MESOSPHERE THERMOSPHERE IMAGERS
+ER  - 
+
+4.
+TY  - CONF
+N1  - ASReview_relevant
+N1  - asreview_time: "2026-05-12 17:09:28"
+TI  - Detecting Equatorial Plasma Bubbles on All-Sky Imager Images Using Convolutional Neural Network
+AU  - Srisamoodkham, Worachai
+AU  - Shiokawa, Kazuo
+AU  - Otsuka, Yuichi
+AU  - Ansari, Kutubuddin
+AU  - Jamjareegulgarn, Punyawi
+T2  - Lecture Notes in Networks and Systems
+AB  - This paper proposes initially to apply convolutional neural network (CNN) for detecting the equatorial plasma bubbles on the ASI images. The considered CNN model is the YOLO v3 tiny model under a deep learning API (Keras), running on top of the machine learning platform (TensorFlow). Our program for EPB detection is written in Python that is extended easily to combine into a space weather web site for detecting and notifying EPBs in our next step. The results show that the YOLO v3-based CNN can detect the EPBs in ASI images with different intensities obtained from many countries. The threshold is tested and selected to be 0.40 suitably for detecting the anomaly (EPB existence). The maximum anomalous value is selected to decide the EPB occurrence. © 2022, The Author(s), under exclusive license to Springer Nature Singapore Pte Ltd.
+DA  - 2022///
+PY  - 2022
+DO  - 10.1007/978-981-19-2130-8_38
+DP  - Scopus
+VL  - 461
+SP  - 481
+LA  - English
+PB  - Springer Science and Business Media Deutschland GmbH
+SN  - 978-981-19-2129-2
+KW  - ASI
+KW  - Convolution neural network
+KW  - Plasma bubble
+KW  - YOLO
+EP  - 487
+C3  - Lect. Notes Networks Syst.
+ER  - 
+
+5.
+TY  - JOUR
+N1  - ASReview_relevant
+N1  - asreview_time: "2026-05-12 17:09:42"
+TI  - Automatic Detection and Feature Extraction of Equatorial Plasma Bubbles From All-Sky Airglow Image Based on Machine Learning
+AU  - Zhong, Jia
+AU  - Zou, Ziming
+AU  - Wu, Kun
+AU  - Xu, Jiyao
+AU  - Lu, Yang
+AU  - Sun, Longchang
+AU  - Li, Qinzeng
+AU  - Yuan, Wei
+T2  - Space Weather-the International Journal of Research and Applications
+AB  - We developed a deep convolutional neural network-based program code that automatically detects equatorial plasma bubbles (EPBs), segments EPB morphologies, and then extracts their features (including EPBs' northernmost foot latitudes and zonal drift velocities) from OI 630 nm airglow images. From 2012 to 2022, all-sky airglow images from Qujing Station, China (geographic: 25 degrees N, 104 degrees E; geomagnetic: 15.1 degrees N, 176.7 degrees E), were manually labeled as EPBs or non-EPBs. Some images showing typical EPB morphologies also had their contours annotated. This created two unique data sets which are both suitable for supervised learning models. Based on the above data sets, numerous experiments were conducted to train the EPB recognition model (EPB-RM) and the EPB morphology segmentation model (EPB-MSM). The results on the test set indicate that ResNet18+CBAM model can perform the best in recognizing EPB (precision: 99%, recall: 91%), and all models perform better during geomagnetically quiet periods and high solar activity periods (F10.7 value >140) than during geomagnetically disturbed periods (Dst index <= -30 nT or Kp index >= 3) and low solar activity periods. The EPB-MSM based on Deeplabv3plus had the highest accuracy (88.2%) for extracting the EPB morphology. Statistical features extracted using the EPB feature extraction program (EPB-FEP) were highly consistent with those extracted manually. The test results verified that machine learning is an excellent method for automatically detecting and extracting EPB characteristics. Our study provides a convenient tool for analyzing massive EPB images.
+CY  - Washington
+DA  - 2025/05/09/
+PY  - 2025
+DO  - 10.1029/2025SW004336
+DP  - Web of Science Nextgen
+VL  - 23
+IS  - 5
+SP  - e2025SW004336
+J2  - Space Weather
+LA  - English
+PB  - Amer Geophysical Union
+SN  - 1542-7390
+KW  - IRREGULARITIES
+KW  - REGION
+KW  - CLASSIFICATION
+KW  - DRIFTS
+KW  - EPBS
+KW  - EVOLUTION
+KW  - GRAVITY-WAVES
+KW  - RADAR
+KW  - SPREAD F
+ER  - 
+
+6.
+TY  - CONF
+N1  - ASReview_relevant
+N1  - asreview_time: "2026-05-12 17:11:39"
+TI  - Deep Learning Based Detection of EPBs in GOLD Airglow Images Towards GNSS-RO Back Propagation Validation
+AU  - Alfonso, Carles Quilis
+AU  - Javadi, Saleh
+AU  - Ludwig-Barbosa, Vinícius
+T2  - Proceedings of the International Technical Meeting of the Satellite Division of The Institute of Navigation, ION GNSS+
+AB  - This study investigates the potential of machine learning techniques for detecting Equatorial Plasma Bubbles (EPBs) using nighttime airglow imagery from the Global-scale Observations of the Limb and Disk (GOLD) mission. EPBs are ionospheric irregularities characterized by significant plasma density depletions that disrupt trans-ionospheric radio wave propagation, affecting satellite navigation and communication systems. We propose and implement a convolutional encoder-decoder neural network specifically designed for precise pixel-level segmentation of EPB structures within GOLD's 135.6 nm radiance images. The convolutional neural network demonstrated remarkable performance, achieving high precision and recall, successfully detecting prominent EPBs as well as subtle features overlooked in manual annotations. Results also reveal the network's capability to generalize beyond explicitly labeled data, indicating its robustness in capturing intricate EPB morphologies. Additionally, a preliminary cross-validation was conducted using GNSS Radio Occultation (RO) data, which showed promising correspondence with the EPB locations identified by the machine learning algorithm. This supports the value of integrating deep learning methods with GNSS-RO techniques to achieve comprehensive global detection and validation of EPBs. © 2025 ION GNSS. All rights re served.
+DA  - 2025///
+PY  - 2025
+DO  - 10.33012/2025.20392
+DP  - Scopus
+IS  - 2025
+SP  - 3369
+LA  - English
+PB  - Institute of Navigation
+EP  - 3376
+C3  - Proc. Int. Tech. Meet. Satell. Div. Inst. Navig., ION GNSS+
+ER  - 
+
+7.
+TY  - JOUR
+N1  - ASReview_relevant
+N1  - asreview_time: "2026-05-12 17:11:51"
+TI  - Automatic Detection of Equatorial Plasma Bubbles in Airglow Images Using Two-Dimensional Principal Component Analysis and Explainable Artificial Intelligence
+AU  - Yacoub, Moheb
+AU  - Abdelwahab, Moataz
+AU  - Shiokawa, Kazuo
+AU  - Mahrous, Ayman
+T2  - Machine Learning and Knowledge Extraction
+AB  - Equatorial plasma bubbles (EPBs) are regions of depleted electron density that form in the Earth's ionosphere due to Rayleigh-Taylor instability. These bubbles can cause signal scintillation, leading to signal loss and errors in position calculations. EPBs can be detected in images captured by All-Sky Imager (ASI) systems. This study proposes a low-cost automatic detection method for EPBs in ASI data that can be used for both real-time detection and classification purposes. This method utilizes Two-Dimensional Principal Component Analysis (2DPCA) with Recursive Feature Elimination (RFE), in conjunction with a Random Forest machine learning model, to create an Explainable Artificial Intelligence (XAI) model capable of extracting image features to automatically detect EPBs with the lowest possible dimensionality. This led to having a small-sized and extremely fast-trained model that could be used to identify EPBs within the captured ASI images. A set of 2458 images, classified into two categories-Event and Empty-were used to build the database. This database was randomly split into two subsets: a training dataset (80%) and a testing dataset (20%). The produced XAI model demonstrated slightly higher detection accuracy compared to the standard 2DPCA model while being significantly smaller in size. Furthermore, the proposed model's performance has been evaluated and compared with other deep learning baseline models (ResNet18, Inception-V3, VGG16, and VGG19) in the same environment.
+CY  - Basel
+DA  - 2025///
+PY  - 2025
+DO  - 10.3390/make7010026
+DP  - Web of Science Nextgen
+VL  - 7
+IS  - 1
+SP  - 26
+J2  - Mach. Learn. Knowl. Extr.
+LA  - English
+PB  - MDPI
+SN  - 2504-4990
+L1  - https://www.mdpi.com/2504-4990/7/1/26/pdf?version=1742124723
+KW  - 2DPCA
+KW  - All-Sky Imager
+KW  - equatorial plasma bubble
+KW  - XAI
+KW  - CLIMATOLOGY
+KW  - IONOSPHERIC PLASMA
+KW  - VECTOR
+KW  - ZONAL DRIFT
+ER  - 
+
+8.
+TY  - JOUR
+N1  - ASReview_relevant
+N1  - asreview_time: "2026-05-12 17:11:55"
+TI  - Automatic detection of equatorial plasma bubbles using deep neural networks
+AU  - Zhang, Ting
+AU  - Luo, Yifu
+AU  - Zhang, Bin
+AU  - Jiang, Fang
+AU  - Wang, Tianfang
+AU  - Xiao, Si
+AU  - Bai, Xuesong
+AU  - Fu, Liping
+T2  - Journal of Atmospheric and Solar-Terrestrial Physics
+AB  - The equatorial plasma bubble (EPB) is one of the most important phenomena in the Earth's ionosphere. In this paper, we propose a method for the EPB image data processing and automatic labeling, utilizing the Global-scale Observations of the Limb and Disk (GOLD) 135.6 nm nightglow data. The method extracts the central position of EPBs, significantly reducing the workload of manual labeling. Through manual analysis, a dataset of 1,380 image samples was established. Based on the unique features of EPB images, a deep learning model was developed to improve detection accuracy. After optimization and validation, the YOLO-LessHead model achieved a mean Average Precision (mAP@0.5) of 78.39 %, enabling automatic and accurate identification of EPB images. We used the developed model to identify and statistically analyze the GOLD airglow image data from October 2018 to December 2024. The results indicate that EPB occurrence rates show strong seasonal and longitudinal variability, with distinct seasonal patterns across different longitudes. The zonal drift velocities of EPBs increase with enhanced solar radio flux (F10.7) and decrease as geomagnetic activity (Ap index) intensifies. Drift speeds are generally higher and more variable at the magnetic equator, while the northern and southern EIA regions exhibit similar values and trends.
+CY  - Oxford
+DA  - 2026/01//
+PY  - 2026
+DO  - 10.1016/j.jastp.2025.106687
+DP  - Web of Science Nextgen
+VL  - 278
+SP  - 106687
+J2  - J. Atmos. Sol.-Terr. Phys.
+LA  - English
+PB  - Pergamon-Elsevier Science Ltd
+SN  - 1364-6826, 1879-1824
+KW  - Deep learning
+KW  - Equatorial plasma bubbles
+KW  - GOLD
+KW  - Object detection
+KW  - Statistical analysis
+KW  - AIRGLOW
+KW  - DEPLETIONS
+KW  - DRIFT
+KW  - SOLAR
+ER  - 
+
+9.
+TY  - JOUR
+N1  - ASReview_relevant
+N1  - asreview_time: "2026-05-12 17:12:08"
+TI  - Automatic detection and classification of Spread-F in ionograms using convolutional neural network
+AU  - Yacoub, Moheb
+AU  - Pacheco, Edgardo E.
+AU  - Abdelwahab, Moataz
+AU  - de la Jara, Cesar
+AU  - Mahrous, Ayman
+T2  - Journal of Atmospheric and Solar-Terrestrial Physics
+AB  - Equatorial spread-F (ESF) is an irregularity caused by plasma instabilities on the night side that causes signal degradation and disruptions to the GNSS signals. Ionosondes could detect ESF as it appears as a diffused echo in the ionogram images. This study proposes a Convolutional Neural Network (CNN) model that can automatically detect ESF within the ionogram images and classify its type. The model has been trained using 2646 manually labeled ionograms from the Low Latitude Ionospheric Sensor Network (LISN) VIPIR Ionosondes in South America. The data used to train the model was measured from 2019 to 2024. The model was able to classify the testing images into six categories: Clear class, frequency spread-F (FSF), range spread-F (RSF), mixed spread-F (MSF), strong spread-F (SSF), and Unidentified class. It demonstrated high classification accuracy within the extracted test subset and a further random test, showcasing robustness and consistency in detection accuracy across all classes. Furthermore, the model performance has been evaluated and compared with other baseline models: VGG16, VGG19, ResNet18, and Inception-V3 in the same environment. Additionally, a comparison with published models is provided. Our model showed a higher consistency in classification accuracy across all classes compared to the mentioned models.
+CY  - Oxford
+DA  - 2025/05//
+PY  - 2025
+DO  - 10.1016/j.jastp.2025.106504
+DP  - Web of Science Nextgen
+VL  - 270
+SP  - 106504
+J2  - J. Atmos. Sol.-Terr. Phys.
+LA  - English
+PB  - Pergamon-Elsevier Science Ltd
+SN  - 1364-6826, 1879-1824
+KW  - REGION
+KW  - EQUATORIAL
+ER  - 
+
+10.
+TY  - JOUR
+N1  - ASReview_relevant
+N1  - asreview_time: "2026-05-12 17:12:13"
+TI  - A machine learning approach for estimating the drift velocities of equatorial plasma bubbles based on All-Sky Imager and GNSS observations
+AU  - Githio, Lynne
+AU  - Liu, Huixin
+AU  - Arafa, Ayman A.
+AU  - Mahrous, Ayman
+T2  - Advances in Space Research
+AB  - Equatorial Plasma Bubbles (EPBs) are zones characterized by fluctuations in plasma densities which form in the low-latitude ionosphere primarily during the post-sunset. They subject radio signals to amplitude and phase variabilities, affecting the functioning of technological systems that utilize the Global Navigation Satellite Systems (GNSS) signals for navigation. Thus, understanding EPB occurrence patterns and morphological features is vital for mitigating their effects. In this work, we employed two GNSS receivers and an All-Sky Imager (ASI) to conduct simultaneous observations on the morphology of EPBs over Brazil. The main objectives of the study were (1) to develop a Random Forest (RF) machine-learning model to estimate and predict the zonal drift velocities of EPBs, and (2) to compare the model predictions with actual EPB drifts inferred from the two instruments, as well as zonal neutral wind speeds obtained from the Horizontal Wind Model (HWM-14). In the model development, we utilized reliable EPB drift measurements made during geomagnetically quiet days between 2013 and 2017 in Brazil. The model predicted the velocities based on parameters including the day of the year, universal time, critical frequency of the F2 layer (foF2), solar and interplanetary indices. The correlation coefficients of 0.98 and 0.96 and RMSE values of 10.61 m/s and 10.06 m/s were obtained upon training and validation correspondingly. We evaluated the accuracy of the model in predicting EPB drifts on two geomagnetically quiet nights where an average correlation coefficient of 0.89 and an RMSE of 15.74 m/s were obtained. The predicted drifts, the zonal neutral wind velocities, and the GNSS and ASI velocity measurements were put into context for validation purposes. Overall, the velocities were comparable and ranged between X100 m/s and X30 m/s from the hours of 00 UT to 05 UT. The results confirmed the accuracy and applicability of the model, revealing the ionosphere-thermosphere coupling influence on the nocturnal propagation of EPBs under the full activation of the F region dynamo. (c) 2024 COSPAR. Published by Elsevier B.V. All rights are reserved, including those for text and data mining, AI training, and similar technologies.
+CY  - London
+DA  - 2024/12/01/
+PY  - 2024
+DO  - 10.1016/j.asr.2024.08.067
+DP  - Web of Science Nextgen
+VL  - 74
+IS  - 11
+SP  - 6047
+J2  - Adv. Space Res.
+LA  - English
+PB  - Elsevier Sci Ltd
+SN  - 0273-1177, 1879-1948
+KW  - All-Sky Imager (ASI)
+KW  - Drift velocity
+KW  - Equatorial Plasma Bubbles (EPBs)
+KW  - Machine learning
+KW  - Neutral winds
+KW  - Random Forest (RF)
+KW  - ZONAL DRIFT
+KW  - ELECTRODYNAMICS
+KW  - GPS
+KW  - IONOSPHERE
+KW  - IRREGULARITIES
+KW  - MODEL
+KW  - REGION
+KW  - SCINTILLATIONS
+KW  - SOLAR-WIND
+KW  - TIME
+EP  - 6064
+ER  - 
+
+11.
+TY  - JOUR
+N1  - ASReview_relevant
+N1  - asreview_time: "2026-05-12 17:28:22"
+TI  - Machine learning based classification of ionospheric equatorial plasma bubbles using GNSS-derived doppler index
+AU  - Sowmya, Bandaru Srilakshmi
+AU  - Ammana, Supraja Reddy
+AU  - Ipsitha, Manthati
+AU  - Minchula, Vinodh Kumar
+AU  - Devanaboyina, Venkata Ratnam
+T2  - Earth Science Informatics
+AB  - Equatorial plasma bubbles (EPBs) are ionospheric irregularities that degrade Global Navigation Satellite System (GNSS) signal quality through rapid total electron content (TEC) fluctuations and scintillation. This study presents a novel approach for EPB detection with Doppler Index and classification using an Xtreme Gradient Boosting (XGBoost) model based on multi-feature GNSS parameters. Doppler index (DI), vertical TEC (VTEC), elevation angle, timestamp and Ionospheric Pierce Point (IPP) were extracted from GNSS observations at the low-latitude IGS GNSS station HYDE during 12 geomagnetically active days spread across 2022, 2023 and 2025. Class imbalance was addressed using SMOTE and SMOTE-Edited Nearest Neighbors (SMOTEENN). To test the robustness, EPB events over the years 2015, 2023, 2024 and 2025 were considered, excluding the days from the train dataset. Results indicate that XGBoost with SMOTEENN has an accuracy of 96.67% and an improved minority-class F1-score of 0.637, outperforming XGBoost + SMOTEENN with single-parameter ROTI (Rate of TEC Index) (0.510) and DI (0.512) models. Validation using DI-ROTI relationships and geomagnetic indices confirms the physical consistency of the GNSS EPB classification results.
+CY  - Heidelberg
+DA  - 2026/05/02/
+PY  - 2026
+DO  - 10.1007/s12145-026-02135-5
+DP  - Web of Science Nextgen
+VL  - 19
+IS  - 6
+SP  - 83
+J2  - Earth Sci. Inform.
+LA  - English
+PB  - Springer Heidelberg
+SN  - 1865-0473, 1865-0481
+KW  - Doppler index (DI)
+KW  - Equatorial plasma bubbles (EPB)
+KW  - Global navigation satellite system (GNSS)
+KW  - IRREGULARITIES
+KW  - ROTI (rate of TEC index)
+KW  - SMOTE
+KW  - SMOTEENN
+KW  - Vertical total electron content (VTEC)
+KW  - XGBoost
+ER  - 
+
+12.
+TY  - JOUR
+N1  - ASReview_relevant
+N1  - asreview_time: "2026-05-12 17:28:51"
+TI  - Deep learning-based detection and statistical analysis of equatorial spread F using ionogram data in the African sector
+AU  - Sulaiman, Yushau Muhammad
+AU  - Okoh, Daniel
+AU  - Joshua, Benjamin Wisdom
+AU  - Abbas, Mustapha
+T2  - Journal of Atmospheric and Solar-Terrestrial Physics
+AB  - Equatorial Spread F (ESF) is a well-documented phenomenon characterised by electron density perturbations in the F-layer, significantly impacting the propagation of electromagnetic waves. The automatic identification of ESF and its statistical analysis are crucial for understanding the physical mechanisms that drive ionospheric irregularities and for improving predictive models. This study implements a convolutional neural network (CNN), a deep learning model, for the automatic detection of ESF using ionosonde data from a Digisonde (DPS-4) at Ilorin (Geographic: 8.5 degrees N, 4.5 degrees E; Geomagnetic: 4.5 degrees S), an equatorial station in the African sector. We used a dataset of 3,000 manually labelled ionograms randomly selected from the period 2019 to 2021. The dataset was categorised into clear, ESF, and unidentified, with 1,000 images per category. Two models were trained using raw ionograms (RGB-model) and gray-scale preprocessed ionograms (Gray-model). The models achieve overall accuracies of 95.17% and 99.33% for raw and preprocessed ionograms, respectively, when tested on an unseen dataset. Evaluation using three complementary skill scores: F1-score, True Skill Score (TSS) and Heidke Skill Score (HSS) indicates that while both methods enable efficient CNN-based ionogram classification tasks, the grayscale approach requires lower computational load and obtains the largest gains compared to the RGB-image approach. For the first time, we provide classification of 60,326 ionograms across diverse geophysical conditions in the African sector, using both manual classification and machine-learning methods. The main contribution lies in the systematic evaluation and application of the models for ionogram classification tasks. The improved classification performance and robustness of the models under both quiet and disturbed geomagnetic conditions demonstrate their potential for large-scale, automated ionogram analysis.
+CY  - Oxford
+DA  - 2026///
+PY  - 2026
+DO  - 10.1016/j.jastp.2026.106808
+DP  - Web of Science Nextgen
+VL  - 283
+SP  - 106808
+J2  - J. Atmos. Sol.-Terr. Phys.
+LA  - English
+PB  - Pergamon-Elsevier Science Ltd
+SN  - 1364-6826, 1879-1824
+KW  - Convolutional neural network
+KW  - Equatorial spread F
+KW  - HEIGHT
+KW  - Ionogram classification
+KW  - Ionospheric irregularities
+ER  - 

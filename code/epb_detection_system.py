@@ -14,7 +14,7 @@ from PIL import Image
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.model_selection import cross_val_score, StratifiedKFold, RandomizedSearchCV
 from sklearn.svm import SVC
-from sklearn.ensemble import RandomForestClassifier, VotingClassifier
+from sklearn.ensemble import RandomForestClassifier, StackingClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
@@ -214,7 +214,7 @@ def load_epb_dataset(data_folder: str, label_file: str, target_size: Tuple[int, 
     n_no_epb = len(labels) - n_epb
     logger.info("Distribuição das classes:")
     logger.info(f"  EPBs detectados: {n_epb} ({n_epb/len(labels)*100:.1f}%)")
-    logger.info(f"  Sem EPB: {n_no_epb} ({n_no_epb/len(labels)*100:.1f}%)")
+    logger.info(f"  No EPB: {n_no_epb} ({n_no_epb/len(labels)*100:.1f}%)")
     
     if n_epb / len(labels) < 0.3 or n_epb / len(labels) > 0.7:
         logger.warning("Dataset desbalanceado! Será aplicado balanceamento.")
@@ -269,7 +269,7 @@ def temporal_train_test_split(
     logger.info(f"Temporal split: {len(unique_nights)} noites encontradas")
     for ni in night_info:
         logger.info(f"  {ni['night']}: {ni['count']} imgs "
-                     f"({'EPB' if ni['class'] == 'epb' else 'Sem EPB'})")
+                     f"({'EPB' if ni['class'] == 'epb' else 'No EPB'})")
 
     # 3. Separa noites por classe (mantendo ordem cronológica)
     epb_nights = [ni for ni in night_info if ni['class'] == 'epb']
@@ -327,21 +327,21 @@ def temporal_train_test_split(
     test_nights_sorted = sorted({dates[i] for i in range(len(dates)) if test_mask[i]})
 
     logger.info(f"\n📅 Temporal Split (estratificado por classe):")
-    logger.info(f"  Treino: {len(X_train)} imgs de {len(train_nights_sorted)} noites "
+    logger.info(f"  Train: {len(X_train)} imgs de {len(train_nights_sorted)} noites "
                 f"({train_nights_sorted[0]}–{train_nights_sorted[-1]})")
-    logger.info(f"  Teste:  {len(X_test)} imgs de {len(test_nights_sorted)} noites "
+    logger.info(f"  Test:  {len(X_test)} imgs de {len(test_nights_sorted)} noites "
                 f"({test_nights_sorted[0]}–{test_nights_sorted[-1]})")
 
     n_epb_train = int(y_train.sum())
     n_epb_test = int(y_test.sum())
-    logger.info(f"  Treino — EPB: {n_epb_train}, Sem EPB: {len(y_train) - n_epb_train}")
-    logger.info(f"  Teste  — EPB: {n_epb_test}, Sem EPB: {len(y_test) - n_epb_test}")
+    logger.info(f"  Train — EPB: {n_epb_train}, No EPB: {len(y_train) - n_epb_train}")
+    logger.info(f"  Test  — EPB: {n_epb_test}, No EPB: {len(y_test) - n_epb_test}")
 
     actual_test_ratio = len(X_test) / len(images)
     logger.info(f"  Ratio teste: {actual_test_ratio:.1%} (objectivo: {test_size:.0%})")
 
     if n_epb_test == 0 or n_epb_test == len(y_test):
-        logger.warning("⚠️  ATENÇÃO: Teste sem representação de ambas as classes! "
+        logger.warning("⚠️  ATENÇÃO: Test sem representação de ambas as classes! "
                        "Considere adicionar mais noites de observação.")
 
     return X_train, X_test, y_train, y_test, files_train, files_test
@@ -647,7 +647,7 @@ def optimize_hyperparameters(
       - C, gamma (SVM RBF)
       - n_estimators, max_depth, learning_rate (XGBoost)
       - n_estimators, max_depth (Random Forest)
-      - weights (VotingClassifier)
+      - C (meta-classificador LogisticRegression do StackingClassifier)
 
     Args:
         X_train: Imagens de treino (n, h, w) — sem augmentation
@@ -655,7 +655,7 @@ def optimize_hyperparameters(
         image_shape: Forma das imagens (height, width)
         n_iter: Combinações aleatórias a testar
         cv_folds: Folds de validação cruzada
-        scoring: Métrica de otimização ('f1', 'accuracy', 'roc_auc')
+        scoring: Metric de otimização ('f1', 'accuracy', 'roc_auc')
         random_state: Seed para reprodutibilidade
 
     Returns:
@@ -668,7 +668,7 @@ def optimize_hyperparameters(
     print(f"{'='*70}")
     print(f"   Combinações a testar: {n_iter}")
     print(f"   Folds CV: {cv_folds}")
-    print(f"   Métrica: {scoring}")
+    print(f"   Metric: {scoring}")
     print(f"   Amostras: {len(X_train)}\n")
 
     # Flatten images para interface sklearn
@@ -684,7 +684,7 @@ def optimize_hyperparameters(
         ('tdpca', TwoDPCATransformer(image_shape=image_shape)),
         ('scaler', StandardScaler()),
         ('smote', SMOTE(random_state=random_state)),
-        ('clf', VotingClassifier(
+        ('clf', StackingClassifier(
             estimators=[
                 ('svm_rbf', SVC(kernel='rbf', probability=True,
                                 class_weight='balanced',
@@ -696,7 +696,10 @@ def optimize_hyperparameters(
                                               min_samples_split=5,
                                               random_state=random_state)),
             ],
-            voting='soft',
+            final_estimator=LogisticRegression(
+                max_iter=1000, random_state=random_state),
+            cv=5,
+            passthrough=False,
         )),
     ])
 
@@ -710,7 +713,7 @@ def optimize_hyperparameters(
         'clf__xgboost__learning_rate': [0.05, 0.1, 0.2],
         'clf__rf__n_estimators': [100, 200, 300],
         'clf__rf__max_depth': [10, 15, 20, None],
-        'clf__weights': [[1, 1, 1], [2, 3, 2], [1, 2, 1], [2, 2, 3], [1, 3, 1]],
+        'clf__final_estimator__C': [0.1, 0.5, 1.0, 5.0, 10.0],
     }
 
     cv = StratifiedKFold(n_splits=cv_folds, shuffle=True,
@@ -742,7 +745,7 @@ def optimize_hyperparameters(
         'xgb_learning_rate': best.get('clf__xgboost__learning_rate', 0.1),
         'rf_n_estimators': best.get('clf__rf__n_estimators', 200),
         'rf_max_depth': best.get('clf__rf__max_depth', 15),
-        'voting_weights': list(best.get('clf__weights', [2, 3, 2])),
+        'meta_C': best.get('clf__final_estimator__C', 1.0),
     }
     best_score = search.best_score_
 
@@ -777,7 +780,7 @@ def optimize_hyperparameters(
         ax.scatter([nc] * len(scores), scores, alpha=0.5, s=30)
     ax.set_xlabel('n_components (2DPCA)', fontsize=11)
     ax.set_ylabel(f'{scoring} (teste)', fontsize=11)
-    ax.set_title('Score vs. Componentes 2DPCA', fontsize=12, fontweight='bold')
+    ax.set_title('Score vs. Components 2DPCA', fontsize=12, fontweight='bold')
     ax.grid(alpha=0.3)
 
     # 2. Distribuição dos scores
@@ -787,22 +790,22 @@ def optimize_hyperparameters(
     ax.axvline(best_score, color='red', linestyle='--', linewidth=2,
                label=f'Melhor: {best_score:.4f}')
     ax.set_xlabel(f'{scoring} (teste)', fontsize=11)
-    ax.set_ylabel('Contagem', fontsize=11)
+    ax.set_ylabel('Count', fontsize=11)
     ax.set_title('Distribuição dos Scores', fontsize=12, fontweight='bold')
     ax.legend()
     ax.grid(alpha=0.3)
 
-    # 3. Treino vs Teste (diagnóstico de overfitting)
+    # 3. Train vs Test (diagnóstico de overfitting)
     ax = axes[2]
     ax.scatter(df_results['mean_train_score'],
                df_results['mean_test_score'],
                alpha=0.5, s=30, c='steelblue')
     lims = [min(df_results['mean_test_score'].min(),
                 df_results['mean_train_score'].min()) - 0.02, 1.02]
-    ax.plot(lims, lims, 'r--', alpha=0.5, label='Treino = Teste')
+    ax.plot(lims, lims, 'r--', alpha=0.5, label='Train = Test')
     ax.set_xlabel(f'{scoring} (treino)', fontsize=11)
     ax.set_ylabel(f'{scoring} (teste)', fontsize=11)
-    ax.set_title('Treino vs. Teste (Overfitting?)', fontsize=12,
+    ax.set_title('Train vs. Test (Overfitting?)', fontsize=12,
                  fontweight='bold')
     ax.legend()
     ax.grid(alpha=0.3)
@@ -852,8 +855,11 @@ class EPBRecognitionSystem:
         self.pipeline_ = None
         self.classifier = None
     
-    def _create_ensemble(self, y_train: np.ndarray) -> VotingClassifier:
-        """Ensemble otimizado para detecção de EPBs.
+    def _create_ensemble(self, y_train: np.ndarray) -> StackingClassifier:
+        """Ensemble otimizado para detecção de EPBs via stacking.
+
+        Usa StackingClassifier com LogisticRegression como meta-classificador,
+        que aprende automaticamente a melhor combinação dos base learners.
 
         Se self.ensemble_params estiver preenchido (de optimize_hyperparameters),
         usa os hiperparâmetros otimizados; caso contrário, usa defaults.
@@ -896,10 +902,15 @@ class EPBRecognitionSystem:
             ))
         ]
 
-        return VotingClassifier(
+        return StackingClassifier(
             estimators=estimators,
-            voting='soft',
-            weights=p.get('voting_weights', [2, 3, 2])
+            final_estimator=LogisticRegression(
+                C=p.get('meta_C', 1.0),
+                max_iter=1000,
+                random_state=42,
+            ),
+            cv=5,
+            passthrough=False,
         )
     
     def _setup_balancing(self):
@@ -1035,10 +1046,10 @@ class EPBRecognitionSystem:
             n_background: Máximo de amostras de background (usado em 'kernel')
 
         Returns:
-            shap_map: Atribuição SHAP no espaço da imagem (H, W) — com sinal:
+            shap_map: SHAP Attribution no espaço da imagem (H, W) — com sinal:
                       positivo → evidência a favor de EPB,
                       negativo → evidência contra EPB
-            shap_features: Valores SHAP no espaço de features (n_features,)
+            shap_features: Valuees SHAP no espaço de features (n_features,)
         """
         try:
             import shap
@@ -1114,12 +1125,35 @@ class EPBRecognitionSystem:
         else:
             raise ValueError(f"Método SHAP inválido: '{method}'. Use 'tree' ou 'kernel'.")
 
-        # Retro-projeção para espaço da imagem
-        # features = image_row @ projection_matrix → (H, n_comp)
-        # shap_map = shap_2d @ projection_matrix.T → (H, W)
+        # Retro-projeção para espaço da imagem (matematicamente correta para 2DPCA + Scaler)
+        # O modelo opera em Y_scaled = (Y - E[Y]) / sigma = (X @ P - E[X @ P]) / sigma
+        # Distribuímos a atribuição SHAP (sv) proporcionalmente à variação de cada pixel
         H = X_sample.shape[0]
-        sv_2d = sv.reshape(H, self.n_components)
-        shap_map = sv_2d @ self.tdpca.projection_matrix.T
+        
+        if X_background is not None:
+            E_X = np.mean(X_background, axis=0)
+            features_bg = self.extract_features(X_background)
+            features_bg_scaled = self.scaler.transform(features_bg)
+            E_Y_scaled = np.mean(features_bg_scaled, axis=0)
+        else:
+            # Fallback caso X_background seja None
+            E_X = np.zeros_like(X_sample)
+            E_Y_scaled = np.zeros_like(sv)
+
+        delta_Y_scaled = features_sample[0] - E_Y_scaled
+        
+        # Evita divisão por zero
+        epsilon = 1e-8
+        weight = sv / (delta_Y_scaled + epsilon * np.sign(delta_Y_scaled + 1e-15))
+        
+        # Desfaz o flatten e o scaler
+        weight_2d = weight.reshape(H, self.n_components)
+        scale_2d = self.scaler.scale_.reshape(H, self.n_components)
+        weight_scaled_2d = weight_2d / scale_2d
+        
+        # Projeta de volta pelo PCA e multiplica pelo desvio do pixel na imagem real
+        delta_X = X_sample - E_X
+        shap_map = delta_X * (weight_scaled_2d @ self.tdpca.projection_matrix.T)
 
         return shap_map, sv
 
@@ -1128,22 +1162,22 @@ class EPBRecognitionSystem:
 # PARTE 4: VISUALIZAÇÃO E INTERPRETAÇÃO
 # ============================================================================
 
-def plot_comprehensive_analysis(system: 'EPBRecognitionSystem', X_train: np.ndarray, X_test: np.ndarray,
-                                y_train: np.ndarray, y_test: np.ndarray,
-                                y_pred: np.ndarray, y_proba: np.ndarray,
-                                filenames_test: Optional[List[str]] = None) -> plt.Figure:
-    """Análise visual completa do sistema"""
+def plot_classification_examples(X_test: np.ndarray, y_test: np.ndarray,
+                                 y_pred: np.ndarray, y_proba: np.ndarray,
+                                 filenames_test: Optional[List[str]] = None, 
+                                 n_examples: int = 6, axes=None) -> Optional[plt.Figure]:
+    fig = None
+    if axes is None:
+        fig, axes = plt.subplots(1, n_examples, figsize=(20, 3.2))
+        if n_examples == 1:
+            axes = [axes]
     
-    fig = plt.figure(figsize=(20, 16))
-    gs = fig.add_gridspec(5, 6, hspace=1, wspace=0.4)
-    
-    # ========== ROW 1: EXEMPLOS DE CLASSIFICAÇÃO ==========
-    for i in range(6):
-        ax = fig.add_subplot(gs[0, i])
+    for i in range(min(n_examples, len(X_test))):
+        ax = axes[i]
         ax.imshow(X_test[i], cmap='plasma', aspect='auto')
         
-        true_label = "EPB" if y_test[i] == 1 else "Sem EPB"
-        pred_label = "EPB" if y_pred[i] == 1 else "Sem EPB"
+        true_label = "EPB" if y_test[i] == 1 else "No EPB"
+        pred_label = "EPB" if y_pred[i] == 1 else "No EPB"
         prob = y_proba[i, 1] * 100
         
         color = 'green' if y_test[i] == y_pred[i] else 'red'
@@ -1153,93 +1187,128 @@ def plot_comprehensive_analysis(system: 'EPBRecognitionSystem', X_train: np.ndar
         
         ax.set_title(title, fontsize=8, color=color)
         ax.axis('off')
-    
-    # ========== ROW 2: ANÁLISE DE FEATURES ==========
-    # Variância por componente
-    ax = fig.add_subplot(gs[1, 0:2])
+        
+    if fig:
+        plt.tight_layout()
+        return fig
+    return None
+
+def plot_2dpca_variance(system: 'EPBRecognitionSystem', axes=None) -> Optional[plt.Figure]:
+    fig = None
+    if axes is None:
+        fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+        
     variance_ratio = system.tdpca.explained_variance_ratio
+    
+    # Variância por componente
+    ax = axes[0]
     ax.bar(range(len(variance_ratio)), variance_ratio, color='steelblue', alpha=0.7)
-    ax.set_xlabel('Componente', fontsize=10)
-    ax.set_ylabel('Variância Explicada', fontsize=10)
-    ax.set_title('Importância de Cada Componente 2DPCA', fontsize=11, fontweight='bold')
+    ax.set_xlabel('Component', fontsize=10)
+    ax.set_ylabel('Explained Variance', fontsize=10)
+    ax.set_title('Importance of Each 2DPCA Component', fontsize=11, fontweight='bold')
     ax.grid(alpha=0.3, axis='y')
     
     # Variância cumulativa
-    ax = fig.add_subplot(gs[1, 2:4])
+    ax = axes[1]
     cumulative = np.cumsum(variance_ratio)
     ax.plot(cumulative, 'o-', color='steelblue', linewidth=2)
     ax.axhline(y=0.9, color='r', linestyle='--', alpha=0.7, label='90%')
     ax.axhline(y=0.95, color='orange', linestyle='--', alpha=0.7, label='95%')
-    ax.set_xlabel('Número de Componentes', fontsize=10)
-    ax.set_ylabel('Variância Acumulada', fontsize=10)
-    ax.set_title('Variância Cumulativa Explicada', fontsize=11, fontweight='bold')
+    ax.set_xlabel('Número de Components', fontsize=10)
+    ax.set_ylabel('Cumulative Variance', fontsize=10)
+    ax.set_title('Cumulative Explained Variance', fontsize=11, fontweight='bold')
     ax.legend()
     ax.grid(alpha=0.3)
     
-    # Matriz de confusão
-    ax = fig.add_subplot(gs[1, 4:6])
+    if fig:
+        plt.tight_layout()
+        return fig
+    return None
+
+def plot_confusion_matrix_analysis(y_test: np.ndarray, y_pred: np.ndarray, ax=None) -> Optional[plt.Figure]:
+    fig = None
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(6, 5))
+        
     cm = confusion_matrix(y_test, y_pred)
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
-                xticklabels=['Sem EPB', 'EPB'],
-                yticklabels=['Sem EPB', 'EPB'], ax=ax, 
-                cbar_kws={'label': 'Contagem'})
-    ax.set_title('Matriz de Confusão', fontsize=11, fontweight='bold')
-    ax.set_ylabel('Classe Real', fontsize=10)
-    ax.set_xlabel('Classe Predita', fontsize=10)
+                xticklabels=['No EPB', 'EPB'],
+                yticklabels=['No EPB', 'EPB'], ax=ax, 
+                cbar_kws={'label': 'Count'})
+    ax.set_title('Confusion Matrix', fontsize=11, fontweight='bold')
+    ax.set_ylabel('True Class', fontsize=10)
+    ax.set_xlabel('Predicted Class', fontsize=10)
     
-    # ========== ROW 3: MÉTRICAS DE PERFORMANCE ==========
-    # Curva ROC
-    ax = fig.add_subplot(gs[2, 0:2])
+    if fig:
+        plt.tight_layout()
+        return fig
+    return None
+
+def plot_performance_metrics(y_test: np.ndarray, y_proba: np.ndarray, axes=None) -> Optional[plt.Figure]:
+    fig = None
+    if axes is None:
+        fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+        
+    # ROC Curve
+    ax = axes[0]
     fpr, tpr, _ = roc_curve(y_test, y_proba[:, 1])
     roc_auc = auc(fpr, tpr)
     ax.plot(fpr, tpr, color='darkorange', lw=2, 
             label=f'ROC (AUC = {roc_auc:.3f})')
     ax.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--', 
-            label='Classificador Aleatório')
-    ax.set_xlabel('Taxa de Falso Positivo', fontsize=10)
-    ax.set_ylabel('Taxa de Verdadeiro Positivo', fontsize=10)
-    ax.set_title('Curva ROC', fontsize=11, fontweight='bold')
+            label='Random Classifier')
+    ax.set_xlabel('False Positive Rate', fontsize=10)
+    ax.set_ylabel('True Positive Rate', fontsize=10)
+    ax.set_title('ROC Curve', fontsize=11, fontweight='bold')
     ax.legend(loc="lower right")
     ax.grid(alpha=0.3)
     
-    # Curva Precision-Recall
-    ax = fig.add_subplot(gs[2, 2:4])
+    # Precision-Recall Curve
+    ax = axes[1]
     precision, recall, _ = precision_recall_curve(y_test, y_proba[:, 1])
     pr_auc = auc(recall, precision)
     ax.plot(recall, precision, color='purple', lw=2,
             label=f'PR (AUC = {pr_auc:.3f})')
     ax.set_xlabel('Recall', fontsize=10)
     ax.set_ylabel('Precision', fontsize=10)
-    ax.set_title('Curva Precision-Recall', fontsize=11, fontweight='bold')
+    ax.set_title('Precision-Recall Curve', fontsize=11, fontweight='bold')
     ax.legend(loc="lower left")
     ax.grid(alpha=0.3)
     
     # Distribuição de probabilidades
-    ax = fig.add_subplot(gs[2, 4:6])
+    ax = axes[2]
     epb_probs = y_proba[y_test == 1, 1]
     no_epb_probs = y_proba[y_test == 0, 1]
     
-    ax.hist(no_epb_probs, bins=20, alpha=0.6, label='Sem EPB (real)', 
+    ax.hist(no_epb_probs, bins=20, alpha=0.6, label='No EPB (real)', 
             color='blue', density=True)
     ax.hist(epb_probs, bins=20, alpha=0.6, label='EPB (real)', 
             color='red', density=True)
     ax.axvline(x=0.5, color='green', linestyle='--', linewidth=2,
                label='Threshold (0.5)')
-    ax.set_xlabel('Probabilidade de EPB', fontsize=10)
-    ax.set_ylabel('Densidade', fontsize=10)
-    ax.set_title('Distribuição de Probabilidades Preditas', fontsize=11, fontweight='bold')
+    ax.set_xlabel('EPB Probability', fontsize=10)
+    ax.set_ylabel('Density', fontsize=10)
+    ax.set_title('Predicted Probabilities Distribution', fontsize=11, fontweight='bold')
     ax.legend()
     ax.grid(alpha=0.3)
     
-    # ========== ROW 4: INTERPRETAÇÃO DAS FEATURES ==========
+    if fig:
+        plt.tight_layout()
+        return fig
+    return None
+
+def plot_feature_interpretation(system: 'EPBRecognitionSystem', X_test: np.ndarray, y_test: np.ndarray, axes=None) -> Optional[plt.Figure]:
+    fig = None
+    if axes is None:
+        fig, axes = plt.subplots(1, 6, figsize=(20, 3.5))
+        
     # Pega exemplos de cada classe
     epb_idx = np.where(y_test == 1)[0][0]
     no_epb_idx = np.where(y_test == 0)[0][0]
     
-    for i, (idx, title_prefix) in enumerate([(epb_idx, 'EPB'), 
-                                              (no_epb_idx, 'Sem EPB')]):
+    for i, (idx, title_prefix) in enumerate([(epb_idx, 'EPB'), (no_epb_idx, 'No EPB')]):
         # Imagem original
-        ax = fig.add_subplot(gs[3, i*3])
+        ax = axes[i*3]
         ax.imshow(X_test[idx], cmap='plasma')
         ax.set_title(f'{title_prefix}: Original', fontsize=10)
         ax.axis('off')
@@ -1247,31 +1316,80 @@ def plot_comprehensive_analysis(system: 'EPBRecognitionSystem', X_train: np.ndar
         # Mapa de importância
         importance_map, reconstructed = system.get_feature_importance(X_test[idx])
         
-        ax = fig.add_subplot(gs[3, i*3+1])
+        ax = axes[i*3+1]
         im = ax.imshow(importance_map, cmap='hot')
-        ax.set_title(f'{title_prefix}: Importância', fontsize=10)
+        ax.set_title(f'{title_prefix}: Importance', fontsize=10)
         ax.axis('off')
-        plt.colorbar(im, ax=ax, fraction=0.046)
         
         # Reconstrução
-        ax = fig.add_subplot(gs[3, i*3+2])
+        ax = axes[i*3+2]
         ax.imshow(reconstructed, cmap='plasma')
-        ax.set_title(f'{title_prefix}: Reconstruído', fontsize=10)
+        ax.set_title(f'{title_prefix}: Reconstructed', fontsize=10)
         ax.axis('off')
-    
-    # ========== ROW 5: COMPONENTES PRINCIPAIS ==========
-    # Visualiza primeiros componentes principais
-    n_comp_to_show = min(6, system.n_components)
+        
+    if fig:
+        plt.tight_layout()
+        return fig
+    return None
+
+def plot_pca_components_visual(system: 'EPBRecognitionSystem', X_test: np.ndarray, n_components: int = 6, axes=None) -> Optional[plt.Figure]:
+    n_comp_to_show = min(n_components, system.n_components)
+    fig = None
+    if axes is None:
+        fig, axes = plt.subplots(1, n_comp_to_show, figsize=(3 * n_comp_to_show, 4))
+        if n_comp_to_show == 1:
+            axes = [axes]
+            
+    variance_ratio = system.tdpca.explained_variance_ratio
     for i in range(n_comp_to_show):
-        ax = fig.add_subplot(gs[4, i])
+        ax = axes[i]
         component = system.tdpca.projection_matrix[:, i].reshape(-1, 1)
         # Expande para visualização
         component_img = np.tile(component, (1, X_test.shape[1]))
         ax.imshow(component_img.T, cmap='RdBu_r', aspect='auto')
         ax.set_title(f'Comp {i+1}\n({variance_ratio[i]:.1%})', fontsize=9)
         ax.axis('off')
+        
+    if fig:
+        plt.tight_layout()
+        return fig
+    return None
+
+def plot_comprehensive_analysis(system: 'EPBRecognitionSystem', X_train: np.ndarray, X_test: np.ndarray,
+                                y_train: np.ndarray, y_test: np.ndarray,
+                                y_pred: np.ndarray, y_proba: np.ndarray,
+                                filenames_test: Optional[List[str]] = None) -> plt.Figure:
+    """Análise visual completa do sistema (Refatorada)"""
     
-    plt.suptitle('🌌 Análise Completa: Sistema de Reconhecimento de EPBs', 
+    fig = plt.figure(figsize=(20, 16))
+    gs = fig.add_gridspec(5, 6, hspace=1, wspace=0.4)
+    
+    # ROW 1: EXEMPLOS DE CLASSIFICAÇÃO
+    axes_row1 = [fig.add_subplot(gs[0, i]) for i in range(6)]
+    plot_classification_examples(X_test, y_test, y_pred, y_proba, filenames_test, axes=axes_row1)
+    
+    # ROW 2: ANÁLISE DE FEATURES E MATRIZ DE CONFUSÃO
+    ax_var1 = fig.add_subplot(gs[1, 0:2])
+    ax_var2 = fig.add_subplot(gs[1, 2:4])
+    plot_2dpca_variance(system, axes=[ax_var1, ax_var2])
+    
+    ax_cm = fig.add_subplot(gs[1, 4:6])
+    plot_confusion_matrix_analysis(y_test, y_pred, ax=ax_cm)
+    
+    # ROW 3: MÉTRICAS DE PERFORMANCE
+    axes_row3 = [fig.add_subplot(gs[2, 0:2]), fig.add_subplot(gs[2, 2:4]), fig.add_subplot(gs[2, 4:6])]
+    plot_performance_metrics(y_test, y_proba, axes=axes_row3)
+    
+    # ROW 4: FEATURE INTERPRETATION
+    axes_row4 = [fig.add_subplot(gs[3, i]) for i in range(6)]
+    plot_feature_interpretation(system, X_test, y_test, axes=axes_row4)
+    
+    # ROW 5: COMPONENTES PRINCIPAIS
+    n_comp = min(6, system.n_components)
+    axes_row5 = [fig.add_subplot(gs[4, i]) for i in range(n_comp)]
+    plot_pca_components_visual(system, X_test, n_components=n_comp, axes=axes_row5)
+    
+    plt.suptitle('🌌 Comprehensive Analysis: EPB Recognition System', 
                  fontsize=16, fontweight='bold', y=0.995)
     
     return fig
@@ -1303,64 +1421,64 @@ def explain_feature_importance(system: 'EPBRecognitionSystem', X_sample: np.ndar
     prob = system.predict_proba(X_sample.reshape(1, *X_sample.shape))[0]
     pred = np.argmax(prob)
     
-    suptitle = (f'Interpretação: {"EPB" if y_sample == 1 else "Sem EPB"} '
-                f'(Predição: {"EPB" if pred == 1 else "Sem EPB"}, {prob[1]*100:.1f}%)')
+    suptitle = (f'Interpretation: {"EPB" if y_sample == 1 else "No EPB"} '
+                f'(Prediction: {"EPB" if pred == 1 else "No EPB"}, {prob[1]*100:.1f}%)')
     
     # --- Modo FULL: análise textual + visualização completa ---
     if mode == 'full':
         print("\n" + "="*70)
-        print("🔍 INTERPRETAÇÃO DAS FEATURES")
+        print("🔍 FEATURE INTERPRETATION")
         print("="*70)
         
         print(f"\n📸 Imagem: {filename if filename else 'N/A'}")
-        print(f"   • Classe real: {'EPB' if y_sample == 1 else 'Sem EPB'}")
-        print(f"   • Predição: {'EPB' if pred == 1 else 'Sem EPB'}")
+        print(f"   • True class: {'EPB' if y_sample == 1 else 'No EPB'}")
+        print(f"   • Prediction: {'EPB' if pred == 1 else 'No EPB'}")
         print(f"   • Probabilidade EPB: {prob[1]*100:.2f}%")
-        print(f"   • Confiança: {'Alta' if max(prob) > 0.8 else 'Média' if max(prob) > 0.6 else 'Baixa'}")
+        print(f"   • Confidence: {'Alta' if max(prob) > 0.8 else 'Média' if max(prob) > 0.6 else 'Baixa'}")
         
         threshold = np.percentile(importance_map, 90)
         important_pixels = importance_map > threshold
         
         h, w = importance_map.shape
         quadrants = {
-            'Superior Esquerdo': important_pixels[:h//2, :w//2].sum(),
-            'Superior Direito': important_pixels[:h//2, w//2:].sum(),
-            'Inferior Esquerdo': important_pixels[h//2:, :w//2].sum(),
-            'Inferior Direito': important_pixels[h//2:, w//2:].sum()
+            'Upper Left': important_pixels[:h//2, :w//2].sum(),
+            'Upper Right': important_pixels[:h//2, w//2:].sum(),
+            'Lower Left': important_pixels[h//2:, :w//2].sum(),
+            'Lower Right': important_pixels[h//2:, w//2:].sum()
         }
         
-        print(f"\n📊 Regiões mais importantes (pixels críticos):")
+        print(f"\n📊 Most important regions (critical pixels):")
         total = sum(quadrants.values())
         for region, count in sorted(quadrants.items(), key=lambda x: x[1], reverse=True):
             percentage = (count / total * 100) if total > 0 else 0
             print(f"   • {region}: {count} pixels ({percentage:.1f}%)")
         
-        print(f"\n💡 Interpretação:")
+        print(f"\n💡 Interpretation:")
         if pred == 1:
-            print("   ✓ O modelo identificou padrões característicos de EPB:")
-            print("     - Estruturas verticais/irregulares")
-            print("     - Deplecções localizadas de plasma")
-            print("     - Distribuição espacial típica de bolhas")
+            print("   ✓ The model identified characteristic EPB patterns:")
+            print("     - Vertical/irregular structures")
+            print("     - Localized plasma depletions")
+            print("     - Typical spatial distribution of bubbles")
         else:
-            print("   ✓ O modelo NÃO detectou padrões de EPB:")
-            print("     - Distribuição uniforme de plasma")
-            print("     - Ausência de estruturas irregulares")
-            print("     - Características de ionosfera quieta")
+            print("   ✓ The model did NOT detect EPB patterns:")
+            print("     - Uniform plasma distribution")
+            print("     - Absence of irregular structures")
+            print("     - Quiet ionosphere characteristics")
         
         fig, axes = plt.subplots(1, 3, figsize=(15, 5))
         
         axes[0].imshow(X_sample, cmap='plasma')
-        axes[0].set_title('Imagem Original', fontsize=12, fontweight='bold')
+        axes[0].set_title('Original Image', fontsize=12, fontweight='bold')
         axes[0].axis('off')
         
         im = axes[1].imshow(importance_map, cmap='hot')
-        axes[1].set_title('Mapa de Importância\n(Regiões críticas para classificação)',
+        axes[1].set_title('Importance Map\n(Critical regions for classification)',
                          fontsize=12, fontweight='bold')
         axes[1].axis('off')
-        plt.colorbar(im, ax=axes[1], fraction=0.046, label='Importância')
+        plt.colorbar(im, ax=axes[1], fraction=0.046, label='Importance')
         
         axes[2].imshow(reconstructed, cmap='plasma')
-        axes[2].set_title('Reconstrução 2DPCA\n(Features capturadas)',
+        axes[2].set_title('2DPCA Reconstruction\n(Captured features)',
                          fontsize=12, fontweight='bold')
         axes[2].axis('off')
         
@@ -1381,10 +1499,10 @@ def explain_feature_importance(system: 'EPBRecognitionSystem', X_sample: np.ndar
         axes[0].axis('off')
         
         im = axes[1].imshow(importance_map, cmap='hot')
-        axes[1].set_title('Mapa de Importância\n(Regiões críticas para classificação)',
+        axes[1].set_title('Importance Map\n(Critical regions for classification)',
                          fontsize=12, fontweight='bold')
         axes[1].axis('off')
-        plt.colorbar(im, ax=axes[1], fraction=0.046, label='Importância')
+        plt.colorbar(im, ax=axes[1], fraction=0.046, label='Importance')
         
         fig.suptitle(suptitle, fontsize=14, fontweight='bold')
         plt.tight_layout()
@@ -1399,19 +1517,19 @@ def explain_feature_importance(system: 'EPBRecognitionSystem', X_sample: np.ndar
             img_disk = X_sample
         
         axes[0].imshow(img_disk, cmap='gray')
-        axes[0].set_title(f'{filename}\n(Imagem Pré-Processada)', fontsize=12, fontweight='bold')
+        axes[0].set_title(f'{filename}\n(Pre-Processed Image)', fontsize=12, fontweight='bold')
         axes[0].axis('off')
         
         axes[1].imshow(X_sample, cmap='plasma')
-        axes[1].set_title('Features extraídas pelo 2DPCA\n(Usada pelo modelo)',
+        axes[1].set_title('Features extracted by 2DPCA\n(Used by the model)',
                          fontsize=12, fontweight='bold')
         axes[1].axis('off')
         
         im = axes[2].imshow(importance_map, cmap='hot')
-        axes[2].set_title('Mapa de Importância\n(Regiões críticas para classificação)',
+        axes[2].set_title('Importance Map\n(Critical regions for classification)',
                          fontsize=12, fontweight='bold')
         axes[2].axis('off')
-        plt.colorbar(im, ax=axes[2], fraction=0.046, label='Importância')
+        plt.colorbar(im, ax=axes[2], fraction=0.046, label='Importance')
         
         fig.suptitle(suptitle, fontsize=14, fontweight='bold')
         plt.tight_layout()
@@ -1449,7 +1567,7 @@ def explain_feature_importance_3(system: 'EPBRecognitionSystem', X_sample: np.nd
 
 
 # ============================================================================
-# PARTE 5: ANÁLISE TEMPORAL DE SEQUÊNCIA DE IMAGENS
+# PARTE 5: ANÁLISE TEMPORAL DE SEQUÊNCIA DE IMAGES
 # ============================================================================
 
 def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
@@ -1474,7 +1592,7 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
         DataFrame com timestamps, probabilidades e predições
     """
     print("="*70)
-    print("🕐 ANÁLISE TEMPORAL DE SEQUÊNCIA DE IMAGENS")
+    print("🕐 TEMPORAL SEQUENCE ANALYSIS OF IMAGES")
     print("="*70)
     
     image_folder = Path(image_folder)
@@ -1483,11 +1601,11 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
     image_files = sorted(list(image_folder.glob('*.png')))
     
     if len(image_files) == 0:
-        print(f"⚠️  Nenhuma imagem encontrada em: {image_folder}")
+        print(f"⚠️  No image found in: {image_folder}")
         return None
     
-    print(f"📂 Pasta: {image_folder}")
-    print(f"📸 Total de imagens: {len(image_files)}")
+    print(f"📂 Folder: {image_folder}")
+    print(f"📸 Total images: {len(image_files)}")
     
     # Processa cada imagem
     results = []
@@ -1519,7 +1637,7 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
                 'prob_no_epb': prob[0],
                 'prob_epb': prob[1],
                 'prediction': pred,
-                'prediction_label': 'EPB' if pred == 1 else 'Sem EPB'
+                'prediction_label': 'EPB' if pred == 1 else 'No EPB'
             })
             
         except Exception as e:
@@ -1536,22 +1654,22 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
     n_epb = (df['prediction'] == 1).sum()
     n_no_epb = (df['prediction'] == 0).sum()
     
-    print(f"\n📊 Resumo das predições:")
-    print(f"   • Com EPB: {n_epb} imagens ({n_epb/len(df)*100:.1f}%)")
-    print(f"   • Sem EPB: {n_no_epb} imagens ({n_no_epb/len(df)*100:.1f}%)")
-    print(f"   • Probabilidade média de EPB: {df['prob_epb'].mean()*100:.1f}%")
-    print(f"   • Probabilidade máxima de EPB: {df['prob_epb'].max()*100:.1f}%")
-    print(f"   • Probabilidade mínima de EPB: {df['prob_epb'].min()*100:.1f}%")
+    print(f"\n📊 Prediction summary:")
+    print(f"   • With EPB: {n_epb} images ({n_epb/len(df)*100:.1f}%)")
+    print(f"   • No EPB: {n_no_epb} images ({n_no_epb/len(df)*100:.1f}%)")
+    print(f"   • Average EPB probability: {df['prob_epb'].mean()*100:.1f}%")
+    print(f"   • Maximum EPB probability: {df['prob_epb'].max()*100:.1f}%")
+    print(f"   • Minimum EPB probability: {df['prob_epb'].min()*100:.1f}%")
     
     # Identifica transições (mudanças de estado)
     df['state_change'] = df['prediction'].diff().fillna(0).abs()
     transitions = df[df['state_change'] == 1]
     
     if len(transitions) > 0:
-        print(f"\n🔄 Transições detectadas ({len(transitions)}):")
+        print(f"\n🔄 Detected transitions ({len(transitions)}):")
         for _, row in transitions.iterrows():
             time_str = row['timestamp'].strftime('%H:%M:%S') if row['timestamp'] else 'N/A'
-            print(f"   • {time_str} - Mudou para: {row['prediction_label']} ({row['prob_epb']*100:.1f}%)")
+            print(f"   • {time_str} - Changed to: {row['prediction_label']} ({row['prob_epb']*100:.1f}%)")
     
     # =========================================================================
     # VISUALIZAÇÃO ELEGANTE - Estilo moderno e profissional
@@ -1596,10 +1714,10 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
     
     if df['timestamp'].notna().all():
         x_values = df['timestamp']
-        x_label = 'Horário (UT)'
+        x_label = 'Time (UT)'
     else:
         x_values = range(len(df))
-        x_label = 'Índice da Imagem'
+        x_label = 'Image Index'
     
     prob_values = df['prob_epb'] * 100
     
@@ -1614,7 +1732,7 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
     # Linha principal com efeito de brilho (glow)
     ax1.plot(x_values, prob_values, color=COLORS['line_main'], linewidth=3.5, alpha=0.3)  # Glow
     ax1.plot(x_values, prob_values, color=COLORS['line_main'], linewidth=2, 
-             label='Probabilidade de EPB', zorder=5)
+             label='EPB Probability', zorder=5)
     
     # Pontos nos dados com efeito sutil
     scatter_colors = [COLORS['epb_positive'] if p > 50 else COLORS['epb_negative'] for p in prob_values]
@@ -1624,9 +1742,9 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
     ax1.axhline(y=50, color=COLORS['threshold'], linestyle='--', linewidth=2, 
                 label='Threshold (50%)', alpha=0.9)
     ax1.axhline(y=70, color=COLORS['confidence_medium'], linestyle=':', linewidth=1.8, 
-                label='Confiança Média (70%)', alpha=0.8)
+                label='Medium Confidence (70%)', alpha=0.8)
     ax1.axhline(y=90, color=COLORS['confidence_high'], linestyle=':', linewidth=1.8, 
-                label='Confiança Alta (90%)', alpha=0.8)
+                label='High Confidence (90%)', alpha=0.8)
     
     # Marca transições com estilo sutil
     for _, row in transitions.iterrows():
@@ -1638,7 +1756,7 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
     
     # Estilização dos eixos
     ax1.set_xlabel(x_label, fontsize=12, color=COLORS['text'], fontweight='medium', labelpad=10)
-    ax1.set_ylabel('Probabilidade de EPB (%)', fontsize=12, color=COLORS['text'], 
+    ax1.set_ylabel('EPB Probability (%)', fontsize=12, color=COLORS['text'], 
                    fontweight='medium', labelpad=10)
     ax1.set_ylim(-2, 105)
     ax1.set_xlim(x_values.iloc[0] if hasattr(x_values, 'iloc') else x_values[0], 
@@ -1665,7 +1783,7 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
     legend.get_frame().set_linewidth(0.5)
     
     # Título do subplot
-    ax1.set_title('Evolução Temporal da Probabilidade de EPB', fontsize=14, 
+    ax1.set_title('Temporal Evolution of EPB Probability', fontsize=14, 
                   color=COLORS['text'], fontweight='bold', pad=15, loc='left')
     
     # -------------------------------------------------------------------------
@@ -1685,7 +1803,7 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
     ax2.set_ylabel('Status', fontsize=11, color=COLORS['text'], fontweight='medium', labelpad=10)
     ax2.set_yticks([0.5])
     ax2.set_yticklabels([''])
-    ax2.set_xlabel('Sequência de Imagens', fontsize=11, color=COLORS['text'], 
+    ax2.set_xlabel('Image Sequence', fontsize=11, color=COLORS['text'], 
                    fontweight='medium', labelpad=10)
     ax2.set_xlim(-0.5, len(df) - 0.5)
     ax2.set_ylim(0, 1)
@@ -1697,14 +1815,14 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
         spine.set_linewidth(0.5)
     
     # Título com legenda integrada
-    ax2.set_title('Classificação ao Longo do Tempo', fontsize=12, 
+    ax2.set_title('Classification Over Time', fontsize=12, 
                   color=COLORS['text'], fontweight='bold', pad=10, loc='left')
     
     # Adiciona mini-legenda no gráfico
     from matplotlib.patches import Patch
     legend_elements = [
-        Patch(facecolor=COLORS['epb_negative'], alpha=0.8, label='Sem EPB'),
-        Patch(facecolor=COLORS['epb_positive'], alpha=0.8, label='Com EPB')
+        Patch(facecolor=COLORS['epb_negative'], alpha=0.8, label='No EPB'),
+        Patch(facecolor=COLORS['epb_positive'], alpha=0.8, label='With EPB')
     ]
     ax2.legend(handles=legend_elements, loc='upper right', fontsize=9, framealpha=0.9,
                facecolor=COLORS['card_bg'], edgecolor=COLORS['grid'], labelcolor=COLORS['text'])
@@ -1715,7 +1833,7 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
     if show_thumbnails:
         ax3 = fig.add_subplot(gs[2], facecolor=COLORS['background'])
         ax3.axis('off')
-        ax3.set_title('Amostra de Imagens', fontsize=12, 
+        ax3.set_title('Image Sample', fontsize=12, 
                       color=COLORS['text'], fontweight='bold', pad=10, loc='left')
         
         # Seleciona imagens para mostrar
@@ -1767,13 +1885,13 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
     # TÍTULO GERAL
     # -------------------------------------------------------------------------
     if df['timestamp'].notna().all():
-        date_str = df['timestamp'].iloc[0].strftime('%d/%m/%Y')
+        date_str = df['timestamp'].iloc[0].strftime('%m/%d/%Y')
         time_range = f"{df['timestamp'].iloc[0].strftime('%H:%M')} – {df['timestamp'].iloc[-1].strftime('%H:%M')} UT"
-        title_text = f'Análise Temporal de EPBs'
-        subtitle_text = f'{date_str}  •  {time_range}  •  {len(df)} imagens'
+        title_text = f'Temporal Analysis of EPBs'
+        subtitle_text = f'{date_str}  •  {time_range}  •  {len(df)} images'
     else:
-        title_text = 'Análise Temporal de EPBs'
-        subtitle_text = f'{len(df)} imagens analisadas'
+        title_text = 'Temporal Analysis of EPBs'
+        subtitle_text = f'{len(df)} analyzed images'
     
     fig.text(0.5, 0.96, title_text, ha='center', va='top', fontsize=18, 
              color=COLORS['text'], fontweight='bold')
@@ -1781,7 +1899,7 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
              color=COLORS['text_secondary'], fontweight='normal')
     
     # Adiciona estatísticas no canto
-    stats_text = f"EPB: {(df['prediction'] == 1).sum()}/{len(df)}  |  Prob. média: {df['prob_epb'].mean()*100:.1f}%"
+    stats_text = f"EPB: {(df['prediction'] == 1).sum()}/{len(df)}  |  Avg prob: {df['prob_epb'].mean()*100:.1f}%"
     fig.text(0.94, 0.96, stats_text, ha='right', va='top', fontsize=10, 
              color=COLORS['text_secondary'], fontweight='normal', 
              bbox=dict(boxstyle='round,pad=0.4', facecolor=COLORS['card_bg'], 
@@ -1791,7 +1909,7 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
     plt.rcParams.update(_rc_backup)
     
     print("\n" + "="*70)
-    print("✅ ANÁLISE TEMPORAL CONCLUÍDA")
+    print("✅ TEMPORAL ANALYSIS COMPLETED")
     print("="*70)
     
     return df
@@ -1810,38 +1928,38 @@ def analyze_critical_periods(df_temporal: pd.DataFrame) -> None:
     from datetime import timedelta
     
     if df_temporal is None or df_temporal.empty:
-        print("⚠️  DataFrame vazio. Execute analyze_temporal_sequence primeiro.")
+        print("⚠️  Empty DataFrame. Run analyze_temporal_sequence first.")
         return
     
     print("="*70)
-    print("🔍 ANÁLISE DE PERÍODOS CRÍTICOS")
+    print("🔍 CRITICAL PERIODS ANALYSIS")
     print("="*70)
     
     # Detecta a data da observação
     if df_temporal['timestamp'].notna().all():
-        obs_date = df_temporal['timestamp'].iloc[0].strftime('%d/%m/%Y')
+        obs_date = df_temporal['timestamp'].iloc[0].strftime('%m/%d/%Y')
         time_start = df_temporal['timestamp'].iloc[0].strftime('%H:%M')
         time_end = df_temporal['timestamp'].iloc[-1].strftime('%H:%M')
-        print(f"📅 Data: {obs_date} | Período: {time_start} - {time_end} UT\n")
+        print(f"📅 Date: {obs_date} | Period: {time_start} - {time_end} UT\n")
     
     # -------------------------------------------------------------------------
-    # 1. Detecta TRANSIÇÕES (mudanças de estado Sem EPB <-> Com EPB)
+    # 1. Detecta TRANSIÇÕES (mudanças de estado No EPB <-> Com EPB)
     # -------------------------------------------------------------------------
     transitions = df_temporal[df_temporal['state_change'] == 1].copy()
     
     if len(transitions) > 0:
-        print("🔄 TRANSIÇÕES DETECTADAS")
+        print("🔄 DETECTED TRANSITIONS")
         print("-"*70)
-        print("   Momentos onde o modelo mudou de classificação:\n")
+        print("   Moments where the model changed classification:\n")
         
         for i, (idx, row) in enumerate(transitions.iterrows()):
             time_str = row['timestamp'].strftime('%H:%M:%S') if row['timestamp'] else 'N/A'
             prob = row['prob_epb'] * 100
             
             if row['prediction'] == 1:
-                direction = "Sem EPB → COM EPB 🔴"
+                direction = "No EPB → WITH EPB 🔴"
             else:
-                direction = "Com EPB → SEM EPB 🟢"
+                direction = "WITH EPB → No EPB 🟢"
             
             print(f"   {i+1}. {time_str} UT | {direction} | Prob: {prob:.1f}%")
         
@@ -1856,9 +1974,9 @@ def analyze_critical_periods(df_temporal: pd.DataFrame) -> None:
         first_epb = first_epb_transition.iloc[0]
         first_epb_time = first_epb['timestamp']
         
-        print("⚡ ANÁLISE DO INÍCIO DO EVENTO EPB")
+        print("⚡ EPB EVENT START ANALYSIS")
         print("-"*70)
-        print(f"   Primeira detecção de EPB: {first_epb_time.strftime('%H:%M:%S')} UT\n")
+        print(f"   First EPB detection: {first_epb_time.strftime('%H:%M:%S')} UT\n")
         
         window_before = timedelta(minutes=15)
         window_after = timedelta(minutes=15)
@@ -1869,10 +1987,10 @@ def analyze_critical_periods(df_temporal: pd.DataFrame) -> None:
         mask = (df_temporal['timestamp'] >= start_window) & (df_temporal['timestamp'] <= end_window)
         df_window = df_temporal[mask].copy()
         
-        print(f"   Janela de análise: {start_window.strftime('%H:%M')} - {end_window.strftime('%H:%M')} UT")
-        print(f"   Imagens na janela: {len(df_window)}\n")
+        print(f"   Analysis window: {start_window.strftime('%H:%M')} - {end_window.strftime('%H:%M')} UT")
+        print(f"   Images in window: {len(df_window)}\n")
         
-        print("   Detalhamento:")
+        print("   Details:")
         print("   " + "-"*60)
         
         for _, row in df_window.iterrows():
@@ -1889,7 +2007,7 @@ def analyze_critical_periods(df_temporal: pd.DataFrame) -> None:
             else:
                 emoji = "🟢"
             
-            marker = " ◄── TRANSIÇÃO" if row['timestamp'] == first_epb_time else ""
+            marker = " ◄── TRANSITION" if row['timestamp'] == first_epb_time else ""
             
             print(f"   {time_str} UT | {emoji} {prob:5.1f}% | {pred}{marker}")
         
@@ -1901,42 +2019,42 @@ def analyze_critical_periods(df_temporal: pd.DataFrame) -> None:
             avg_prob_before = pre_transition['prob_epb'].mean() * 100
             max_prob_before = pre_transition['prob_epb'].max() * 100
             
-            print(f"\n   📊 Estatísticas pré-transição (últimas 5 imagens):")
-            print(f"      • Probabilidade média: {avg_prob_before:.1f}%")
-            print(f"      • Probabilidade máxima: {max_prob_before:.1f}%")
+            print(f"\n   📊 Pre-transition statistics (last 5 images):")
+            print(f"      • Average probability: {avg_prob_before:.1f}%")
+            print(f"      • Maximum probability: {max_prob_before:.1f}%")
             
             if max_prob_before > 40:
-                print(f"\n   💡 INSIGHT: O modelo já indicava {max_prob_before:.1f}% de probabilidade")
-                print(f"      ANTES da classificação mudar para EPB!")
-                print(f"      Isso sugere detecção precoce de perturbações ionosféricas.")
+                print(f"\n   💡 INSIGHT: The model already indicated {max_prob_before:.1f}% probability")
+                print(f"      BEFORE the classification changed to EPB!")
+                print(f"      This suggests early detection of ionospheric disturbances.")
         
         print()
     
     # -------------------------------------------------------------------------
     # 3. Estatísticas gerais da noite
     # -------------------------------------------------------------------------
-    print("📈 ESTATÍSTICAS GERAIS DA NOITE")
+    print("📈 OVERALL NIGHT STATISTICS")
     print("-"*70)
     
     n_total = len(df_temporal)
     n_epb = (df_temporal['prediction'] == 1).sum()
     n_no_epb = (df_temporal['prediction'] == 0).sum()
     
-    print(f"   • Total de imagens: {n_total}")
-    print(f"   • Com EPB detectada: {n_epb} ({n_epb/n_total*100:.1f}%)")
-    print(f"   • Sem EPB detectada: {n_no_epb} ({n_no_epb/n_total*100:.1f}%)")
-    print(f"   • Número de transições: {len(transitions)}")
-    print(f"\n   • Probabilidade média de EPB: {df_temporal['prob_epb'].mean()*100:.1f}%")
-    print(f"   • Probabilidade máxima: {df_temporal['prob_epb'].max()*100:.1f}%")
-    print(f"   • Probabilidade mínima: {df_temporal['prob_epb'].min()*100:.1f}%")
+    print(f"   • Total images: {n_total}")
+    print(f"   • With EPB detected: {n_epb} ({n_epb/n_total*100:.1f}%)")
+    print(f"   • No EPB detected: {n_no_epb} ({n_no_epb/n_total*100:.1f}%)")
+    print(f"   • Number of transitions: {len(transitions)}")
+    print(f"\n   • Average EPB probability: {df_temporal['prob_epb'].mean()*100:.1f}%")
+    print(f"   • Maximum probability: {df_temporal['prob_epb'].max()*100:.1f}%")
+    print(f"   • Minimum probability: {df_temporal['prob_epb'].min()*100:.1f}%")
     
     idx_max = df_temporal['prob_epb'].idxmax()
     peak = df_temporal.loc[idx_max]
     if peak['timestamp']:
-        print(f"\n   🎯 Pico de atividade: {peak['timestamp'].strftime('%H:%M:%S')} UT ({peak['prob_epb']*100:.1f}%)")
+        print(f"\n   🎯 Activity peak: {peak['timestamp'].strftime('%H:%M:%S')} UT ({peak['prob_epb']*100:.1f}%)")
     
     print("\n" + "="*70)
-    print("✅ ANÁLISE CONCLUÍDA")
+    print("✅ ANALYSIS COMPLETED")
     print("="*70)
 
 
@@ -2011,7 +2129,7 @@ def analyze_threshold_sensitivity(y_true: np.ndarray, y_proba: np.ndarray,
     ax.plot(df_thresholds['threshold'], df_thresholds['accuracy'],
             label='Accuracy', linewidth=2, color='tab:orange', linestyle='--')
 
-    ax.axvline(x=0.5, color='gray', linestyle=':', linewidth=1.5, label='Threshold padrão (0.5)')
+    ax.axvline(x=0.5, color='gray', linestyle=':', linewidth=1.5, label='Default threshold (0.5)')
 
     # Marca o threshold que maximiza F1
     best_f1_idx = df_thresholds['f1'].idxmax()
@@ -2019,11 +2137,11 @@ def analyze_threshold_sensitivity(y_true: np.ndarray, y_proba: np.ndarray,
     best_f1 = df_thresholds.loc[best_f1_idx, 'f1']
     ax.axvline(x=best_t, color='purple', linestyle='--', linewidth=1.5, alpha=0.7)
     ax.scatter([best_t], [best_f1], color='purple', s=80, zorder=5,
-              label=f'Melhor F1={best_f1:.3f} (t={best_t:.2f})')
+              label=f'Best F1={best_f1:.3f} (t={best_t:.2f})')
 
     ax.set_xlabel('Threshold', fontsize=12)
-    ax.set_ylabel('Métrica', fontsize=12)
-    ax.set_title('Sensibilidade ao Threshold de Decisão', fontsize=13, fontweight='bold')
+    ax.set_ylabel('Metric', fontsize=12)
+    ax.set_title('Decision Threshold Sensitivity', fontsize=13, fontweight='bold')
     ax.legend(loc='center left', fontsize=9)
     ax.set_xlim(0, 1)
     ax.set_ylim(-0.02, 1.05)
@@ -2044,11 +2162,11 @@ def analyze_threshold_sensitivity(y_true: np.ndarray, y_proba: np.ndarray,
 
     ax2.axvline(x=eq_t, color='gray', linestyle='--', linewidth=1.5, alpha=0.7)
     ax2.scatter([eq_t], [eq_val], color='black', s=100, zorder=5, marker='X',
-               label=f'Equilíbrio (t={eq_t:.2f}, ≈{eq_val:.3f})')
+               label=f'Equilibrium (t={eq_t:.2f}, ≈{eq_val:.3f})')
     ax2.axvline(x=0.5, color='gray', linestyle=':', linewidth=1.5, alpha=0.5)
 
     ax2.set_xlabel('Threshold', fontsize=12)
-    ax2.set_ylabel('Métrica', fontsize=12)
+    ax2.set_ylabel('Metric', fontsize=12)
     ax2.set_title('Trade-off Sensitivity vs. Specificity', fontsize=13, fontweight='bold')
     ax2.legend(fontsize=10)
     ax2.set_xlim(0, 1)
@@ -2066,7 +2184,7 @@ def analyze_threshold_sensitivity(y_true: np.ndarray, y_proba: np.ndarray,
     print("\n" + "="*70)
     print("📊 ANÁLISE DE SENSIBILIDADE AO THRESHOLD")
     print("="*70)
-    print(f"\n   {'Métrica':<20} {'t=0.50':>10} {'Melhor F1':>12} {'Equilíbrio':>12}")
+    print(f"\n   {'Metric':<20} {'t=0.50':>10} {'Best F1':>12} {'Equilibrium':>12}")
     print("   " + "-"*56)
     print(f"   {'Threshold':<20} {row_default['threshold']:>10.2f} {row_best_f1['threshold']:>12.2f} {row_eq['threshold']:>12.2f}")
     print(f"   {'Sensitivity':<20} {row_default['sensitivity']:>10.4f} {row_best_f1['sensitivity']:>12.4f} {row_eq['sensitivity']:>12.4f}")
@@ -2163,14 +2281,14 @@ def plot_calibration_analysis(y_true: np.ndarray, y_proba: np.ndarray,
 
     # Subplot 1: Reliability diagram
     ax = axes[0]
-    ax.plot([0, 1], [0, 1], 'k--', linewidth=1.5, label='Perfeitamente calibrado')
+    ax.plot([0, 1], [0, 1], 'k--', linewidth=1.5, label='Perfectly calibrated')
     ax.plot(mean_predicted, fraction_pos, 's-', color='tab:red', linewidth=2,
-            label=f'Modelo original (ECE={ece:.3f})')
+            label=f'Original model (ECE={ece:.3f})')
     if has_calibration:
         ax.plot(cal_mean_predicted, cal_fraction_pos, 'o-', color='tab:blue', linewidth=2,
-                label=f'Após calibração (ECE={stats["ece_calibrated"]:.3f})')
-    ax.set_xlabel('Probabilidade média predita', fontsize=11)
-    ax.set_ylabel('Fração de positivos reais', fontsize=11)
+                label=f'After calibration (ECE={stats["ece_calibrated"]:.3f})')
+    ax.set_xlabel('Mean predicted probability', fontsize=11)
+    ax.set_ylabel('Fraction of true positives', fontsize=11)
     ax.set_title('Reliability Diagram (Calibration Plot)', fontsize=12, fontweight='bold')
     ax.legend(loc='upper left', fontsize=9)
     ax.set_xlim(-0.02, 1.02)
@@ -2183,26 +2301,26 @@ def plot_calibration_analysis(y_true: np.ndarray, y_proba: np.ndarray,
              edgecolor='black', label='Original')
     if has_calibration:
         ax2.hist(cal_probs, bins=n_bins, range=(0, 1), alpha=0.5, color='tab:blue',
-                 edgecolor='black', label='Calibrado')
-    ax2.set_xlabel('Probabilidade predita', fontsize=11)
-    ax2.set_ylabel('Frequência', fontsize=11)
-    ax2.set_title('Distribuição das Probabilidades', fontsize=12, fontweight='bold')
+                 edgecolor='black', label='Calibrated')
+    ax2.set_xlabel('Predicted probability', fontsize=11)
+    ax2.set_ylabel('Frequency', fontsize=11)
+    ax2.set_title('Probability Distribution', fontsize=12, fontweight='bold')
     ax2.legend(fontsize=9)
     ax2.grid(alpha=0.3)
 
     # Subplot 3 (opcional): Comparação por classe
     if has_calibration:
         ax3 = axes[2]
-        for label_val, label_name, color in [(0, 'Sem EPB', 'tab:blue'), (1, 'EPB', 'tab:red')]:
+        for label_val, label_name, color in [(0, 'No EPB', 'tab:blue'), (1, 'EPB', 'tab:red')]:
             mask = y_true == label_val
             ax3.hist(probs[mask], bins=n_bins, range=(0, 1), alpha=0.4,
                      color=color, label=f'{label_name} (original)', edgecolor='black')
             ax3.hist(cal_probs[mask], bins=n_bins, range=(0, 1), alpha=0.4,
                      color=color, linestyle='--', histtype='step', linewidth=2,
                      label=f'{label_name} (calibrado)')
-        ax3.set_xlabel('Probabilidade predita', fontsize=11)
-        ax3.set_ylabel('Frequência', fontsize=11)
-        ax3.set_title('Original vs. Calibrado por Classe', fontsize=12, fontweight='bold')
+        ax3.set_xlabel('Predicted probability', fontsize=11)
+        ax3.set_ylabel('Frequency', fontsize=11)
+        ax3.set_title('Original vs. Calibrated por Classe', fontsize=12, fontweight='bold')
         ax3.legend(fontsize=8)
         ax3.grid(alpha=0.3)
 
@@ -2275,9 +2393,9 @@ def evaluate_kfold_cv(X: np.ndarray, y: np.ndarray,
     print(f"\n{'='*70}")
     print(f"📊 AVALIAÇÃO K-FOLD CROSS-VALIDATION ({n_folds} folds)")
     print(f"{'='*70}")
-    print(f"   Componentes: {n_components} | Balanceamento: {balance_method}")
+    print(f"   Components: {n_components} | Balanceamento: {balance_method}")
     print(f"   Augmentation: {'Sim (fator={})'.format(augment_factor) if use_augmentation else 'Não'}")
-    print(f"   Total de amostras: {len(X)} ({int(np.sum(y))} EPB, {int(len(y) - np.sum(y))} Sem EPB)\n")
+    print(f"   Total de amostras: {len(X)} ({int(np.sum(y))} EPB, {int(len(y) - np.sum(y))} No EPB)\n")
 
     for fold_idx, (train_idx, val_idx) in enumerate(skf.split(X, y)):
         X_fold_train, X_fold_val = X[train_idx], X[val_idx]
@@ -2335,7 +2453,7 @@ def evaluate_kfold_cv(X: np.ndarray, y: np.ndarray,
     print(f"\n{'='*70}")
     print(f"📈 RESULTADOS {n_folds}-FOLD CROSS-VALIDATION")
     print(f"{'='*70}")
-    print(f"\n   {'Métrica':<20} {'Média':>10} {'± Std':>10} {'Mín':>10} {'Máx':>10}")
+    print(f"\n   {'Metric':<20} {'Média':>10} {'± Std':>10} {'Mín':>10} {'Máx':>10}")
     print(f"   {'-'*60}")
 
     for col in metrics_cols:
@@ -2362,22 +2480,22 @@ def evaluate_kfold_cv(X: np.ndarray, y: np.ndarray,
 
     # Subplot 1: Boxplot de todas as métricas
     ax = axes[0]
-    df_melt = df_results[metrics_cols].melt(var_name='Métrica', value_name='Valor')
-    sns.boxplot(data=df_melt, x='Métrica', y='Valor', ax=ax, palette='Set2')
-    sns.stripplot(data=df_melt, x='Métrica', y='Valor', ax=ax,
+    df_melt = df_results[metrics_cols].melt(var_name='Metric', value_name='Value')
+    sns.boxplot(data=df_melt, x='Metric', y='Value', ax=ax, palette='Set2')
+    sns.stripplot(data=df_melt, x='Metric', y='Value', ax=ax,
                   color='black', size=5, alpha=0.6)
-    ax.set_title(f'Distribuição das Métricas ({n_folds}-Fold CV)', fontsize=12, fontweight='bold')
+    ax.set_title(f'Distribuição das Metrics ({n_folds}-Fold CV)', fontsize=12, fontweight='bold')
     ax.set_ylim(0, 1.05)
     ax.set_xticklabels([c.capitalize() for c in metrics_cols], rotation=30, ha='right')
     ax.grid(alpha=0.3, axis='y')
 
-    # Subplot 2: Métricas por fold
+    # Subplot 2: Metrics por fold
     ax2 = axes[1]
     for col in ['sensitivity', 'specificity', 'f1', 'auc']:
         ax2.plot(df_results['fold'], df_results[col], 'o-', label=col.capitalize(), linewidth=2)
     ax2.set_xlabel('Fold', fontsize=11)
-    ax2.set_ylabel('Valor', fontsize=11)
-    ax2.set_title('Métricas por Fold', fontsize=12, fontweight='bold')
+    ax2.set_ylabel('Value', fontsize=11)
+    ax2.set_title('Metrics por Fold', fontsize=12, fontweight='bold')
     ax2.set_xticks(df_results['fold'])
     ax2.set_ylim(0, 1.05)
     ax2.legend(fontsize=9)
@@ -2413,7 +2531,7 @@ def benchmark_baselines(X_train: np.ndarray, y_train: np.ndarray,
         y_train: Labels de treino
         X_test: Imagens de teste (n, h, w)
         y_test: Labels de teste
-        n_components: Componentes para 2DPCA
+        n_components: Components para 2DPCA
         balance_method: Método de balanceamento
 
     Returns:
@@ -2423,7 +2541,7 @@ def benchmark_baselines(X_train: np.ndarray, y_train: np.ndarray,
     print(f"\n{'='*70}")
     print(f"📊 BENCHMARKING CONTRA BASELINES")
     print(f"{'='*70}")
-    print(f"   Treino: {len(X_train)} | Teste: {len(X_test)} | Componentes: {n_components}\n")
+    print(f"   Train: {len(X_train)} | Test: {len(X_test)} | Components: {n_components}\n")
 
     n_samples_train, h, w = X_train.shape
     n_samples_test = X_test.shape[0]
@@ -2569,8 +2687,8 @@ def benchmark_baselines(X_train: np.ndarray, y_train: np.ndarray,
 
     ax.set_yticks(x)
     ax.set_yticklabels(df_results['model'], fontsize=9)
-    ax.set_xlabel('Valor', fontsize=11)
-    ax.set_title('Comparação de Modelos', fontsize=12, fontweight='bold')
+    ax.set_xlabel('Value', fontsize=11)
+    ax.set_title('Model Comparison', fontsize=12, fontweight='bold')
     ax.set_xlim(0, 1.05)
     ax.legend(loc='lower right', fontsize=9)
     ax.grid(alpha=0.3, axis='x')
@@ -2581,8 +2699,8 @@ def benchmark_baselines(X_train: np.ndarray, y_train: np.ndarray,
     heatmap_data = df_results.set_index('model')[metrics_cols]
     sns.heatmap(heatmap_data, annot=True, fmt='.3f', cmap='YlGnBu',
                 ax=ax2, vmin=0, vmax=1, linewidths=0.5,
-                cbar_kws={'label': 'Valor'})
-    ax2.set_title('Métricas por Modelo', fontsize=12, fontweight='bold')
+                cbar_kws={'label': 'Value'})
+    ax2.set_title('Metrics por Modelo', fontsize=12, fontweight='bold')
     ax2.set_xticklabels([c.capitalize() for c in metrics_cols], rotation=30, ha='right')
 
     plt.tight_layout()
@@ -2608,14 +2726,14 @@ def explain_shap_importance(system: 'EPBRecognitionSystem',
     Diferença em relação ao mapa de erro de reconstrução (get_feature_importance):
     - SHAP mostra a contribuição **real** de cada pixel para a decisão do
       classificador, não apenas o erro de reconstrução do 2DPCA.
-    - Valores positivos (vermelho) → evidência a favor de EPB
-    - Valores negativos (azul) → evidência contra EPB
+    - Valuees positivos (vermelho) → evidência a favor de EPB
+    - Valuees negativos (azul) → evidência contra EPB
 
     Gera um painel com 4 visualizações:
       1. Imagem + overlay SHAP
       2. Mapa SHAP com sinal (vermelho=EPB, azul=não-EPB)
       3. |SHAP| — magnitude da importância
-      4. Erro de reconstrução 2DPCA (método anterior, para comparação)
+      4. Erro de reconstrução 2DPCA (previous method, para comparação)
 
     Args:
         system: EPBRecognitionSystem treinado
@@ -2635,7 +2753,7 @@ def explain_shap_importance(system: 'EPBRecognitionSystem',
     )
     abs_shap_map = np.abs(shap_map)
 
-    # 2. Importância antiga (erro de reconstrução)
+    # 2. Importance antiga (erro de reconstrução)
     old_importance, _ = system.get_feature_importance(X_sample)
 
     # 3. Predição
@@ -2644,20 +2762,20 @@ def explain_shap_importance(system: 'EPBRecognitionSystem',
 
     # 4. Análise textual
     print(f"\n{'='*70}")
-    print(f"🔬 ANÁLISE SHAP — Importância Real para Classificação")
+    print(f"🔬 ANÁLISE SHAP — Importance Real para Classificação")
     print(f"{'='*70}")
     print(f"\n📸 Imagem: {filename or 'N/A'}")
-    print(f"   • Classe real: {'EPB' if y_sample == 1 else 'Sem EPB'}")
-    print(f"   • Predição: {'EPB' if pred == 1 else 'Sem EPB'} ({prob[1]*100:.1f}%)")
+    print(f"   • True class: {'EPB' if y_sample == 1 else 'No EPB'}")
+    print(f"   • Prediction: {'EPB' if pred == 1 else 'No EPB'} ({prob[1]*100:.1f}%)")
     print(f"   • Método SHAP: {'TreeExplainer (tree-based)' if method == 'tree' else 'KernelExplainer (Ensemble)'}")
 
     # Análise por quadrante
     H, W = shap_map.shape
     quadrants = {
-        'Superior Esquerdo': (slice(None, H // 2), slice(None, W // 2)),
-        'Superior Direito':  (slice(None, H // 2), slice(W // 2, None)),
-        'Inferior Esquerdo': (slice(H // 2, None), slice(None, W // 2)),
-        'Inferior Direito':  (slice(H // 2, None), slice(W // 2, None)),
+        'Upper Left': (slice(None, H // 2), slice(None, W // 2)),
+        'Upper Right':  (slice(None, H // 2), slice(W // 2, None)),
+        'Lower Left': (slice(H // 2, None), slice(None, W // 2)),
+        'Lower Right':  (slice(H // 2, None), slice(W // 2, None)),
     }
 
     quadrant_values = {}
@@ -2668,17 +2786,17 @@ def explain_shap_importance(system: 'EPBRecognitionSystem',
         )
 
     total_abs = abs_shap_map.sum()
-    print(f"\n📊 Contribuição SHAP por quadrante:")
+    print(f"\n📊 SHAP contribution by quadrant:")
     for region in sorted(quadrant_values,
                          key=lambda r: quadrant_values[r][0], reverse=True):
         val, mean_signed = quadrant_values[region]
         pct = (val / total_abs * 100) if total_abs > 0 else 0
-        dir_str = '↑ EPB' if mean_signed > 0 else '↓ Sem EPB'
+        dir_str = '↑ EPB' if mean_signed > 0 else '↓ No EPB'
         print(f"   • {region}: {pct:.1f}% ({dir_str})")
 
     # Correlação entre SHAP e erro de reconstrução
     corr, _ = spearmanr(abs_shap_map.ravel(), old_importance.ravel())
-    print(f"\n📐 Correlação |SHAP| vs. Erro de Reconstrução: {corr:.3f} (Spearman)")
+    print(f"\n📐 Correlação |SHAP| vs. Reconstruction Error: {corr:.3f} (Spearman)")
     if corr > 0.7:
         print(f"   → Alta correlação: o erro de reconstrução já refletia a decisão")
     elif corr > 0.4:
@@ -2687,7 +2805,7 @@ def explain_shap_importance(system: 'EPBRecognitionSystem',
         print(f"   → Baixa correlação: SHAP e reconstrução focam em regiões distintas")
 
     # Interpretação física
-    print(f"\n💡 Interpretação:")
+    print(f"\n💡 Interpretation:")
     if pred == 1:
         print(f"   As regiões vermelhas no mapa SHAP mostram onde o modelo")
         print(f"   encontra evidência de EPB (estruturas verticais, deplecções).")
@@ -2695,13 +2813,15 @@ def explain_shap_importance(system: 'EPBRecognitionSystem',
         print(f"   As regiões azuis no mapa SHAP mostram evidência de ionosfera")
         print(f"   quieta (ausência de estruturas irregulares).")
 
-    # 5. Visualização — 4 painéis
-    fig, axes = plt.subplots(1, 4, figsize=(22, 5))
+    # 5. Visualização — 2 painéis
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
-    # Painel 1: Imagem com overlay SHAP
-    axes[0].imshow(X_sample, cmap='gray')
-    axes[0].imshow(abs_shap_map, cmap='hot', alpha=0.5)
-    axes[0].set_title('Imagem + SHAP overlay', fontsize=11, fontweight='bold')
+    # Painel 1: Imagem original
+    img = _load_disk_image(filename, image_folder)
+    if img is None:
+        img = X_sample
+    axes[0].imshow(img, cmap='gray')
+    axes[0].set_title('Original Image', fontsize=11, fontweight='bold')
     axes[0].axis('off')
 
     # Painel 2: SHAP com sinal (colormap divergente)
@@ -2709,25 +2829,13 @@ def explain_shap_importance(system: 'EPBRecognitionSystem',
     if vmax == 0:
         vmax = 1e-10
     im1 = axes[1].imshow(shap_map, cmap='RdBu_r', vmin=-vmax, vmax=vmax)
-    axes[1].set_title('Atribuição SHAP\n(🔴 EPB  |  🔵 Sem EPB)',
+    axes[1].set_title('SHAP Attribution\n(Red: EPB evidence  |  Blue: No EPB evidence)',
                       fontsize=11, fontweight='bold')
     axes[1].axis('off')
     plt.colorbar(im1, ax=axes[1], fraction=0.046, label='SHAP value')
 
-    # Painel 3: |SHAP| — magnitude
-    im2 = axes[2].imshow(abs_shap_map, cmap='hot')
-    axes[2].set_title('|SHAP| — Magnitude\nda Importância', fontsize=11, fontweight='bold')
-    axes[2].axis('off')
-    plt.colorbar(im2, ax=axes[2], fraction=0.046, label='|SHAP|')
-
-    # Painel 4: Erro de reconstrução (método anterior)
-    im3 = axes[3].imshow(old_importance, cmap='hot')
-    axes[3].set_title('Erro de Reconstrução\n(método anterior)', fontsize=11, fontweight='bold')
-    axes[3].axis('off')
-    plt.colorbar(im3, ax=axes[3], fraction=0.046, label='|Original − Reconstruída|')
-
-    suptitle = (f'SHAP: {"EPB" if y_sample == 1 else "Sem EPB"} '
-                f'(Pred: {"EPB" if pred == 1 else "Sem EPB"}, {prob[1]*100:.1f}%)'
+    suptitle = (f'SHAP: {"EPB" if y_sample == 1 else "No EPB"} '
+                f'(Pred: {"EPB" if pred == 1 else "No EPB"}, {prob[1]*100:.1f}%)'
                 f'{" — " + filename if filename else ""}')
     fig.suptitle(suptitle, fontsize=13, fontweight='bold')
     plt.tight_layout()

@@ -1,0 +1,13 @@
+TODOS RECEBERAM FILTRO DE PERÍODO: 2020 A 2026 E IDIOMA EM INGLÊS
+
+Filtro do Scopus: 65
+
+TITLE-ABS-KEY ( ( "equatorial plasma bubble*" OR "ionospheric plasma bubble*" OR "equatorial spread f" OR "ionospheric irregularit*" ) AND ( "detect*" OR "segment*" OR "classif*" OR "identif*" OR "predict*" ) AND ( "machine learning" OR "deep learning" OR "artificial intelligence" OR "neural network*" OR "convolutional neural network*" OR "CNN" ) ) AND PUBYEAR > 2019 AND PUBYEAR < 2027 AND ( LIMIT-TO ( LANGUAGE , "English" ) )
+
+Filtro do Web Of Scince
+
+TS=( ( "equatorial plasma bubble*" OR "ionospheric plasma bubble*" OR "equatorial spread f" OR "ionospheric irregularit*" ) AND ( "detect*" OR "segment*" OR "classif*" OR "identif*" OR "predict*" ) AND ( "machine learning" OR "deep learning" OR "artificial intelligence" OR "neural network*" OR "convolutional neural network*" OR "CNN"  ) )
+
+Filtro do IEEE
+
+(("All Metadata":"equatorial plasma bubble*" OR "All Metadata":"ionospheric plasma bubble*" OR "All Metadata":"equatorial spread f" OR "All Metadata":"ionospheric irregularit*") AND ("All Metadata":"detect*" OR "All Metadata":"segment*" OR "All Metadata":"classif*" OR "All Metadata":"identif*" OR "All Metadata":"predict*") AND ("All Metadata":"machine learning" OR "All Metadata":"deep learning" OR "All Metadata":"artificial intelligence" OR "All Metadata":"neural network*" OR "All Metadata":"CNN"))

@@ -1,0 +1,2347 @@
+TY  - JOUR
+TI  - Classification of the equatorial plasma bubbles using convolutional neural network and support vector machine techniques
+AU  - Thanakulketsarat, Thananphat
+AU  - Supnithi, Pornchai
+AU  - Myint, Lin Min Min
+AU  - Hozumi, Kornyanat
+AU  - Nishioka, Michi
+T2  - Earth Planets and Space
+AB  - Equatorial plasma bubble (EPB) is a phenomenon characterized by depletions in ionospheric plasma density being formed during post-sunset hours. The ionospheric irregularities can lead to disruptions in trans-ionospheric radio systems, navigation systems and satellite communications. Real-time detection and classification of EPBs are crucial for the space weather community. Since 2020, the Prachomklao radar station, a very high frequency (VHF) radar station, has been installed at Chumphon station (Geographic: 10.72 degrees N, 99.73 degrees E and Geomagnetic: 1.33 degrees N) and started to produce radar images ever since. In this work, we propose two real-time plasma bubble detection systems based on support vector machine techniques. Two designs are made with the convolutional neural network (CNN) and singular value decomposition (SVD) used for feature extraction, the connected to the support vector machine (SVM) for EPB classification. The proposed models are trained using quick look (QL) plot images from the VHF radar system at the Chumphon station, Thailand, in 2017. The experimental results show that the combined CNN-SVM model, using the RBF kernel, achieves the highest accuracy of 93.08% while the model using the polynomial kernel achieved an accuracy of 92.14%. On the other hand, the combined SVD-SVM models yield the accuracies of 88.37% and 85.00% for RBF and polynomial kernels of SVM, respectively.
+CY  - New York
+DA  - 2023///
+PY  - 2023
+DO  - 10.1186/s40623-023-01903-7
+DP  - Clarivate Analytics Web of Science
+VL  - 75
+IS  - 1
+SP  - 161
+J2  - Earth Planets Space
+LA  - English
+PB  - Springer
+SN  - 1880-5981
+L1  - https://earth-planets-space.springeropen.com/counter/pdf/10.1186/s40623-023-01903-7
+L1  - https://earth-planets-space.springeropen.com/counter/pdf/10.1186/s40623-023-01903-7
+L1  - https://earth-planets-space.springeropen.com/counter/pdf/10.1186/s40623-023-01903-7
+KW  - Support vector machine
+KW  - Convolutional neural network
+KW  - Equatorial plasma bubble
+KW  - Singular value decomposition
+ER  - 
+
+TY  - JOUR
+TI  - Deep convolutional neural network for P-band spaceborne synthetic aperture radar imaging through the ionosphere
+AU  - Shi, Hongyin
+AU  - Zhang, Jing
+AU  - Gao, Er-Fang
+AU  - Yang, Ting
+AU  - Guo, Jianwen
+T2  - Journal of Applied Remote Sensing
+AB  - The dispersion characteristics of the background ionosphere and the random fluctuations of the ionospheric irregularities are an important source of phase error that seriously damages the quality of radar images. To mitigate the ionospheric distortions of P-band spaceborne synthetic aperture radar (SAR) images, a super-resolution deep learning method is proposed in this paper. Different from the traditional imaging method based on the prior knowledge of imaging, the method proposed in this paper directly trains the ionospheric implicit imaging model of spaceborne SAR without complicated iterative processes. First, the phase errors, which are caused by the dispersion and the scintillation in the range and azimuth directions, respectively, are analyzed. Second, an improved u-net structure that embeds the residual network between the encoder and decoder is briefly proposed. Finally, the range doppler algorithm is used to preprocess radar image as the input of the convolutional neural network (CNN) and is compare with the predicted output of the CNN. Experimental results prove the effectiveness of the proposed method in radar image focusing. (C) 2020 Society of Photo Optical Instrumentation Engineers (SPIE)
+CY  - Bellingham
+DA  - 2020///
+PY  - 2020
+DO  - 10.1117/1.JRS.14.046507
+DP  - Web of Science Nextgen
+VL  - 14
+IS  - 4
+SP  - 046507
+J2  - J. Appl. Remote Sens.
+LA  - English
+PB  - Spie-Soc Photo-Optical Instrumentation Engineers
+SN  - 1931-3195
+KW  - convolutional neural network
+KW  - ionospheric scintillation
+KW  - P-band
+KW  - phase dispersion
+KW  - SAR
+KW  - SCINTILLATION
+KW  - spaceborne synthetic aperture radar
+ER  - 
+
+TY  - JOUR
+TI  - A Bootstrapping Convolutional Neural Network Technique for Optimizing Automated Detection of Equatorial Plasma Bubbles by Optical All-Sky Imagers
+AU  - Okoh, Daniel
+AU  - Cesaroni, Claudio
+AU  - Rabiu, Babatunde
+AU  - Shiokawa, Kazuo
+AU  - Otsuka, Yuichi
+AU  - Ogunjo, Samuel
+AU  - Akerele, Aderonke
+AU  - Habarulema, John Bosco
+AU  - Nava, Bruno
+AU  - Migoya-Orue, Yenca
+AU  - Jamjareegulgarn, Punyawi
+AU  - Seun, Adeniran
+AU  - Adama, Ogechi
+AU  - Ochieng, George
+AU  - Ameh, James
+AU  - Awuor, Adero
+AU  - Baki, Paul
+T2  - Earth and Space Science
+AB  - Equatorial plasma bubbles (EPBs) disrupt satellite-based communication and navigation systems, particularly in equatorial regions. Reliable detection and classification of EPBs from all-sky imager (ASI) images are essential for accurate space weather monitoring and forecasting. This study presents a novel bootstrapping convolutional neural network (CNN) approach to optimize automated EPB detection on ASI images for operational space weather monitoring applications, and overcoming challenges related to image variability and imbalanced data sets. Data used for CNN training were obtained from the optical mesosphere thermosphere imagers ASI installed at the Space Environment Research Laboratory, National Space Research and Development Agency, Abuja during the period from 2015 to 2020. Our method involved training three sub-models, and aggregating their predictions. The CNN trainings were conducted on three sub-datasets of 3,000 images each, categorized as "EPB," "Noisy/Cloudy" or "No EPB." Three corresponding sub-models were developed from the CNN trainings. The three sub-model classifications independently gave prediction accuracies of 98.67%, 98.33%, and 95.83% on a reserved test data set of 600 images. Ensemble models further improved the model prediction accuracies to 99.17% and 99.33% for methods based on the mean of sub-model probabilities and the mode of sub-model classifications respectively. Our results indicate that the bootstrapping CNN technique enhanced the EPB detection accuracy, providing a powerful tool for real-time space weather monitoring applications, and implications for improving operational reliability of satellite-based navigation and communication in the equatorial region.
+CY  - Washington
+DA  - 2025/06/11/
+PY  - 2025
+DO  - 10.1029/2024EA004117
+DP  - Web of Science Nextgen
+VL  - 12
+IS  - 6
+SP  - e2024EA004117
+J2  - Earth Space Sci.
+LA  - English
+PB  - Amer Geophysical Union
+SN  - 2333-5084
+KW  - airglow images
+KW  - all-sky imager
+KW  - bootstrapping
+KW  - convolutional neural networks
+KW  - equatorial plasma bubbles
+KW  - image processing
+KW  - machine learning
+KW  - DEEP
+KW  - MESOSPHERE THERMOSPHERE IMAGERS
+ER  - 
+
+TY  - JOUR
+TI  - Automatic detection and classification of Spread-F in ionograms using convolutional neural network
+AU  - Yacoub, Moheb
+AU  - Pacheco, Edgardo E.
+AU  - Abdelwahab, Moataz
+AU  - de la Jara, Cesar
+AU  - Mahrous, Ayman
+T2  - Journal of Atmospheric and Solar-Terrestrial Physics
+AB  - Equatorial spread-F (ESF) is an irregularity caused by plasma instabilities on the night side that causes signal degradation and disruptions to the GNSS signals. Ionosondes could detect ESF as it appears as a diffused echo in the ionogram images. This study proposes a Convolutional Neural Network (CNN) model that can automatically detect ESF within the ionogram images and classify its type. The model has been trained using 2646 manually labeled ionograms from the Low Latitude Ionospheric Sensor Network (LISN) VIPIR Ionosondes in South America. The data used to train the model was measured from 2019 to 2024. The model was able to classify the testing images into six categories: Clear class, frequency spread-F (FSF), range spread-F (RSF), mixed spread-F (MSF), strong spread-F (SSF), and Unidentified class. It demonstrated high classification accuracy within the extracted test subset and a further random test, showcasing robustness and consistency in detection accuracy across all classes. Furthermore, the model performance has been evaluated and compared with other baseline models: VGG16, VGG19, ResNet18, and Inception-V3 in the same environment. Additionally, a comparison with published models is provided. Our model showed a higher consistency in classification accuracy across all classes compared to the mentioned models.
+CY  - Oxford
+DA  - 2025/05//
+PY  - 2025
+DO  - 10.1016/j.jastp.2025.106504
+DP  - Web of Science Nextgen
+VL  - 270
+SP  - 106504
+J2  - J. Atmos. Sol.-Terr. Phys.
+LA  - English
+PB  - Pergamon-Elsevier Science Ltd
+SN  - 1364-6826, 1879-1824
+KW  - REGION
+KW  - EQUATORIAL
+ER  - 
+
+TY  - JOUR
+TI  - A comparative study of decision tree, random forest, and convolutional neural network for spread-F identification
+AU  - Lan, Ting
+AU  - Hu, Hui
+AU  - Jiang, Chunhua
+AU  - Yang, Guobin
+AU  - Zhao, Zhengyu
+T2  - Advances in Space Research
+AB  - Ionospheric spread-F (SF) is a commonly observed phenomenon of electron density perturbation in the F-layer. The ionospheric irregularities structure has an adverse effect on the propagation of electromagnetic waves in the ionosphere. The automatic identification of ionospheric spread-F and statistical study of the formation of spread-F are of great significance to the study of the physical mechanism of ionospheric inhomogeneity and for prediction of ionospheric irregularities. In this paper, we describe and implement three automatic identification methods of spread-F based on machine learning: decision tree, random forest, and convolutional neural network (CNN). The performance of these automatic identification methods was verified using a large set of test data. Results show that the accuracy of all three methods on identifying ionograms with spread-F exceeded 90%. After comparing the results of the three methods, we found that the decision tree method was the simplest and with the structure easiest to be understood, and it required the shortest interpretation time. In terms of the identification results, the random forest method provided better results than the decision tree method, and the CNN method was the best at accurately identifying ionograms with spread-F. (C) 2020 COSPAR. Published by Elsevier Ltd. All rights reserved.
+CY  - London
+DA  - 2020/04/15/
+PY  - 2020
+DO  - 10.1016/j.asr.2020.01.036
+DP  - Web of Science Nextgen
+VL  - 65
+IS  - 8
+SP  - 2052
+EP  - 2061
+J2  - Adv. Space Res.
+LA  - English
+PB  - Elsevier Sci Ltd
+SN  - 0273-1177, 1879-1948
+KW  - Convolutional neural network
+KW  - Automatic identification
+KW  - Decision tree
+KW  - Ionograms
+KW  - Random forest
+KW  - Spread-F
+ER  - 
+
+TY  - JOUR
+TI  - Automatic Detection and Feature Extraction of Equatorial Plasma Bubbles From All-Sky Airglow Image Based on Machine Learning
+AU  - Zhong, Jia
+AU  - Zou, Ziming
+AU  - Wu, Kun
+AU  - Xu, Jiyao
+AU  - Lu, Yang
+AU  - Sun, Longchang
+AU  - Li, Qinzeng
+AU  - Yuan, Wei
+T2  - Space Weather-the International Journal of Research and Applications
+AB  - We developed a deep convolutional neural network-based program code that automatically detects equatorial plasma bubbles (EPBs), segments EPB morphologies, and then extracts their features (including EPBs' northernmost foot latitudes and zonal drift velocities) from OI 630 nm airglow images. From 2012 to 2022, all-sky airglow images from Qujing Station, China (geographic: 25 degrees N, 104 degrees E; geomagnetic: 15.1 degrees N, 176.7 degrees E), were manually labeled as EPBs or non-EPBs. Some images showing typical EPB morphologies also had their contours annotated. This created two unique data sets which are both suitable for supervised learning models. Based on the above data sets, numerous experiments were conducted to train the EPB recognition model (EPB-RM) and the EPB morphology segmentation model (EPB-MSM). The results on the test set indicate that ResNet18+CBAM model can perform the best in recognizing EPB (precision: 99%, recall: 91%), and all models perform better during geomagnetically quiet periods and high solar activity periods (F10.7 value >140) than during geomagnetically disturbed periods (Dst index <= -30 nT or Kp index >= 3) and low solar activity periods. The EPB-MSM based on Deeplabv3plus had the highest accuracy (88.2%) for extracting the EPB morphology. Statistical features extracted using the EPB feature extraction program (EPB-FEP) were highly consistent with those extracted manually. The test results verified that machine learning is an excellent method for automatically detecting and extracting EPB characteristics. Our study provides a convenient tool for analyzing massive EPB images.
+CY  - Washington
+DA  - 2025/05/09/
+PY  - 2025
+DO  - 10.1029/2025SW004336
+DP  - Web of Science Nextgen
+VL  - 23
+IS  - 5
+SP  - e2025SW004336
+J2  - Space Weather
+LA  - English
+PB  - Amer Geophysical Union
+SN  - 1542-7390
+KW  - IRREGULARITIES
+KW  - REGION
+KW  - CLASSIFICATION
+KW  - DRIFTS
+KW  - EPBS
+KW  - EVOLUTION
+KW  - GRAVITY-WAVES
+KW  - RADAR
+KW  - SPREAD F
+ER  - 
+
+TY  - JOUR
+TI  - A Novel Short-Term Prediction Model for Regional Equatorial Plasma Bubble Irregularities in East and Southeast Asia
+AU  - Zhao, Xiukuan
+AU  - Li, Guozhu
+AU  - Xie, Haiyong
+AU  - Hu, Lianhuan
+AU  - Sun, Wenjie
+AU  - Li, Yi
+AU  - Dai, Guofeng
+AU  - Liu, Jianfei
+AU  - Li, Yu
+AU  - Ning, Baiqi
+AU  - Nishioka, Michi
+AU  - Perwitasari, Septi
+AU  - Kenpankho, Prasert
+T2  - Space Weather-the International Journal of Research and Applications
+AB  - Equatorial plasma bubble (EPB) irregularities can significantly impact satellite-based communication and navigation systems. Accurate prediction of EPB occurrence is essential for mitigating these impacts. Using the GNSS receiver network and ionosonde data from East and Southeast Asia during 2010-2021, and the rate of TEC change index to characterize the occurrence of EPB irregularities, we developed a novel Spatio-Temporal deep learning model for regional EPB irregularities short-term Prediction (STEP). The model integrates the convolutional neural network and long short-term memory (LSTM) network, together with attention mechanisms, to capture both spatial and temporal features of regional ionospheric irregularities. The results show that for 5-min forecast, the STEP model achieves a root mean square error (RMSE) of 0.062 TECU/min and an R2 of 0.818, reducing RMSE by 19.48% compared to LSTM and 27.06% compared to gated recurrent unit model. For 60-min prediction, the STEP model can still achieve reasonable accuracy with an RMSE of 0.110 TECU/min and an R2 of 0.482, showing significant improvement over traditional models. The equatorial F layer height and regional TEC fluctuations were identified as the most critical factors for predicting the generation and duration of EPB irregularities, respectively. The spatial and temporal distributions of EPB irregularities, including their latitudinal variation and delayed onset after sunset, and the occurrence across different days in East and Southeast Asia, were well predicted by the STEP. It is expected that the STEP model would provide a valuable tool for improving the resilience of GNSS against ionospheric scintillations induced by EPB irregularities.
+CY  - Washington
+DA  - 2025/02/12/
+PY  - 2025
+DO  - 10.1029/2024SW004224
+DP  - Web of Science Nextgen
+VL  - 23
+IS  - 2
+SP  - e2024SW004224
+J2  - Space Weather
+LA  - English
+PB  - Amer Geophysical Union
+SN  - 1542-7390
+KW  - equatorial plasma bubble
+KW  - DRIFT
+KW  - ionospheric irregularity
+KW  - GRADIENT
+KW  - IONOSPHERIC SCINTILLATION
+KW  - NEURAL-NETWORKS
+KW  - prediction model
+KW  - ROTI
+KW  - spatio-temporal deep learning
+ER  - 
+
+TY  - JOUR
+TI  - Statistical Analysis of Medium-Scale Traveling Ionospheric Disturbances Over Japan Based on Deep Learning Instance Segmentation
+AU  - Liu, Peng
+AU  - Yokoyama, Tatsuhiro
+AU  - Fu, Weizheng
+AU  - Yamamoto, Mamoru
+T2  - Space Weather-the International Journal of Research and Applications
+AB  - Medium-scale traveling ionospheric disturbances (MSTIDs) are observed as parallelly arrayed wavelike perturbations of Total Electron Content (TEC) in ionospheric F region leading to satellite navigation error and communication signal scintillation. The observation method for MSTIDs, detrended TEC (dTEC) map, summarizes the perturbation component of TEC having the merits of full-time and two-dimensional. However, previous automatic processing methods for dTEC map cannot discriminate MSTIDs from other irregular ionospheric perturbations intelligently. With the development of artificial intelligence in recent years, deep learning approach is expecting to clarify the controversy of MSTID external dependence (season and solar/geomagnetic activity) under debating for decades. Therefore, this research proposes a real-time processing algorithm for dTEC maps based on Mask Region-Convolutional Neural Network (R-CNN) model of deep learning instance segmentation to detect wavelike perturbations intelligently with an accuracy of about 80% and a processing speed of about 8 fps. Then isolated perturbations are eliminated and only MSTID waveforms are chosen to obtain statistical characteristics of MSTIDs. With this algorithm, we analyzed up to 1,209,600 dTEC maps from 1997 to 2019 over Japan automatically and established a database of hourly averaged MSTID characteristics. This research introduces the partial correlation coefficient for the first time to clarify the solar/geomagnetic activity dependence of MSTID characteristics which is independent with each other.
+CY  - Washington
+DA  - 2022/07//
+PY  - 2022
+DO  - 10.1029/2022SW003151
+DP  - Web of Science Nextgen
+VL  - 20
+IS  - 7
+SP  - e2022SW003151
+J2  - Space Weather
+LA  - English
+PB  - Amer Geophysical Union
+SN  - 1542-7390
+KW  - statistical analysis
+KW  - deep learning
+KW  - ATMOSPHERIC GRAVITY-WAVES
+KW  - NETWORK
+KW  - AIRGLOW OBSERVATIONS
+KW  - DOPPLER
+KW  - IMAGES
+KW  - instance segmentation
+KW  - ionospheric irregularity
+KW  - MIDLATITUDE
+KW  - MSTID
+KW  - PERTURBATIONS
+KW  - wavelike perturbation
+ER  - 
+
+TY  - JOUR
+TI  - Equatorial spread-F forecasting model with local factors using the long short-term memory network
+AU  - Thammavongsy, Phimmasone
+AU  - Supnithi, Pornchai
+AU  - Myint, Lin Min Min
+AU  - Hozumi, Kornyanat
+AU  - Lakanchanh, Donekeo
+T2  - Earth Planets and Space
+AB  - The predictability of the nighttime equatorial spread-F (ESF) occurrences is essential to the ionospheric disturbance warning system. In this work, we propose ESF forecasting models using two deep learning techniques: artificial neural network (ANN) and long short-term memory (LSTM). The ANN and LSTM models are trained with the ionogram data from equinoctial months in 2008 to 2018 at Chumphon station (CPN), Thailand near the magnetic equator, where the ESF onset typically occurs, and they are tested with the ionogram data from 2019. These models are trained especially with new local input parameters such as vertical drift velocity of the F-layer height (Vd) and atmospheric gravity waves (AGW) collected at CPN station together with global parameters of solar and geomagnetic activity. We analyze the ESF forecasting models in terms of monthly probability, daily probability and occurrence, and diurnal predictions. The proposed LSTM model can achieve the 85.4% accuracy when the local parameters: Vd and AGW are utilized. The LSTM model outperforms the ANN, particularly in February, March, April, and October. The results show that the AGW parameter plays a significant role in improvements of the LSTM model during post-midnight. When compared to the IRI-2016 model, the proposed LSTM model can provide lower discrepancies from observational data.
+CY  - New York
+DA  - 2023/08/04/
+PY  - 2023
+DO  - 10.1186/s40623-023-01868-7
+DP  - Web of Science Nextgen
+VL  - 75
+IS  - 1
+SP  - 118
+J2  - Earth Planets Space
+LA  - English
+PB  - Springer
+SN  - 1880-5981
+L1  - https://earth-planets-space.springeropen.com/counter/pdf/10.1186/s40623-023-01868-7
+L1  - https://earth-planets-space.springeropen.com/counter/pdf/10.1186/s40623-023-01868-7
+L1  - https://earth-planets-space.springeropen.com/counter/pdf/10.1186/s40623-023-01868-7
+KW  - Equatorial spread-F
+KW  - Artificial neural network
+KW  - EAST
+KW  - Equatorial spread-F forecasting model
+KW  - IRI
+KW  - IRI-2016 model
+KW  - Long short-term memory
+KW  - NEURAL-NETWORK
+KW  - PLASMA BUBBLE
+KW  - STATION
+KW  - STATISTICS
+KW  - Long short-term memory
+ER  - 
+
+TY  - CONF
+TI  - Applying Machine Learning to Predict Alaskan Ionospheric Irregularities
+AU  - Gomez, Annabel R.
+AU  - Pi, Xiaoqing
+T2  - 34th International Technical Meeting of the Satellite-Division-of-The-Institute-of-Navigation (ION GNSS+)
+AB  - In this work several machine-learning (ML) techniques for predicting ionospheric irregularities in the northern auroral zone were tested. The techniques include Ridge Regression, Long Short-Term Memory Neural Network (LSTM), Classification Neural Network ( CNN), Autoencoder Classification Neural Network (ACNN), and LSTM Autoencoder Classification Neural Network (LACNN). These techniques were tested with the rate of total electron content (TEC) index (ROTI) data collected during 2008 and 2009 from a geodetic station in Fairbanks, Alaska (64.98 degrees N, 147.50 degrees W), which is located in the northern auroral zone. Using ROTI data with the ML techniques, experiments were conducted to reach two goals: (1) examine what space weather measurements present good correlation with ROTI so that they may be helpful in ML-based prediction of ionospheric irregularities in the polar region; (2) predict ROTI hours and days ahead by training the neural network models with historical ROTI data alone. The Ridge Regression experiments indicate that a combination of measurements of local geomagnetic horizontal components, geomagnetic SYM-H index, 3-hour Kp and ap indices, and F10.7 solar flux index appears to be more correlated to the single-site ROTI measurements than other parameters analyzed. The neural network (NN) experiments show that although the LACNN model allows for predictions of non-irregularity and irregularity conditions defined by ROTI levels up to 3 hours in advance, with an overall accuracy >= 92%, a number of irregularity events can still be missed in the predictions. Hence, further development is needed to reduce the number of missed events. In this paper, the models, data processing, model performance, prediction results, and potential applications are presented.
+C1  - Washington
+C3  - Proceedings of the 34th International Technical Meeting of the Satellite Division of the Institute of Navigation (ion Gnss+ 2021)
+DA  - 2021///
+PY  - 2021
+DO  - 10.33012/2021.18032
+DP  - Web of Science Nextgen
+SP  - 3848
+EP  - 3858
+LA  - English
+PB  - Inst Navigation
+SN  - 978-0-936406-29-9
+ER  - 
+
+TY  - JOUR
+TI  - Neural Network Model for ESF Occurrence at an Equatorial Station
+AU  - Oladipo, O. A.
+AU  - Salifu, F. U.
+AU  - Ebock, E. O.
+AU  - Nava, B.
+T2  - Space Weather-the International Journal of Research and Applications
+AB  - Equatorial Spread F (ESF) usually seen in the nighttime ionograms as diffused echo is a manifestation of the ionospheric plasma density irregularities. lifting of the F-region ionization to the higher altitude shortly after local sunset has been identified as the main mechanism responsible for the generation and evolution of equatorial ionospheric plasma density irregularities. Vertical drift velocity () obtained from ionograms can be used as an indicator of the strength of this lifting. Therefore, a neural network model, built around the value and other related parameters for the prediction of ESF occurrence, was trained and validated in this study. The model was a decision tree regressor neural network model and the input parameters were , time of maximum , day of the year and . The target parameter was the ESF occurrence or non-occurrence (i.e. 1 or 0). Vertical drift velocity values were obtained from available ionograms that were recorded at Ilorin. Attempts were made to vary the number of input parameters in order to see their contribution in predicting ESF occurrence. The best model is the one trained with the four input parameters with 78.62% accuracy during validation. The most revealing is the result obtained when alone was used as input to train the model-in which very poor result was obtained during validation. The results obtained were compared with that of an existing model for ESF prediction.
+CY  - Washington
+DA  - 2025///
+PY  - 2025
+DO  - 10.1029/2025SW004442
+DP  - Web of Science Nextgen
+VL  - 23
+IS  - 8
+SP  - e2025SW004442
+J2  - Space Weather
+LA  - English
+PB  - Amer Geophysical Union
+SN  - 1542-7390
+KW  - CLIMATOLOGY
+KW  - IRREGULARITIES
+KW  - equatorial ionosphere
+KW  - PLASMA BUBBLES
+KW  - ESF occurrence
+KW  - GEOMAGNETIC STORM
+KW  - GPS IONOSPHERIC SCINTILLATIONS
+KW  - ionospheric plasma density irregularities
+KW  - LONGITUDES
+KW  - neural network model
+KW  - SPREAD-F OCCURRENCE
+KW  - vertical drifting of ionization
+ER  - 
+
+TY  - JOUR
+TI  - Spread-F prediction model for the equatorial Chumphon station, Thailand
+AU  - Thammavongsy, P.
+AU  - Supnithi, P.
+AU  - Phakphisut, W.
+AU  - Hozumi, K.
+AU  - Tsugawa, T.
+T2  - Advances in Space Research
+AB  - This work proposes a range spread-F (RSF) prediction model using the neural network (NN) over the equatorial Chumphon (CPN) region in Thailand. The RSF model is constructed by using five input spaces including the diurnal variations, seasonal variations, geographic latitude, solar flux index (F10.7), and magnetic index (A(p)). The RSF NN model is trained with three years of RSF data during 2013 to 2015 from Chumphon (CPN) station (Latitude = 10.7 degrees N, Longitude = 99.4 degrees E) and the performance of the proposed RSF NN model is validated using the dataset of 2016. As a result, the RSF NN model achieves 98.3% accuracy of all correct predictions even with the limited available data. The results show that the proposed NN model yields a lower RSF probability than the actual observation by about 7.3%, but the overestimation of the proposed NN model is 2.5% in both the equinoxes and solstices. In addition, we discover that the IRI-2016 model mostly overestimates the RSF probability when compared with the actual observation for all seasons in 2016, particularly, in equinoctial months over Chumphon station. (C) 2019 COSPAR. Published by Elsevier Ltd. All rights reserved.
+CY  - London
+DA  - 2020///
+PY  - 2020
+DO  - 10.1016/j.asr.2019.09.040
+DP  - Web of Science Nextgen
+VL  - 65
+IS  - 1
+SP  - 152
+EP  - 162
+J2  - Adv. Space Res.
+LA  - English
+PB  - Elsevier Sci Ltd
+SN  - 0273-1177, 1879-1948
+KW  - IRREGULARITIES
+KW  - Equatorial spread-F
+KW  - IRI-2016 model
+KW  - DIFFERENT LONGITUDE SECTORS
+KW  - Ionospheric irregularity
+KW  - Neural network
+KW  - Spread-F prediction model
+ER  - 
+
+TY  - JOUR
+TI  - Machine learning approach for prediction of ionospheric irregularities on ROTI index over the Northern anomaly crest in Egypt during solar cycle 24
+AU  - Salah, Hager M.
+AU  - Babatunde, Rabiu
+AU  - Okoh, Daniel
+AU  - Youssef, M.
+AU  - Mahrous, Ayman
+T2  - Advances in Space Research
+AB  - This paper reports the prediction results of the ionospheric irregularities represented by the ROTI index close to the equatorial ionization anomaly's Northern peak. A feedforward backpropagation Neural Network (NN) approach is implemented using a time series Nonlinear Autoregressive approach with Exogenous inputs (NARX). We used the data from a dual frequency GPS-SCINDA station located at Helwan (geographic coordinates of 29.86 degrees N, 31.32 degrees E, and MLAT of 29.94 degrees N) in Egypt. To allow the model to be independently tested during varying levels of solar activities, we collected a 5 -minute resolution of ROTI data for the solar cycle 24 from 2009 to 2017. The factors that influence the development of ionospheric irregularities are involved in the established model representing the diurnal and seasonal variations as well as solar and geomagnetic activity parameters. To support learning, we included IRI-foF2 and IRIhmF2 parameters in the input layer neurons to improve the model learning about the behavior of the ionospheric F layer. The results show that the NN-ROTI values precisely match the GPS-ROTI values with an RMSE of 0.106 TECU/min and a prediction efficiency of 95%. The predicted values are highly correlated with the originals, with a regression of 0.89. Furthermore, the irregularities were more prevalent during the equinox months than during the solstice months. It is also observed that predicted NN-ROTI values in all seasons have RMSEs less than 0.03 and 0.05 TECU/min for the low and high solar activity, respectively. The results also showed a clear correlation between solar activity and the occurrence percentage of ionospheric irregularities indicating a solar cycle dependency. The prediction values of the NN-ROTI occurrence % demonstrated a remarkable correlation with the observed GPS-ROTI occurrence % across SC24. (c) 2024 COSPAR. Published by Elsevier B.V. All rights are reserved, including those for text and data mining, AI training, and similar technologies.
+CY  - London
+DA  - 2024///
+PY  - 2024
+DO  - 10.1016/j.asr.2024.05.022
+DP  - Web of Science Nextgen
+VL  - 74
+IS  - 4
+SP  - 1810
+EP  - 1827
+J2  - Adv. Space Res.
+LA  - English
+PB  - Elsevier Sci Ltd
+SN  - 0273-1177, 1879-1948
+KW  - REGION
+KW  - SCINTILLATION
+KW  - EQUATORIAL
+KW  - NEURAL-NETWORKS
+KW  - Artificial Neural Network
+KW  - Equatorial ionization anomaly crest
+KW  - FLUCTUATIONS
+KW  - Ionospheric Irregularities
+KW  - NARX
+KW  - PHASE
+KW  - ROTI Index
+KW  - TOTAL ELECTRON-CONTENT
+KW  - VARIABILITY
+ER  - 
+
+TY  - JOUR
+TI  - Predicting Equatorial Ionospheric Convective Instability Using Machine Learning
+AU  - Garcia, D.
+AU  - Rojas, E. L.
+AU  - Hysell, D. L.
+T2  - Space Weather-the International Journal of Research and Applications
+AB  - The numerical forecast methods used to predict ionospheric convective plasma instabilities associated with Equatorial Spread-F (ESF) have limited accuracy and are often computationally expensive. We test whether it is possible to bypass first-principle numeric simulations and forecast irregularities using machine learning models. The data are obtained from the incoherent scatter radar at the Jicamarca Radio Observatory located in Lima, Peru. Our models map vertical plasma drifts, time, and solar activity to the occurrence and location of clusters of echoes telltale of ionospheric irregularities. Our results show that these models are capable of identifying the predictive power of the tested inputs, obtaining accuracies around 75%.
+CY  - Washington
+DA  - 2023/12//
+PY  - 2023
+DO  - 10.1029/2023SW003505
+DP  - Web of Science Nextgen
+VL  - 21
+IS  - 12
+SP  - e2023SW003505
+J2  - Space Weather
+LA  - English
+PB  - Amer Geophysical Union
+SN  - 1542-7390
+KW  - machine learning
+KW  - SPREAD-F
+KW  - DRIFT
+KW  - RADAR
+KW  - PREREVERSAL ENHANCEMENT
+KW  - PLASMA BUBBLES
+KW  - equatorial spread F
+KW  - forecasting
+KW  - ionospheric irregularities
+KW  - neural networks
+KW  - random forests
+ER  - 
+
+TY  - JOUR
+TI  - ISNet: Decomposed Dynamic Spatio-Temporal Neural Network for Ionospheric Scintillation Forecasts
+AU  - Gao, Zhixu
+AU  - Chen, Yanhong
+AU  - Ao, Xianzhi
+AU  - Yue, Fulu
+AU  - Chen, Hong
+AU  - Deng, Hao
+AU  - Luo, Bingxian
+AU  - Wang, Xin
+AU  - Yuan, Tianjiao
+T2  - Space Weather-the International Journal of Research and Applications
+AB  - Accurate prediction of ionospheric scintillation is essential for ensuring the reliability of spaceborne and ground-based radio wave technology infrastructures, including but not limited to navigation and communication systems. In this study, we propose a deep learning-based Ionospheric Scintillation Network (ISNet), which can predict the regional scintillation index S4 1 hour in advance. The novel ISNet decomposes the S4 index into background and disturbance fields and treats them separately. The model also employs specialized modules to capture the time-delay effect between external disturbances and the associated scintillation. A flexible dynamic data reconstruction strategy is adopted, which allows the model to learn directly from high-fidelity scintillation observations. Our results show that ISNet can provide accurate regional ionospheric scintillation forecasts in the low-latitude regions of China. The RMSEs for weak, moderate, and strong scintillations in the test set are 0.053, 0.124, and 0.183, respectively. Compared with 12 other methods, ISNet displays a significant advantage in predicting moderate-to-strong scintillations. We also quantified the relative importance of input features to model predictions through the interpretable technique, which may provide valuable insights into model interpretation and feature selection.
+CY  - Washington
+DA  - 2025/05/30/
+PY  - 2025
+DO  - 10.1029/2024SW004239
+DP  - Web of Science Nextgen
+VL  - 23
+IS  - 6
+SP  - e2024SW004239
+J2  - Space Weather
+LA  - English
+PB  - Amer Geophysical Union
+SN  - 1542-7390
+ST  - ISNet
+KW  - EQUATORIAL PLASMA BUBBLE
+KW  - IRREGULARITIES
+KW  - MODEL
+KW  - VARIABILITY
+ER  - 
+
+TY  - JOUR
+TI  - Transductive Radar Clutter Segmentation Network for Ionospheric Inhomogeneity Clutter Suppression
+AU  - Li, Yuanbiao
+AU  - Yu, Lei
+AU  - Wei, Yinsheng
+T2  - Ieee Journal of Selected Topics in Applied Earth Observations and Remote Sensing
+AB  - The ionosphere turbulent motions, detected by radar systems, result in a complex form of ionospheric inhomogeneity clutter. In this article, we introduce transductive radar clutter segmentation network (TRCS-Net), a deep unfolding network architecture for joint suppression of ionospheric clutter. The proposed model utilizes transductive transfer learning to adapt knowledge from a source domain to specific target domain conditions of ionospheric clutter. A deep unfolding approach maps the iterative optimization procedure onto a neural network, jointly optimizing across multiple traditional clutter suppression methods. The training dataset uniquely fuses measured radar data with simulations characterizing the turbulent motion mechanisms that generate ionospheric irregularities. Experiments demonstrate the effectiveness of TRCS-Net in improving clutter suppression performance compared to individual algorithms, leveraging transductive transfer learning and simulation data.
+CY  - Piscataway
+DA  - 2025///
+PY  - 2025
+DO  - 10.1109/JSTARS.2025.3594152
+DP  - Web of Science Nextgen
+VL  - 18
+SP  - 19649
+EP  - 19661
+J2  - IEEE J. Sel. Top. Appl. Earth Observ. Remote Sens.
+LA  - English
+PB  - Ieee-Inst Electrical Electronics Engineers Inc
+SN  - 1939-1404, 2151-1535
+L1  - https://ieeexplore.ieee.org/stampPDF/getPDF.jsp?tp=&arnumber=11105023&ref=
+L1  - https://ieeexplore.ieee.org/stampPDF/getPDF.jsp?tp=&arnumber=11105023&ref=
+L1  - https://ieeexplore.ieee.org/stampPDF/getPDF.jsp?tp=&arnumber=11105023&ref=
+L1  - https://ieeexplore-ieee-org.ez15.periodicos.capes.gov.br/stampPDF/getPDF.jsp?tp=&arnumber=11105023&ref=
+KW  - Radar
+KW  - Feature extraction
+KW  - Training
+KW  - Optimization
+KW  - Adaptation models
+KW  - ALGORITHM
+KW  - Clutter
+KW  - Deep unfolding
+KW  - ionospheric clutter
+KW  - Nonhomogeneous media
+KW  - Radar clutter
+KW  - Remote sensing
+KW  - transductive transfer learning
+KW  - Transfer learning
+KW  - turbulence simulation
+ER  - 
+
+TY  - JOUR
+TI  - Modelling and forecasting of ionospheric TEC irregularities over a low latitude GNSS station
+AU  - Sivavaraprasad, G.
+AU  - Venkata Ratnam, D.
+AU  - Sridhar, M.
+AU  - Sivakrishna, K.
+T2  - Astrophysics and Space Science
+AB  - The study aims to take an advantage of the systematic combination of statistical procedures namely Principal Component analysis (PCA), Linear Model to develop a local climatological model for ionospheric Total Electron Content (TEC) irregularities. Further, Auto Regressive Moving Average (ARMA) model, Neural Network (NN) model are used to forecast the ionospheric irregularities over Bengaluru region, India. Bengaluru International GNSS Service (IGS) station dataset (geographic lat.- 13.02 degrees N, long.77.57 degrees E; geomagnetic latitude: 4.4 degrees N) of an 8-year period has been used to implement the proposed algorithm. Retrieval of the main components of the times series using Principal Component Analysis, identifying and analyzing the trends and cycles in the PCA residual to model the un-modelled irregularities using Linear model and finally fitting the residual series using ARMA/NN models to forecast the irregularity es has delivered successful results. The ionospheric TEC irregularities, measured in TECU/hour, are investigated during the 24th solar cycle ascending and descending phases. The MAE and RMSE values are used for the validation of the proposed models in forecasting the ionospheric TEC irregularities during both geomagnetic quiet and storm days (12-14 October 2016). It is observed that MAE value of NN model is 0.5 TECU/hour during geomagnetic quiet period whereas it is 0.98 TECU/hour during geomagnetic disturbed period. Moreover, the RMSE value of ARMA model is 0.73 TECU/hour and 0.67 TECU/hour for NN model which reveals that NN model is comparatively good in forecasting the ionospheric TEC irregularities during geomagnetic quiet period. The proposed model can be useful to develop an ionospheric irregularity climatological tool for low latitude regions.
+CY  - Dordrecht
+DA  - 2020///
+PY  - 2020
+DO  - 10.1007/s10509-020-03883-6
+DP  - Web of Science Nextgen
+VL  - 365
+IS  - 10
+SP  - 168
+J2  - Astrophys. Space Sci.
+LA  - English
+PB  - Springer
+SN  - 0004-640X, 1572-946X
+KW  - NETWORK
+KW  - GPS
+KW  - REGION
+KW  - SCINTILLATIONS
+KW  - MORPHOLOGY
+KW  - EQUATORIAL
+KW  - Ionospheric irregularities
+KW  - TOTAL ELECTRON-CONTENT
+KW  - GNSS
+KW  - ALGORITHM
+KW  - ANOMALY CREST
+KW  - ARMA
+KW  - Autoregressive Moving Average
+KW  - Linear Model
+KW  - Neural Networks
+KW  - Principal Component Analysis
+ER  - 
+
+TY  - JOUR
+TI  - A high-accuracy ionospheric foF2 critical frequency forecast using long short-term memory LSTM
+AU  - Denisenko-Floyd, Alexandra
+AU  - Yucel, Meric
+AU  - Ustundag, Burak Berk
+T2  - Environmental Data Science
+AB  - Due to the F2 ionospheric layer's ability to reflect radio waves, the foF2 critical frequency is essential since sudden irregularities can disrupt communication and navigation systems, affecting the weather forecast's accuracy. This paper aims to develop accurate foF2 critical frequency prediction up to 24 hours ahead, focusing on mid and high latitudes, using the long short-term memory (LSTM) model covering the 24th solar cycle from 2008 to 2019. To evaluate the effectiveness of the proposed model, a comparative analysis is conducted with commonly referenced machine learning techniques, including linear regression, decision tree algorithms, and multilayer perceptron (MLP) using the Taylor diagram and error plots. The study involved five monitoring stations, different years with minimum and maximum solar activity, and prediction timeframes. Through extensive experimentation, a comprehensive set of outcomes is evaluated across diverse metrics. The findings conclusively established that the LSTM model has demonstrated superior performance compared to the other models across all stations and years. On average, LSTM is 1.2 times better than the second-best model (DT), 1.6 times as effective as the multilayer perceptron MLP, and three times more accurate than linear regression. The results of this research hold promise for increasing the precision of foF2-prediction, with potential implications for enhancing communication systems and weather forecasting capabilities.
+CY  - Cambridge
+DA  - 2024///
+PY  - 2024
+DO  - 10.1017/eds.2024.20
+DP  - Web of Science Nextgen
+VL  - 3
+SP  - e26
+J2  - Environ. Data Sci.
+LA  - English
+PB  - Cambridge Univ Press
+SN  - 2634-4602
+L1  - https://www.cambridge.org/core/services/aop-cambridge-core/content/view/0682740A8DAFAF4EBC5380F061FECF73/S2634460224000207a.pdf/div-class-title-a-high-accuracy-ionospheric-fof2-critical-frequency-forecast-using-long-short-term-memory-lstm-div.pdf
+L1  - https://www.cambridge.org/core/services/aop-cambridge-core/content/view/0682740A8DAFAF4EBC5380F061FECF73/S2634460224000207a.pdf/div-class-title-a-high-accuracy-ionospheric-fof2-critical-frequency-forecast-using-long-short-term-memory-lstm-div.pdf
+L1  - https://www.cambridge.org/core/services/aop-cambridge-core/content/view/0682740A8DAFAF4EBC5380F061FECF73/S2634460224000207a.pdf/div-class-title-a-high-accuracy-ionospheric-fof2-critical-frequency-forecast-using-long-short-term-memory-lstm-div.pdf
+KW  - NEURAL-NETWORK
+KW  - ionospheric irregularities
+KW  - foF2 critical frequency
+KW  - GLOBAL IONOSPHERE
+KW  - INTERNATIONAL REFERENCE IONOSPHERE
+KW  - MULTILAYER PERCEPTRON
+KW  - PREDICTION MODEL
+KW  - short-term prediction
+KW  - space weather
+KW  - time-series forecasting
+KW  - short-Term prediction
+ER  - 
+
+TY  - JOUR
+TI  - Ionospheric irregularity reconstruction using multisource data fusion via deep learning
+AU  - Tian, Penghao
+AU  - Yu, Bingkun
+AU  - Ye, Hailun
+AU  - Xue, Xianghui
+AU  - Wu, Jianfei
+AU  - Chen, Tingdi
+T2  - Atmospheric Chemistry and Physics
+AB  - Ionospheric sporadic E layers (Es) are intense plasma irregularities between 80 and 130 km in altitude and are generally unpredictable. Reconstructing the morphology of sporadic E layers is not only essential for understanding the nature of ionospheric irregularities and many other atmospheric coupling systems, but is also useful for solving a broad range of demands for reliable radio communication of many sectors reliant on ionosphere-dependent decision-making. Despite the efforts of many empirical and theoretical models, a predictive algorithm with both high accuracy and high efficiency is still lacking. Here we introduce a new approach for Sporadic E Layer Forecast using Artificial Neural Networks (SELF-ANN). The prediction engine is trained by fusing observational data from multiple sources, including a high-resolution ERA5 reanalysis dataset, Constellation Observing System for Meteorology, Ionosphere, and Climate (COSMIC) radio occultation (RO) measurements, and integrated data from OMNIWeb. The results show that the model can effectively reconstruct the morphology of the ionospheric E layer with intraseasonal variability by learning complex patterns. The model obtains good performance and generalization capability by applying multiple evaluation criteria. The random forest algorithm used for preliminary processing shows that local time, altitude, longitude, and latitude are significantly essential for forecasting the E-layer region. Extensive evaluations based on ground-based observations demonstrate the superior utility of the model in dealing with unknown information. The presented framework will help us better understand the nature of the ionospheric irregularities, which is a fundamental challenge in upper-atmospheric and ionospheric physics. Moreover, the proposed SELF-ANN can make a significant contribution to the development of the prediction of ionospheric irregularities in the E layer, particularly when the formation mechanisms and evolution processes of the Es layer are not well understood.
+CY  - Gottingen
+DA  - 2023///
+PY  - 2023
+DO  - 10.5194/acp-23-13413-2023
+DP  - Web of Science Nextgen
+VL  - 23
+IS  - 20
+SP  - 13413
+EP  - 13431
+J2  - Atmos. Chem. Phys.
+LA  - English
+PB  - Copernicus Gesellschaft Mbh
+SN  - 1680-7316, 1680-7324
+L1  - https://acp.copernicus.org/articles/23/13413/2023/acp-23-13413-2023.pdf
+L1  - https://acp.copernicus.org/articles/23/13413/2023/acp-23-13413-2023.pdf
+L1  - https://acp.copernicus.org/articles/23/13413/2023/acp-23-13413-2023.pdf
+KW  - SCINTILLATIONS
+KW  - MIDLATITUDE
+KW  - RADIO OCCULTATION MEASUREMENTS
+KW  - SPORADIC-E LAYERS
+KW  - ABSORPTION
+KW  - ATMOSPHERE
+KW  - GLOBAL TRANSPORT
+KW  - METALLIC-IONS
+KW  - MONOCHROMATIC RADIATION
+KW  - SPACE WEATHER
+ER  - 
+
+TY  - CONF
+TI  - Clustering of Ionospheric Irregularities based on Spatiotemporal ROTI Keogram Images
+AU  - Mutasov, Gleb
+AU  - Myint, Lin Min Min
+AU  - Supnithi, Pornchai
+AU  - Budtho, Jirapoom
+AU  - Tongkasem, Napat
+AU  - Nishioka, Michi
+T2  - 21st International Conference on Electrical Engineering/Electronics, Computer, Telecommunications and Information Technology (ECTI-CON)
+AB  - Ionospheric irregularities associated with Equatorial plasma bubbles (EPB) can significantly impact navigation and communication systems. Therefore, their occurrences need to be studied and predicted. To solve the prediction problem, it is necessary to identify types of spatiotemporal characteristics as reference points for the predictive model. This work employs unsupervised machine learning algorithms to identify types of ionospheric irregularities due to EPB using the rate of total electron content index (ROTI) keograms. Two machine learning methods: two models, the Gaussian mixture model (GMM), and k-means, are considered. Comparative analysis is performed, and the optimal number of clusters is estimated using one classical, k-means and one additional - repeatability score, introduced in this work metric. The optimal GMM model successfully classifies three types of irregularity patterns offering valuable insights for the development of an effective EPB prediction model and enhancing our understanding of ionospheric behavior.
+C1  - New York
+C3  - 2024 21st International Conference on Electrical Engineering/Electronics, Computer, Telecommunications and Information Technology, Ecti-Con 2024
+DA  - 2024///
+PY  - 2024
+DO  - 10.1109/ECTI-CON60892.2024.10594966
+DP  - Web of Science Nextgen
+SP  - 1
+EP  - 6
+LA  - English
+PB  - IEEE
+SN  - 979-8-3503-8156-6 979-8-3503-8155-9
+UR  - https://ieeexplore.ieee.org/document/10594966/
+L1  - https://ieeexplore-ieee-org.ez15.periodicos.capes.gov.br/stampPDF/getPDF.jsp?tp=&arnumber=10594966&ref=
+KW  - Machine learning
+KW  - equatorial plasma bubble
+KW  - machine learning
+KW  - clustering
+KW  - Feature extraction
+KW  - GMM
+KW  - ionosphere
+KW  - k-means
+KW  - Machine learning algorithms
+KW  - Measurement
+KW  - Navigation
+KW  - Prediction algorithms
+KW  - Predictive models
+KW  - ROTI keograms
+ER  - 
+
+TY  - JOUR
+TI  - Machine learning based classification of ionospheric equatorial plasma bubbles using GNSS-derived doppler index
+AU  - Sowmya, Bandaru Srilakshmi
+AU  - Ammana, Supraja Reddy
+AU  - Ipsitha, Manthati
+AU  - Minchula, Vinodh Kumar
+AU  - Devanaboyina, Venkata Ratnam
+T2  - Earth Science Informatics
+AB  - Equatorial plasma bubbles (EPBs) are ionospheric irregularities that degrade Global Navigation Satellite System (GNSS) signal quality through rapid total electron content (TEC) fluctuations and scintillation. This study presents a novel approach for EPB detection with Doppler Index and classification using an Xtreme Gradient Boosting (XGBoost) model based on multi-feature GNSS parameters. Doppler index (DI), vertical TEC (VTEC), elevation angle, timestamp and Ionospheric Pierce Point (IPP) were extracted from GNSS observations at the low-latitude IGS GNSS station HYDE during 12 geomagnetically active days spread across 2022, 2023 and 2025. Class imbalance was addressed using SMOTE and SMOTE-Edited Nearest Neighbors (SMOTEENN). To test the robustness, EPB events over the years 2015, 2023, 2024 and 2025 were considered, excluding the days from the train dataset. Results indicate that XGBoost with SMOTEENN has an accuracy of 96.67% and an improved minority-class F1-score of 0.637, outperforming XGBoost + SMOTEENN with single-parameter ROTI (Rate of TEC Index) (0.510) and DI (0.512) models. Validation using DI-ROTI relationships and geomagnetic indices confirms the physical consistency of the GNSS EPB classification results.
+CY  - Heidelberg
+DA  - 2026/05/02/
+PY  - 2026
+DO  - 10.1007/s12145-026-02135-5
+DP  - Web of Science Nextgen
+VL  - 19
+IS  - 6
+SP  - 83
+J2  - Earth Sci. Inform.
+LA  - English
+PB  - Springer Heidelberg
+SN  - 1865-0473, 1865-0481
+KW  - Doppler index (DI)
+KW  - Equatorial plasma bubbles (EPB)
+KW  - Global navigation satellite system (GNSS)
+KW  - IRREGULARITIES
+KW  - ROTI (rate of TEC index)
+KW  - SMOTE
+KW  - SMOTEENN
+KW  - Vertical total electron content (VTEC)
+KW  - XGBoost
+ER  - 
+
+TY  - JOUR
+TI  - Predicting Swarm Equatorial Plasma Bubbles via Machine Learning and Shapley Values
+AU  - Reddy, S. A.
+AU  - Forsyth, C.
+AU  - Aruliah, A.
+AU  - Smith, A.
+AU  - Bortnik, J.
+AU  - Aa, E.
+AU  - Kataria, D. O.
+AU  - Lewis, G.
+T2  - Journal of Geophysical Research-Space Physics
+AB  - In this study we present AI Prediction of Equatorial Plasma Bubbles (APE), a machine learning model that can accurately predict the Ionospheric Bubble Index (IBI) on the Swarm spacecraft. IBI is a correlation (R-2) between perturbations in plasma density and the magnetic field, whose source can be Equatorial Plasma Bubbles (EPBs). EPBs have been studied for a number of years, but their day-to-day variability has made predicting them a considerable challenge. We build an ensemble machine learning model to predict IBI. We use data from 2014 to 2022 at a resolution of 1s, and transform it from a time-series into a 6-dimensional space with a corresponding EPB R-2 (0-1) acting as the label. APE performs well across all metrics, exhibiting a skill, association and root mean squared error score of 0.96, 0.98 and 0.08 respectively. The model performs best post-sunset, in the American/Atlantic sector, around the equinoxes, and when solar activity is high. This is promising because EPBs are most likely to occur during these periods. Shapley values reveal that F10.7 is the most important feature in driving the predictions, whereas latitude is the least. The analysis also examines the relationship between the features, which reveals new insights into EPB climatology. Finally, the selection of the features means that APE could be expanded to forecasting EPBs following additional investigations into their onset.
+CY  - Washington
+DA  - 2023/06//
+PY  - 2023
+DO  - 10.1029/2022JA031183
+DP  - Web of Science Nextgen
+VL  - 128
+IS  - 6
+SP  - e2022JA031183
+J2  - J. Geophys. Res-Space Phys.
+LA  - English
+PB  - Amer Geophysical Union
+SN  - 2169-9380, 2169-9402
+KW  - equatorial plasma bubbles
+KW  - machine learning
+KW  - IRREGULARITIES
+KW  - TIME
+KW  - SOLAR
+KW  - VARIABILITY
+KW  - MEAN-SQUARE ERROR
+KW  - predictions
+KW  - Shapley values
+ER  - 
+
+TY  - JOUR
+TI  - Advanced detection methods and machine learning analysis of temporal and spatial patterns of equatorial plasma bubble depth
+AU  - Adawa, Ifeoluwa
+AU  - Otsuka, Yuichi
+AU  - Abdelwahab, Moataz
+AU  - Mahrous, Ayman
+T2  - Journal of Atmospheric and Solar-Terrestrial Physics
+AB  - Strong plasma density depletions, particularly across broader longitudinal areas with consecutive depletion trains, are challenging to analyse using simple polynomial fitting or moving average techniques for detrending. This study presents a double threshold approach, combining the "Bubble Index" and the "Rolling Barrel Technique," to detect the depth of plasma irregularities. The proposed method is promising in EPB characterization and depth estimation. We validated the result from our method by analysing the temporal, seasonal, and longitudinal characteristics of Equatorial Plasma Bubbles (EPBs) using data for solar cycle 24 from the Communication/Navigation Outage Forecasting System (C/NOFS), covering about 8 years (August 2008-November 2015). Our Machine Learning (ML) prediction results show that XGBoost outperforms other approaches (Random Forest and LSTM), achieving skill, association, and root mean square error scores of 0.78, 0.88, and 0.14, respectively. Climatological verifications of our analysis show that most EPB events are concentrated between - 70 degrees and - 30 degrees longitude in the South Atlantic Anomaly (SAA). The depth magnitude of EPBs is inversely proportional to altitude, with shallower depths observed during solar minimum and deeper depths during periods of moderate solar activity. Postsunset bubbles are quite deeper, especially between 19:00 LT and 21:00 LT, having significantly deeper magnitude during equinoxes and shallowest in summer, particularly over South America. As the satellite's apex lowered, the depths of postsunset and postmidnight EPB became nearly equal, highlighting the importance of observation altitude. Analysing EPB depth variation with location and time will enhance understanding of EPB dynamics by identifying how seasonal and solar activity influences EPB formation patterns. These findings will further aid in developing improved ionospheric models for space weather forecasting.
+CY  - Oxford
+DA  - 2025/05//
+PY  - 2025
+DO  - 10.1016/j.jastp.2025.106495
+DP  - Web of Science Nextgen
+VL  - 270
+SP  - 106495
+J2  - J. Atmos. Sol.-Terr. Phys.
+LA  - English
+PB  - Pergamon-Elsevier Science Ltd
+SN  - 1364-6826, 1879-1824
+KW  - Machine learning
+KW  - SPREAD-F
+KW  - REGION
+KW  - SCINTILLATIONS
+KW  - RADAR
+KW  - LONGITUDINAL VARIABILITY
+KW  - TO-DAY VARIABILITY
+KW  - MEAN-SQUARE ERROR
+KW  - AMPLITUDE
+KW  - C/NOFs
+KW  - Equatorial plasma bubble depth
+KW  - IONOSPHERIC IRREGULARITIES
+KW  - IVM
+KW  - LOCAL TIME
+ER  - 
+
+TY  - JOUR
+TI  - Classification of Equatorial Ionospheric Irregularities Using Unsupervised Machine Learning Based on Spatiotemporal ROTI Keograms
+AU  - Mutasov, Gleb
+AU  - Supnithi, Pornchai
+AU  - Budtho, Jirapoom
+AU  - Tongkasem, Napat
+AU  - Nishioka, Michi
+AU  - Perwitasari, Septi
+AU  - Myint, Lin Min Min
+T2  - Ieee Journal of Selected Topics in Applied Earth Observations and Remote Sensing
+AB  - Equatorial ionospheric irregularities, particularly those associated with equatorial plasma bubbles (EPB), can significantly disrupt satellite navigation and communication systems. As the demand for reliable Global Navigation Satellite System (GNSS) and communication services grows, the prediction of ionospheric irregularities becomes critical. A key step in the prediction process is to identify distinct spatiotemporal patterns of irregularities, including day-to-day, longitudinal, and seasonal variations. However, with large datasets, manually classification or identification of these irregularities is a complex and challenging task. In this work, we propose unsupervised machine learning techniques to recognize and group irregularity patterns in large, unlabeled Rate of Total Electron Content (TEC) Index (ROTI) keograms. Specifically, two machine learning models: Gaussian Mixture Model and k-means clustering are employed. The ROTI keograms are constructed using GNSS data from two low-latitude receiver stations in Thailand. To reduce redundancy in the keogram images, three feature extraction techniques are applied before the clustering process. A comparative analysis is performed to determine the optimal number of clusters using these models. Based on the results, the optimal combination of feature extraction and clustering technique is determined for the proposed clustering model. The resulting k-means model with contour extractor classifies five distinct patterns of ionospheric irregularity patterns, providing valuable insights for enhancing EPB prediction models and deepening our understanding of ionospheric dynamics. Furthermore, these five irregularity patterns are analyzed in relation to space weather parameters such as the solar radio flux index (F10.7), and the geomagnetic index (Kp). The findings contribute to the development of robust prediction models, improving the reliability of satellite-based communication and navigation systems.
+CY  - Piscataway
+DA  - 2025///
+PY  - 2025
+DO  - 10.1109/JSTARS.2025.3600477
+DP  - Web of Science Nextgen
+VL  - 18
+SP  - 21769
+EP  - 21782
+J2  - IEEE J. Sel. Top. Appl. Earth Observ. Remote Sens.
+LA  - English
+PB  - Ieee-Inst Electrical Electronics Engineers Inc
+SN  - 1939-1404, 2151-1535
+UR  - https://ieeexplore.ieee.org/document/11129605/
+L1  - https://ieeexplore.ieee.org/stampPDF/getPDF.jsp?tp=&arnumber=11129605&ref=
+L1  - https://ieeexplore.ieee.org/stampPDF/getPDF.jsp?tp=&arnumber=11129605&ref=
+L1  - https://ieeexplore.ieee.org/stampPDF/getPDF.jsp?tp=&arnumber=11129605&ref=
+L1  - https://ieeexplore-ieee-org.ez15.periodicos.capes.gov.br/stampPDF/getPDF.jsp?tp=&arnumber=11129605&ref=
+KW  - Machine learning
+KW  - equatorial plasma bubbles
+KW  - Plasmas
+KW  - Feature extraction
+KW  - Predictive models
+KW  - Indexes
+KW  - Ionosphere
+KW  - Clustering
+KW  - Clustering algorithms
+KW  - equatorial ionospheric irregularities
+KW  - Global navigation satellite system
+KW  - ionospheric total electron content
+KW  - keograms
+KW  - Receivers
+KW  - Spatiotemporal phenomena
+KW  - unsupervised machine learning
+KW  - NETWORKS
+ER  - 
+
+TY  - JOUR
+TI  - Machine Learning Detection of Radio Occultation Electron Density Profiles Perturbed by the Equatorial Plasma Bubbles
+AU  - Chen, Shih-Ping
+AU  - Lin, Charles C. H.
+AU  - Rajesh, P. K.
+AU  - Cheng, Pin-Hsuan
+AU  - Tsai, Ho-Fang
+AU  - Eastes, Richard
+AU  - Choi, Jong-Min
+AU  - Liu, Jann-Yenq
+AU  - Chen, Alfred Bing-Chih
+T2  - Ieee Transactions on Geoscience and Remote Sensing
+AB  - The FORMOSAT-7/COSMIC-2 (F7C2) constellation consists of six small satellites that provide high temporal and spatial resolutions of ionosphere observations at mid- and low-latitudes using radio occultation (RO) technology. While having the advantage of such dense radio soundings, ensuring the quality of the derived electron density profiles (EDPs) is crucial for applications such as data assimilation forecasting models or monitoring of the ionosphere status. However, after the Hunga Tonga-Hunga Ha'apai volcano erupted on January 15, 2022, more than 70% of the F7C2 EDPs from the Pacific to the Indian Ocean exhibited significant fluctuations, indicating possible data quality degradation. In addition to the extreme event giving such a high proportion of EDPs with quality uncertainties, the fluctuated EDPs are also observed in daily RO soundings. More than 40% of EDPs fluctuate during premidnight hours from October to December within 90(degrees)W-0(degrees)E, while 70% fluctuate during postmidnight hours from May to July. This study presents, for the first time, a comprehensive investigation into the fluctuating EDPs during usual and event days. The statistics indicate that these fluctuating or irregular EDPs primarily occur during nighttime (>70%). The high correlation (0.82) between the longitudinal and seasonal variations of irregular EDPs and the ion velocity meter (IVM) climatological occurrence of equatorial plasma bubbles (EPBs), as observed in previous studies, indicates that irregular EDPs during postmidnight hours primarily result from EPBs. The machine learning models utilizing the Bagged Trees classification are developed to classify the normal and irregular EDPs across varying times, locations, and solar activity levels showing the clear connection between the EPBs and the irregular EDPs.
+CY  - Piscataway
+DA  - 2025///
+PY  - 2025
+DO  - 10.1109/TGRS.2025.3543427
+DP  - Web of Science Nextgen
+VL  - 63
+SP  - 4103113
+J2  - IEEE Trans. Geosci. Remote Sensing
+LA  - English
+PB  - Ieee-Inst Electrical Electronics Engineers Inc
+SN  - 0196-2892, 1558-0644
+UR  - https://ieeexplore.ieee.org/document/10891857/
+L1  - https://ieeexplore.ieee.org/stampPDF/getPDF.jsp?tp=&arnumber=10891857&ref=
+L1  - https://ieeexplore.ieee.org/stampPDF/getPDF.jsp?tp=&arnumber=10891857&ref=
+L1  - https://ieeexplore.ieee.org/stampPDF/getPDF.jsp?tp=&arnumber=10891857&ref=
+L1  - https://ieeexplore-ieee-org.ez15.periodicos.capes.gov.br/stampPDF/getPDF.jsp?tp=&arnumber=10891857&ref=
+KW  - Machine learning
+KW  - Gold
+KW  - Plasmas
+KW  - Atmospheric modeling
+KW  - Electrons
+KW  - Equatorial plasma bubble (EPB)
+KW  - Fluctuations
+KW  - FORMOSAT-7/COSMIC-2 (F7C2)
+KW  - Hunga Tonga-Hunga Ha’apai volcanic eruption
+KW  - Indexes
+KW  - Ionosphere
+KW  - machine learning (ML)
+KW  - Perturbation methods
+KW  - radio occultation (RO)
+KW  - Volcanoes
+KW  - IONOSPHERE
+KW  - IRREGULARITIES
+KW  - REGION
+KW  - SOLAR
+KW  - GPS DATA
+KW  - Hunga Tonga-Hunga Ha'apai volcanic eruption
+KW  - INVERSION
+KW  - SYSTEM
+ER  - 
+
+TY  - JOUR
+TI  - A machine learning approach for estimating the drift velocities of equatorial plasma bubbles based on All-Sky Imager and GNSS observations
+AU  - Githio, Lynne
+AU  - Liu, Huixin
+AU  - Arafa, Ayman A.
+AU  - Mahrous, Ayman
+T2  - Advances in Space Research
+AB  - Equatorial Plasma Bubbles (EPBs) are zones characterized by fluctuations in plasma densities which form in the low-latitude ionosphere primarily during the post-sunset. They subject radio signals to amplitude and phase variabilities, affecting the functioning of technological systems that utilize the Global Navigation Satellite Systems (GNSS) signals for navigation. Thus, understanding EPB occurrence patterns and morphological features is vital for mitigating their effects. In this work, we employed two GNSS receivers and an All-Sky Imager (ASI) to conduct simultaneous observations on the morphology of EPBs over Brazil. The main objectives of the study were (1) to develop a Random Forest (RF) machine-learning model to estimate and predict the zonal drift velocities of EPBs, and (2) to compare the model predictions with actual EPB drifts inferred from the two instruments, as well as zonal neutral wind speeds obtained from the Horizontal Wind Model (HWM-14). In the model development, we utilized reliable EPB drift measurements made during geomagnetically quiet days between 2013 and 2017 in Brazil. The model predicted the velocities based on parameters including the day of the year, universal time, critical frequency of the F2 layer (foF2), solar and interplanetary indices. The correlation coefficients of 0.98 and 0.96 and RMSE values of 10.61 m/s and 10.06 m/s were obtained upon training and validation correspondingly. We evaluated the accuracy of the model in predicting EPB drifts on two geomagnetically quiet nights where an average correlation coefficient of 0.89 and an RMSE of 15.74 m/s were obtained. The predicted drifts, the zonal neutral wind velocities, and the GNSS and ASI velocity measurements were put into context for validation purposes. Overall, the velocities were comparable and ranged between X100 m/s and X30 m/s from the hours of 00 UT to 05 UT. The results confirmed the accuracy and applicability of the model, revealing the ionosphere-thermosphere coupling influence on the nocturnal propagation of EPBs under the full activation of the F region dynamo. (c) 2024 COSPAR. Published by Elsevier B.V. All rights are reserved, including those for text and data mining, AI training, and similar technologies.
+CY  - London
+DA  - 2024/12/01/
+PY  - 2024
+DO  - 10.1016/j.asr.2024.08.067
+DP  - Web of Science Nextgen
+VL  - 74
+IS  - 11
+SP  - 6047
+EP  - 6064
+J2  - Adv. Space Res.
+LA  - English
+PB  - Elsevier Sci Ltd
+SN  - 0273-1177, 1879-1948
+KW  - All-Sky Imager (ASI)
+KW  - Drift velocity
+KW  - Equatorial Plasma Bubbles (EPBs)
+KW  - Machine learning
+KW  - Neutral winds
+KW  - Random Forest (RF)
+KW  - ZONAL DRIFT
+KW  - ELECTRODYNAMICS
+KW  - GPS
+KW  - IONOSPHERE
+KW  - IRREGULARITIES
+KW  - MODEL
+KW  - REGION
+KW  - SCINTILLATIONS
+KW  - SOLAR-WIND
+KW  - TIME
+ER  - 
+
+TY  - JOUR
+TI  - Automatic Detection of Equatorial Plasma Bubbles in Airglow Images Using Two-Dimensional Principal Component Analysis and Explainable Artificial Intelligence
+AU  - Yacoub, Moheb
+AU  - Abdelwahab, Moataz
+AU  - Shiokawa, Kazuo
+AU  - Mahrous, Ayman
+T2  - Machine Learning and Knowledge Extraction
+AB  - Equatorial plasma bubbles (EPBs) are regions of depleted electron density that form in the Earth's ionosphere due to Rayleigh-Taylor instability. These bubbles can cause signal scintillation, leading to signal loss and errors in position calculations. EPBs can be detected in images captured by All-Sky Imager (ASI) systems. This study proposes a low-cost automatic detection method for EPBs in ASI data that can be used for both real-time detection and classification purposes. This method utilizes Two-Dimensional Principal Component Analysis (2DPCA) with Recursive Feature Elimination (RFE), in conjunction with a Random Forest machine learning model, to create an Explainable Artificial Intelligence (XAI) model capable of extracting image features to automatically detect EPBs with the lowest possible dimensionality. This led to having a small-sized and extremely fast-trained model that could be used to identify EPBs within the captured ASI images. A set of 2458 images, classified into two categories-Event and Empty-were used to build the database. This database was randomly split into two subsets: a training dataset (80%) and a testing dataset (20%). The produced XAI model demonstrated slightly higher detection accuracy compared to the standard 2DPCA model while being significantly smaller in size. Furthermore, the proposed model's performance has been evaluated and compared with other deep learning baseline models (ResNet18, Inception-V3, VGG16, and VGG19) in the same environment.
+CY  - Basel
+DA  - 2025///
+PY  - 2025
+DO  - 10.3390/make7010026
+DP  - Web of Science Nextgen
+VL  - 7
+IS  - 1
+SP  - 26
+J2  - Mach. Learn. Knowl. Extr.
+LA  - English
+PB  - MDPI
+SN  - 2504-4990
+L1  - https://www.mdpi.com/2504-4990/7/1/26/pdf?version=1742124723
+L1  - https://www.mdpi.com/2504-4990/7/1/26/pdf?version=1742124723
+L1  - https://www.mdpi.com/2504-4990/7/1/26/pdf?version=1742124723
+KW  - 2DPCA
+KW  - All-Sky Imager
+KW  - equatorial plasma bubble
+KW  - XAI
+KW  - CLIMATOLOGY
+KW  - IONOSPHERIC PLASMA
+KW  - VECTOR
+KW  - ZONAL DRIFT
+ER  - 
+
+TY  - JOUR
+TI  - An Automatic Method for Detection and Naive Classification of the Martian Ionospheric Irregularities
+AU  - Wan, Xin
+AU  - Zhong, Jiahao
+AU  - Hao, Yongqiang
+AU  - Cao, Yutian
+AU  - Cui, Jun
+AU  - Xiong, Chao
+AU  - Wang, Hui
+AU  - Liu, Yiwen
+AU  - Kuai, Jiawei
+AU  - Li, Qiaoling
+T2  - Journal of Geophysical Research-Space Physics
+AB  - The abundant observations and research established a detailed category of the terrestrial ionospheric irregularities, which significantly advanced our understanding of how the Earth system's complicated physical and chemical process generates the intermediate-scale structures of the charged particles. Motivated by a future attempt at categorizing the Martian ionospheric irregularity, this study designs a method for naive classification of the plasma density depletion, enhancement, and oscillation based on the in situ measurements of the Martian ionosphere. The technique consists of several procedures: trend estimation, detrending and candidate extraction, and parameterization. The classification is achieved through a machine-learning-like process using some testing artificial density profiles. A preliminary credence test shows a good performance in separating the terrestrial low-latitude Equatorial Plasma bubble (depletion) and mid-latitude Median-scale Traveling Ionospheric Disturbance (oscillation). Another detection experiment of the Martian plasma depletion events (collected by Basuvaraj et al. (2022a, )) showed a recall rate (i.e., true positive) of 38% but with a high precision of 67.8%. Therefore, we believe the proposed method could convincingly extract different Martian ionospheric irregularities and help uncover the climatological characteristics in the future. Ionospheric irregularities refer to the inhomogeneous distribution of the charged particles in the ionosphere, which would affect radio wave transmission and thus pose threats to tremendous human-made assets deployed in terrestrial outer space and on other planets such as Mars. Unlike the terrestrial ionospheric irregularities, whose categories and physical mechanisms are well-understood, the Martian counterparts are still in poor understanding. Previous studies have indicated the diversity, but the category has yet to be built. The large data set provided by the Mars Atmosphere and Volatile EvolutioN (MAVEN) mission allows a more detailed investigation of the Martian ionospheric irregularities. Therefore, an automatic method to extract the ionospheric density enhancement, depletion, and oscillation would be a first step to figuring out the exact types of the Martian ionospheric irregularities, thus helping to extend our knowledge of how the finer ionospheric structures are formed backgrounded by the region crustal magnetic field other than the global dipole field. A modified rolling-barrel algorithm extracts the candidate irregularities Classification of the candidates into depletion, enhancement, and oscillation is achieved through a few parameterization processes Initial testing shows good performance on the Martian and terrestrial ionospheric irregularities
+CY  - Washington
+DA  - 2024/03/04/
+PY  - 2024
+DO  - 10.1029/2023JA032228
+DP  - Web of Science Nextgen
+VL  - 129
+IS  - 3
+SP  - e2023JA032228
+J2  - J. Geophys. Res-Space Phys.
+LA  - English
+PB  - Amer Geophysical Union
+SN  - 2169-9380, 2169-9402
+KW  - DISTURBANCES
+KW  - TEC
+KW  - SWARM
+KW  - detection method
+KW  - ionosoheric irregularity
+KW  - LATITUDE PLASMA BLOBS
+KW  - Mars
+KW  - MARS
+KW  - MAVEN
+KW  - Swarm
+KW  - TRANSFORM
+ER  - 
+
+TY  - JOUR
+TI  - Precursors Identification for Forecasting UHF-Band Ionospheric Scintillation Events Over Chinese Low-Latitude Region by Deep Learning
+AU  - Zhang, Hongbo
+AU  - Wang, Feifei
+AU  - Sheng, Dongsheng
+AU  - Ban, Panpan
+AU  - Liu, Yumei
+T2  - Earth and Space Science
+AB  - The occurrences of the UHF-band ionospheric scintillation events caused by Equatorial Plasma Bubbles (EPBs) in the low-latitude region depend on many factors. Nowadays, it is also a hard work for researchers to analyze and find out the useful precursory signatures of the generation of EPBs from several kinds of observations, which is a necessary work to build a forecasting model base on the priori knowledge. Many studies have revealed that there are distinctive features of daytime background ionosphere characteristics on scintillation and nonscintillation days. Deep learning technique (DLT) could automatically discover the distinctive variations from the daytime background ionospheric observations of scintillation and nonscintillation days. It is found that the forecasting problem of postsunset ionospheric scintillation events could be converted to a classification problem, and easily solved by DLT. The effectiveness of DLT for building a forecasting model of the UHF-band ionospheric scintillation events over Chinese low-latitude region is studied and evaluated. By analyzing the performance metrics of different combinations of related factors as the input parameters of DLT, a new important precursor for forecasting the UHF-band ionospheric scintillation events over Chinese low-latitude region is identified for the first time. It is suggested that the latitudinal and diurnal variations of the transequatorial Total Electron Content (TEC) profile in the east of the forecasting area is one of the key precursors.
+CY  - Washington
+DA  - 2022///
+PY  - 2022
+DO  - 10.1029/2021EA002164
+DP  - Web of Science Nextgen
+VL  - 9
+IS  - 9
+SP  - e2021EA002164
+J2  - Earth Space Sci.
+LA  - English
+PB  - Amer Geophysical Union
+SN  - 2333-5084
+KW  - deep learning
+KW  - MODEL
+KW  - ionospheric scintillation
+KW  - EQUATORIAL
+KW  - forecasting
+KW  - RELEVANT
+KW  - precursors
+ER  - 
+
+TY  - JOUR
+TI  - Machine learning approach for detection of plasma depletions from TEC
+AU  - Kapil, Chandan
+AU  - Seemala, Gopi K.
+T2  - Advances in Space Research
+AB  - Ionospheric delay is of concern for trans-ionospheric radio communication, especially for the navigation systems relying on these satellite signals. Most of the ionospheric delays are estimated to a degree of first-order using dual frequency global navigation satellite system (GNSS) receivers except during irregularities and equatorial plasma bubbles. The plasma bubbles are observed as a decrease or reduction in total electron content (TEC) as a result of large-scale irregularities that are generated at the equatorial ionosphere. These plasma bubbles can be detected from TEC values visually or by using mathematical algorithms. The mathematical algorithms may have limitations based on assumptions made for the current dataset. Therefore, various machine learning (ML) techniques were tried by training them with selected TEC depletions that are verified for accuracy. From this study, the Random Forest Method (RFM) has performed well compared to other ML methods. The RFM is trained to use for the detection of TEC depletions from the Indian low-latitude region. The training accuracy obtained is 97.6%, with a minimum classification error of 0.023%. The result obtained from the confusion matrix ascertained that the proportion of positively classified cases that are truly positive that is the positive predictive value (PPV) is 96.8%. These statistical results are validated after plotting the observed TEC depletion patch obtained from the ML method. There are cases in which depletions detected by the ML method are appreciable over the mathematical algorithm. The ML technique once trained will not have inherent limitations, as there are no assumptions or threshold values needed to set as required by most of the mathematical algorithms. Thus, the results are encouraging and have scope for further improvement and advancement. (c) 2023 COSPAR. Published by Elsevier B.V. All rights reserved.
+CY  - London
+DA  - 2024///
+PY  - 2024
+DO  - 10.1016/j.asr.2023.04.042
+DP  - Web of Science Nextgen
+VL  - 73
+IS  - 7
+SP  - 3833
+EP  - 3844
+J2  - Adv. Space Res.
+LA  - English
+PB  - Elsevier Sci Ltd
+SN  - 0273-1177, 1879-1948
+KW  - NETWORK
+KW  - GPS
+KW  - IRREGULARITIES
+KW  - RADAR
+KW  - EQUATORIAL SPREAD-F
+KW  - BUBBLES
+KW  - Plasma bubble detection
+KW  - SCINTILLATION
+KW  - GLOBAL POSITIONING SYSTEM
+KW  - INDIAN EQUATORIAL
+KW  - Machine learning classification techniques
+KW  - Random Forest method
+KW  - TEC depletion detection
+ER  - 
+
+TY  - JOUR
+TI  - Leveraging machine learning techniques and GPS measurements for precise TEC rate predictions
+AU  - Tete, Stephen
+AU  - Otsuka, Yuichi
+AU  - Zahra, Waheed K.
+AU  - Mahrous, Ayman
+T2  - Gps Solutions
+AB  - This study explores machine learning models to gain insights into dynamics of ionospheric irregularities over geodetic receivers in Mbarara (0.60 degrees S, 30.74 degrees E) and Kigali (1.94 degrees S, 30.09 degrees E). A seven-year rate of total electron content index (ROTI) database and two modeling approaches (multivariate and univariate) were employed. The motivation was to treat the database with time series techniques following a case study with and without the influence of solar wind parameters. The objective is to examine how each approach reconstructs the morphology of ROTI within 3-h time steps over a 24-h cycle. To achieve this, five machine learning models, including extreme gradient boosting (XGBoost), random forest (RF), bidirectional long-short term memory (BLSTM), unidirectional long-short term memory (LSTM) and nonlinear autoregressive with eXogenous input (NARX), were developed and evaluated. Test results demonstrate significant performance variations highlighting comparable ROTI reconstructions in the absence of the solar wind features. The RF model exhibited superior performance with the lowest mean absolute errors of 0.03 and 0.07 TECU/min and accuracies of 93% and 75% under multivariate and univariate modeling, respectively. Based on the RF model's performance, we employed an extended database over the Ugandan (Mbar) station for further model development and validated its efficiency over a station in Rwanda (Nurk). The results provided promising insights, emphasizing the need for future research dedicated to robust and enhanced nowcasting models that leverage long-term ionospheric data, especially in regions with limited scintillation monitors.
+CY  - Heidelberg
+DA  - 2024///
+PY  - 2024
+DO  - 10.1007/s10291-024-01652-4
+DP  - Web of Science Nextgen
+VL  - 28
+IS  - 3
+SP  - 115
+J2  - GPS Solut.
+LA  - English
+PB  - Springer Heidelberg
+SN  - 1080-5370, 1521-1886
+KW  - Machine learning
+KW  - NETWORK
+KW  - SOLAR
+KW  - SCINTILLATION
+KW  - EQUATORIAL
+KW  - FLUCTUATIONS
+KW  - PHASE
+KW  - IONOSPHERIC IRREGULARITIES
+KW  - AFRICAN REGION
+KW  - Global positioning system (GPS)
+KW  - Ionospheric scintillation
+KW  - Rate of TEC index (ROTI)
+KW  - Total electron content (TEC)
+ER  - 
+
+TY  - JOUR
+TI  - Advancing Ionospheric Irregularity Reconstruction With ICON/MIGHTI Wind-Driven Insights
+AU  - Tian, Penghao
+AU  - Yu, Bingkun
+AU  - Xue, Xianghui
+AU  - Yamazaki, Yosuke
+AU  - Owens, Mathew J.
+AU  - Ye, Hailun
+AU  - Wu, Jianfei
+AU  - Chen, Tingdi
+AU  - Scott, Christopher J.
+AU  - Dou, Xiankang
+T2  - Geophysical Research Letters
+AB  - In the mesosphere-lower thermosphere region, atmospheric plasma components exhibit short-term enhancements, forming sporadic E (Es) layers that impact communication systems. The prevailing theory posits that neutral wind shear is the primary driver of mid-latitude Es layer. Here, we present neutral wind field data from the ICON/Michelson Interferometer for Global High-resolution Thermospheric Imaging mission during 2019-2022, revealing a clear relationship between wind shear and Es layer formation in the Northern Hemisphere. Notably, the vertical ion divergence/convergence significantly impact mid-latitude Es production. Inspired by deep learning techniques, we developed a deep learning model based on wind shear and neutral wind data, reconstructing the small-scale morphology of Es layers. Vertical ion convergence information derived from the wind shear physical equations was found to be a key factor in enhancing model performance. Our results demonstrate that incorporating physical data from vertical ion drift improves the predictive capabilities of ionospheric irregularities artificial intelligence models, increasing the accuracy from 71.6% to 87.9%.
+CY  - Washington
+DA  - 2025/06/11/
+PY  - 2025
+DO  - 10.1029/2025GL115666
+DP  - Web of Science Nextgen
+VL  - 52
+IS  - 12
+SP  - e2025GL115666
+J2  - Geophys. Res. Lett.
+LA  - English
+PB  - Amer Geophysical Union
+SN  - 0094-8276, 1944-8007
+KW  - deep learning
+KW  - MIDLATITUDE
+KW  - SPORADIC-E LAYERS
+KW  - ionospheric irregularities
+KW  - CHEMISTRY
+KW  - COSMIC-2
+KW  - LATITUDE
+KW  - sporadic E layer
+KW  - vertical wind shear
+ER  - 
+
+TY  - JOUR
+TI  - Machine Learning Prediction of Storm-Time High-Latitude Ionospheric Irregularities From GNSS-Derived ROTI Maps
+AU  - Liu, Lei
+AU  - Morton, Y. Jade
+AU  - Liu, Yunxiang
+T2  - Geophysical Research Letters
+AB  - This study presents an image-based convolutional long short-term memory (convLSTM) machine learning algorithm to predict storm-time ionospheric irregularities. Unlike existing methods that are either focused on irregularities at individual locations or treat the irregularity prediction as a classification problem, the convLSTM-based architecture forecasts an entire regions' ionospheric irregularity occurrence and intensity values. We implemented the convLSTM-based model with a custom-designed loss function (convLSTM-L-c) that includes a dynamic penalty on the difference between the truth and the predicted rate of total electron content index (ROTI) maps. The convLSTM-L-c is trained with real ROTI data collected during January 1-August 7, 2015 from similar to 550 global navigation satellite system receivers located in (45 degrees -90 degrees N, 0 degrees -180 degrees W). Test results show that the convLSTM-L-c algorithm can forecast irregularity structures more accurately than a convLSTM model that implements conventional loss functions. The model also outperforms the convLSTM-L-1, convLSTM-L-2, and persistence models according to statistical classification metrics with a lead time of up to 60 min. Plain Language Summary Forecasting the occurrence of ionospheric irregularities is a challenging task due to their dynamic nature driven by solar-geomagnetic activities and multi-scale ionospheric processes. We present an image-based machine learning (ML) approach to predict storm-time two-dimensional (2D) ionospheric irregularity occurrence and intensity using ground-based global navigation satellite system receiver measurements. The new approach can forecast 2D spatial structures of the irregularities more accurately than conventional ML approaches because a custom-designed loss function is used. The improvement is particularly evident with up to a 30-min lead time. The new approach also significantly outperforms the state-of-the-art model according to statistical classification metrics with a lead time of up to 60 min. This encouraging model could play a critical role in the advanced warning for space weather and satellite navigation communities. Key Points The convolutional long short-term memory (convLSTM)-L-c model is developed to predict ionospheric irregularities using global navigation satellite system-derived rate of total electron content index (ROTI) maps The custom-designed novel loss function improves the prediction performance of ROTI maps compared to conventional approaches The convLSTM-L-c performs well in predicting short-term ionospheric irregularities under geomagnetic active conditions at mid- and high latitudes
+CY  - Washington
+DA  - 2021///
+PY  - 2021
+DO  - 10.1029/2021GL095561
+DP  - Web of Science Nextgen
+VL  - 48
+IS  - 20
+SP  - e2021GL095561
+J2  - Geophys. Res. Lett.
+LA  - English
+PB  - Amer Geophysical Union
+SN  - 0094-8276, 1944-8007
+KW  - SCINTILLATION
+ER  - 
+
+TY  - JOUR
+TI  - Estimation Model of Global Ionospheric Irregularities: An Artificial Intelligence Approach
+AU  - Tian, Penghao
+AU  - Yu, Bingkun
+AU  - Ye, Hailun
+AU  - Xue, Xianghui
+AU  - Wu, Jianfei
+AU  - Chen, Tingdi
+T2  - Space Weather-the International Journal of Research and Applications
+AB  - The ionospheric sporadic E layer, the ionospheric irregularities of enhanced electron density, appears in the Earth's ionosphere at altitudes between 90 and 120 km, which supports the real-world radio communication needs of many sectors reliant on ionosphere-dependent decision-making. The prediction of the occurrence of sporadic E layers has been extremely difficult due to the highly complex behavior. Conventional numerical methods are limited because of the inability to extract high-level information from data. Deep learning is a powerful tool for mining latent features from data, which can theoretically avoid assumptions constraining physical methods. Inspired by feature extraction, we applied deep learning to explore latent relationships between mapping observable lower atmospheric data and ionospheric data from limited observations. The proposed model was trained with high-resolution ERA5 data during 1 January 2007-30 August 2018 as input and corresponding ionospheric sporadic E data collected from COSMIC RO measurements as output. The results show that the model can learn complex relevance as bridges connecting the input and the desired output and obtain excellent performance and generalization capability by applying multiple evaluation criteria. Additionally, we established several model architecture training methods to explore the performance of the model with different input data. The statistic results show that model inference performance is proportional to the abundance of input information and is impacted by intraseasonal variability. The inference capability of the model achieves the best performance in the June-August (JJA) and December-February (DJF) seasons, which is the exact period of sporadic E layer significant occurrence, although different models are evaluated.
+CY  - Washington
+DA  - 2022///
+PY  - 2022
+DO  - 10.1029/2022SW003160
+DP  - Web of Science Nextgen
+VL  - 20
+IS  - 9
+SP  - e2022SW003160
+J2  - Space Weather
+LA  - English
+PB  - Amer Geophysical Union
+SN  - 1542-7390
+ST  - Estimation Model of Global Ionospheric Irregularities
+KW  - deep learning
+KW  - ionosphere
+KW  - RADIO OCCULTATION MEASUREMENTS
+KW  - SPORADIC-E LAYERS
+KW  - VARIABILITY
+KW  - ionospheric irregularities
+KW  - METALLIC-IONS
+KW  - AREA
+KW  - LOWER ATMOSPHERE
+KW  - radio occultation
+KW  - S4max
+KW  - sporadic E
+KW  - TRANSPORT
+ER  - 
+
+TY  - JOUR
+TI  - The Short-Term Prediction of Low-Latitude Ionospheric Irregularities Leveraging a Hybrid Ensemble Model
+AU  - Liu, Hang
+AU  - Yang, Pengxin
+AU  - Ren, Xiaodong
+AU  - Mei, Dengkui
+AU  - Le, Xuan
+AU  - Zhang, Xiaohong
+AU  - Freeshah, Mohamed
+T2  - Ieee Transactions on Geoscience and Remote Sensing
+AB  - Accurate and timely forecasting of ionospheric irregularities is of great significance for the reliable and stable operation of global high-precision communication and navigation systems at low latitudes. In this study, we implement a hybrid ensemble model (HEM) that combines multiple machine learning models for forecasting the occurrence and intensity of ionospheric irregularities instead of considering ionospheric irregularity forecasting as classifications. Meanwhile, this model is trained with the GNSS-derived rate of total electron content index (ROTI) maps from approximately 147 ground-based global navigation satellite systems (GNSS) receivers in Brazil sector (35(degrees) S-5(degrees) N, 30(degrees) W-75(degrees) W). Meanwhile, a diverse set of input features, including interplanetary magnetic field (IMF) components, F2 layer critical frequency (foF2), peak height F2-layer (hmF2), F10.7, flow pressure, and SYM-H indices, are carefully selected during January 1, 2022 to 15 October 31, 2022. Regarding the relative importance of various input features, results demonstrate that the performance of the HEM model trained by the ROTI and hmF2 observations for predicting ionospheric irregularities is superior to that of other input features. Furthermore, the deviations of forecasting ionospheric irregularities from the HEM model occur mainly in the southern equatorial ionization anomaly (EIA) regions, and the accuracy of the HEM model with daily standard deviation (STD) and root mean square (rms) is less than 0.1 TECU/min. Hence, the HEM model is more stable and greater than other predicted models. Additionally, the HEM algorithm can forecast the ionospheric irregularity structures and intensity for 30 min over Brazilian territory. It is expected to improve the accuracy of short-term ionospheric irregularities forecasting at low latitudes.
+CY  - Piscataway
+DA  - 2024///
+PY  - 2024
+DO  - 10.1109/TGRS.2023.3346449
+DP  - Web of Science Nextgen
+VL  - 62
+SP  - 4100615
+J2  - IEEE Trans. Geosci. Remote Sensing
+LA  - English
+PB  - Ieee-Inst Electrical Electronics Engineers Inc
+SN  - 0196-2892, 1558-0644
+UR  - https://ieeexplore.ieee.org/document/10379034/
+L1  - https://ieeexplore-ieee-org.ez15.periodicos.capes.gov.br/stampPDF/getPDF.jsp?tp=&arnumber=10379034&ref=
+KW  - Prediction algorithms
+KW  - Predictive models
+KW  - Indexes
+KW  - Global navigation satellite system
+KW  - Receivers
+KW  - Forecasting
+KW  - CLIMATOLOGY
+KW  - SCINTILLATION
+KW  - IRI
+KW  - VARIABILITY
+KW  - ionospheric irregularities
+KW  - short-term prediction
+KW  - DELAY
+KW  - Ensemble model
+KW  - EQUATORIAL LATITUDES
+KW  - global navigation satellite systems (GNSS)
+KW  - LEVEL
+KW  - rate of total electron content index (ROTI)
+KW  - SECTOR
+KW  - Geomagnetism
+ER  - 
+
+TY  - CONF
+TI  - Machine Learning Prediction of Highlatitude Ionospheric Irregularities from GNSS-derived ROTI Maps
+AU  - Liu, Lei
+AU  - Morton, Y. Jade
+AU  - Liu, Yunxiang
+T2  - 34th International Technical Meeting of the Satellite-Division-of-The-Institute-of-Navigation (ION GNSS+)
+AB  - This paper applies a convolutional long short-term memory (convLSTM) model with a custom- designed loss function Lc (convLSTM-Lc) to forecast high-latitude ionospheric irregularities. The data used for this study are GNSS-derived rate of TEC change index (ROTI) maps collected in 2014-2016. The convLSTM-Lc is trained with real ROTI data above 51 degrees magnetic latitude (MLat) during January 1, 2014 to October 21, 2015. Test results show that the convLSTM-Lc model can predict large-scale features and overall evolution of the high-latitude ionospheric irregularities occurrence with a lead time of up to one day.
+C1  - Washington
+C3  - Proceedings of the 34th International Technical Meeting of the Satellite Division of the Institute of Navigation (ion Gnss+ 2021)
+DA  - 2021///
+PY  - 2021
+DO  - 10.33012/2021.18046
+DP  - Web of Science Nextgen
+SP  - 3870
+EP  - 3877
+LA  - English
+PB  - Inst Navigation
+SN  - 978-0-936406-29-9
+ER  - 
+
+TY  - JOUR
+TI  - Stacking data analysis method for Langmuir multi-probe payload
+AU  - Wang, Jin
+AU  - Zhang, Duan
+AU  - Zhang, Qinghe
+AU  - Xie, Xinyao
+AU  - Zou, Fangye
+AU  - Du, Qingfu
+AU  - Manu, V.
+AU  - Sun, Yanjv
+T2  - Frontiers in Astronomy and Space Sciences
+AB  - There are numerous small-scale electron density irregularities in the ionosphere. The coordination of multiple needle Langmuir probes (m-NLPs) enables in situ measurement of electron density with high spatial resolution. However, the theoretical analysis method based on orbital motion-limited (OML) theory cannot accurately estimate electron density, even at higher resolutions, due to limitations in satellite measurements. In addition, due to the influence of satellite charging and flight wake, the currents collected between multi-probes have low consistency, introducing significant error into the measurement results. This study uses a stacking algorithm to process m-NLP data and incorporates the International Reference Ionosphere (IRI) model to correct the predicted electron density (Ne) values. The integrated characteristics of the stacking model make full use of the advantages of various models such as multilayer perceptron (MLP), support vector regression (SVR), K-nearest neighbors (KNN), and light gradient boosting machine (LightGBM). The combination of integrated machine learning methods and IRI models greatly improves the accuracy of electron density measurements obtained by m-NLPs. The results indicate that even with poor consistency among the currents collected by multiple probes, the coefficient of determination (R2) of the prediction results using this method can reach 0.9553, which is 0.5079 higher than that of the traditional diagnostic method.
+CY  - Lausanne
+DA  - 2025/08/13/
+PY  - 2025
+DO  - 10.3389/fspas.2025.1614225
+DP  - Web of Science Nextgen
+VL  - 12
+SP  - 1614225
+J2  - Front. Astron. Space Sci.
+LA  - English
+PB  - Frontiers Media Sa
+SN  - 2296-987X
+L1  - https://www.frontiersin.org/articles/10.3389/fspas.2025.1614225/pdf
+L1  - https://www.frontiersin.org/articles/10.3389/fspas.2025.1614225/pdf
+L1  - https://www.frontiersin.org/articles/10.3389/fspas.2025.1614225/pdf
+KW  - machine learning
+KW  - ionospheric irregularity
+KW  - IONOSPHERIC IRREGULARITIES
+KW  - Langmuir probe
+KW  - plasma diagnosis
+KW  - PROBE
+KW  - stacking
+ER  - 
+
+TY  - JOUR
+TI  - Predicting Equatorial Spread F at JICAMARCA Sector Via Supervised Machine Learning
+AU  - Gao, Shunzu
+AU  - Xiong, Chao
+AU  - Cai, Hongtao
+AU  - Pan, Qian
+AU  - Zhan, Weijia
+AU  - Zhang, Hong
+AU  - Zheng, Yuhao
+T2  - Space Weather-the International Journal of Research and Applications
+AB  - The nighttime equatorial spread-F (ESF) occurrence is essential to cause disturbances of the trans-ionospheric radio wave signals. Previous research has successfully modeled the probability or growth rate of ESF, but remains deficient in distinguishing their typology and duration, which are also critical for predicting their influences on radio wave propagation. In this paper, an ensemble learning approach is proposed to predict the occurrence and typology of ESF, based on over one solar cycle observations of coherent scattering radar (CSR) located at Jicamarca. The training data set cover from 2000 to 2016, and the observations in 2017 are chosen as testing data set. The model inputs include local time (LT), day of year (DoY), height, solar flux index (P10.7), geomagnetic activity related indices (Kp, SYMH, AE), the true height of the ionospheric F layer (HF), the vertical plasma drift velocity of the ionospheric F layer, and the occurrence rate of ESF from the previous 3 hr. By using the Shapley Additive exPlanations (SHAP) tool analysis, it shows that the LT is the most influential parameter, and the P10.7 contributes more than the geomagnetic indices, to predict the occurrence of ESF. An important advantage of our model is that it can present different types of ESF by reconstructing their duration versus height distributions. Comparison results between prediction and observation suggest that the model predicts all bins with an accuracy reaching 81.2%, and it is able to predict the daily occurrence of ESF with accuracy of about 90.1%.
+CY  - Washington
+DA  - 2025///
+PY  - 2025
+DO  - 10.1029/2024SW004214
+DP  - Web of Science Nextgen
+VL  - 23
+IS  - 3
+SP  - e2024SW004214
+J2  - Space Weather
+LA  - English
+PB  - Amer Geophysical Union
+SN  - 1542-7390
+KW  - machine learning
+KW  - IRREGULARITIES
+KW  - MODEL
+KW  - REGION
+KW  - equatorial ionosphere
+KW  - PLASMA BUBBLES
+KW  - INSTABILITY
+KW  - TO-DAY VARIABILITY
+KW  - COHERENT
+KW  - IONOSPHERIC SCINTILLATION
+KW  - equatorial spread F
+KW  - ionospheric irregularities
+KW  - eXtreme gradient boosting
+KW  - JULIA RADAR
+KW  - LINEAR-THEORY
+KW  - modeling and prediction
+ER  - 
+
+TY  - CONF
+TI  - Automatic Trace Recognition of Ionogram with YOLOv3
+AU  - Gong, Tai-yuan
+AU  - Sang, Fan
+AU  - Yang, Tian-yu
+AU  - Chen, Zi-wei
+T2  - 7th IEEE International Conference on Consumer Electronics - Taiwan (ICCE-Taiwan)
+AB  - The correct trace identification of the ionosphere in ionograms is one of the fundamental steps to the automatic scaling of ionograms. In this paper, a new method based on deep learning network is proposed to identify the traces of ionograms and ionospheric irregularities effectively. 12000 ionograms from the Chinese Academy of Sciences Digital Ionosonde installed at Huailai, Wuhan, Naning, Ganzi and Xiamen are utilized to train the deep learning network and satisfying results with 83.9% mAP are obtained.
+C1  - New York
+C3  - 2020 Ieee International Conference on Consumer Electronics - Taiwan (icce-Taiwan)
+DA  - 2020///
+PY  - 2020
+DO  - 10.1109/icce-taiwan49838.2020.9258025
+DP  - Web of Science Nextgen
+SP  - 1
+EP  - 2
+LA  - English
+PB  - IEEE
+SN  - 978-1-7281-7399-3
+UR  - https://ieeexplore.ieee.org/document/9258025/
+L1  - https://ieeexplore-ieee-org.ez15.periodicos.capes.gov.br/stampPDF/getPDF.jsp?tp=&arnumber=9258025&ref=
+KW  - YOLO
+KW  - Deep learning
+KW  - deep learning
+KW  - automatic recognition
+KW  - ionogram
+KW  - Conferences
+KW  - Consumer electronics
+KW  - Ear
+KW  - Frequency locked loops
+KW  - Silicon
+ER  - 
+
+TY  - JOUR
+TI  - Short-time forecast of ionospheric irregularities using long short-term memory networks over equatorial and low-latitudes regions
+AU  - Ojo, Olakunle L.
+AU  - Abe, Oladipo Emmanuel
+AU  - Hammed, Olaide Sakiru
+AU  - Olumodimu, Olugbenga
+T2  - Journal of Atmospheric and Solar-Terrestrial Physics
+AB  - Predicting ionospheric conditions is becoming increasingly important towards the operational efficiency of both ground-based and space-borne radio communication systems with a view to compensate for the effects of space weather. This study focuses on predicting ionospheric irregularities in the complex and variable equatorial ionosphere which is deemed critical for optimal space-based application. We utilized the Long-Short-TermMemory (LSTM) deep learning algorithm to develop a predictive model for forecasting disturbances in the equatorial ionization anomaly (EIA) region using Global Navigation Satellite Systems (GNSS) data. We utilized fifteen-year worth of data (2005-2020) to train, validate and test the performance of the model and assessed the results against a baseline model relying on daily and hourly Rate of Change of TEC Index (ROTI) values and utilized evaluation metrics such as correlation (R), determination coefficient (R2), and mean squared error (MSE). Remarkably, the LSTM Predictive Model consistently outperformed the Baseline Model across various stations, demonstrating higher R and R2 values and significantly lower MSE. These results indicate the LSTM model's superior accuracy in forecasting ionospheric disturbances, essential for space-based applications. The distribution analysis of residual errors highlighted the LSTM model's ability to better capture underlying patterns and variability in the target variable. This study contributes to enhancing ionospheric forecasting models for space applications, ensuring the dependability of space-based systems.
+CY  - Oxford
+DA  - 2025///
+PY  - 2025
+DO  - 10.1016/j.jastp.2025.106466
+DP  - Web of Science Nextgen
+VL  - 269
+SP  - 106466
+J2  - J. Atmos. Sol.-Terr. Phys.
+LA  - English
+PB  - Pergamon-Elsevier Science Ltd
+SN  - 1364-6826, 1879-1824
+KW  - Ionospheric irregularities
+KW  - ROTI
+KW  - GNSS
+KW  - TEC
+KW  - LSTM
+KW  - Time series
+ER  - 
+
+TY  - JOUR
+TI  - On estimating the phase scintillation index using TEC provided by ISM and IGS professional GNSS receivers and machine learning
+AU  - Imam, Rayan
+AU  - Alfonsi, Lucilla
+AU  - Spogli, Luca
+AU  - Cesaroni, Claudio
+AU  - Dovis, Fabio
+T2  - Advances in Space Research
+AB  - Amplitude and phase scintillation indexes (S4 and sigma(phi)) provided by Ionospheric Scintillation Monitoring (ISM) receivers are the most used GNSS-based indicators of the signal fluctuations induced by the presence of ionospheric irregularities. These indexes are available only from ISM receivers which are not as abundant as other types of professional GNSS receivers, resulting in limited geographic distribution. This makes the scintillation indexes measurements rare and sparse compared to other types of ionospheric measurements available from GNSS receivers. Total Electron Content (TEC), on the other hand, is an ionospheric parameter available from a wide range of multi-frequency GNSS receivers. Many efforts have worked on establishing scintillation indicators based on TEC, and geodetic receivers in general, introducing various metrics, including the Rate of TEC change (ROT) and ROT Index (ROTI). However, a possible relationship between TEC and its variation, and the corresponding scintillation index that an Ionospheric Scintillation Monitor (ISM) receiver would estimate is not trivial. In principle, TEC can be retrieved from carrier phase measurements of the GNSS receiver, as sigma(phi). We investigate how to estimate sigma(phi) from time series of TEC and ROT measurements from an ISM in Ny-Alesund (Svalbard) using Machine Learning (ML). To evaluate its usability to estimate sigma(phi) from geodetic receivers, the model is tested using TEC data provided by a quasi-co-located geodetic receiver belonging to the International GNSS Service (IGS) network. It is shown that the model performance when TEC from the IGS receiver is used gives comparable results to the model performance when TEC from the ISM receiver is utilised. The model's ability to infer the exact value of the scintillation index is bound to Mean Square Error (MSE) = 0.1 radians(2) when sigma(phi) <= 0.8 radians. For sigma(phi) > 0.8 the MSE reaches 0.18 and 0.45 radians(2) in operative testing using ISM and IGS measurements, respectively. However, the model's ability to detect phase scintillation from IGS TEC measurements is comparable to expert visual inspection. Such a model has potential in alerting against phase fluctuations resulting in enhanced sigma(phi), especially in locations where ISM receivers are not available, but other types of dual-frequency GNSS receivers are present. (C) 2023 COSPAR. Published by Elsevier B.V.
+CY  - London
+DA  - 2024/04/01/
+PY  - 2024
+DO  - 10.1016/j.asr.2023.07.039
+DP  - Web of Science Nextgen
+VL  - 73
+IS  - 7
+SP  - 3753
+EP  - 3771
+J2  - Adv. Space Res.
+LA  - English
+PB  - Elsevier Sci Ltd
+SN  - 0273-1177, 1879-1948
+KW  - Ionospheric irregularities
+KW  - IONOSPHERIC IRREGULARITIES
+KW  - Artificial intelligence
+KW  - Geodetic receivers
+KW  - HIGH-LATITUDE
+KW  - Space weather
+KW  - STORM
+ER  - 
+
+TY  - JOUR
+TI  - The Local Time and Altitude Dependences of Long-Lived Nonspecular Meteor Echoes With Weak Magnetic Aspect Sensitivity at Low Latitudes
+AU  - Wang, Ye
+AU  - Li, Guozhu
+AU  - Xiao, Zhuowei
+T2  - Journal of Geophysical Research-Space Physics
+AB  - Long-lived nonspecular meteor echoes backscattered from meteor trail nonfield-aligned irregularities (NFAIs) were observed sporadically at high latitudes. In this study, we employ the observations by the all-sky radar of Meteor and ionospheric Irregularity Observation System (MIOS) at Ledong (18.4 degrees N, 109 degrees E) in October 2018, January, April, and July 2019, to investigate the occurrences of meteor trail NFAIs at low latitudes. A deep learning method was developed to identify long-lived meteor echo events with durations of more than 5 s. The long-lived echo events with triangular shape (a typical feature of nonspecular echo) in radar range-time intensity maps were manually distinguished from those with nontriangular shape. Based on the cutoff magnetic aspect angle 12 degrees of nonspecular meteor echoes from field-aligned irregularities (FAIs), the local time and altitude dependences of meteor NFAIs producing long-lived nonspecular echoes are investigated. A total of 846 meteor events due to the backscatters of NFAIs were observed. These events peak around the morning hours, with the beginning (end) altitudes up to (down to) 120 km (similar to 80 km). Their mean heights are about 2-6 km higher than specular meteor echoes. The occurrence of NFAI echoes peaks on certain days that is likely associated with meteor showers. The ratio of the observed NFAI echo to specular echo events is, on average, less than 1 parts per thousand. Possible factors responsible for the NFAIs at low latitudes are discussed based on the current understanding of meteor dust trail.
+CY  - Washington
+DA  - 2022/09//
+PY  - 2022
+DO  - 10.1029/2022JA030458
+DP  - Web of Science Nextgen
+VL  - 127
+IS  - 9
+SP  - e2022JA030458
+J2  - J. Geophys. Res-Space Phys.
+LA  - English
+PB  - Amer Geophysical Union
+SN  - 2169-9380, 2169-9402
+KW  - RADAR
+KW  - IRREGULARITY
+KW  - meteor trail
+KW  - nonfield-aligned irregularities
+KW  - TRAILS
+ER  - 
+
+TY  - JOUR
+TI  - Prediction of Ionospheric Scintillation with ConvGRU Networks Using GNSS Ground-Based Data across South America
+AU  - Atabati, Alireza
+AU  - Jazireeyan, Iraj
+AU  - Alizadeh, Mahdi
+AU  - Langley, Richard B.
+T2  - Remote Sensing
+AB  - This study investigates the relationship between geomagnetic activities and ionospheric scintillations, focusing on how solar and geomagnetic parameters influence ionospheric disturbances across varying time frames and latitudes. Utilizing indices such as Kp, Dst, sunspot numbers, and the F10.7 solar flux, we elucidate the dynamics influencing ionospheric conditions, which are vital for the reliability of satellite communications, particularly in low-latitude regions. Our analysis demonstrates a clear correlation between periods of high solar activity and increased geomagnetic disturbances, leading to heightened ionospheric scintillations, such as occurred during the solar maximum of 2015. In contrast, 2020-a solar minimum period-exhibited fewer disturbances, highlighting the impact of solar activity levels on ionospheric conditions. Innovatively employing ConvGRU networks, this research advances the modeling and prediction of ionospheric scintillations by integrating deep learning techniques suited to the spatiotemporal complexities of ionospheric data. The ConvGRU model effectively captures both temporal sequences and spatial distributions, offering enhanced accuracy in depicting ionospheric scintillation patterns crucial for satellite-based navigation and communication systems. Ground-based GNSS data from 121 stations across South America, collected during 2015 and 2020, provide a robust dataset for our analysis. The study highlights the influence of the solar cycle on ionospheric scintillations, with the years of maximum and minimum solar activity showing significant differences in scintillation intensity and frequency. Our evaluation of the ConvGRU models using statistical parameters demonstrated their potential for reliable ionospheric scintillation prediction. The research underscores the necessity of integrating adaptive mechanisms within models to effectively handle the dynamic nature of ionospheric disturbances influenced by external geomagnetic and solar factors. This study enhances the understanding of ionospheric scintillations and significantly advances predictive modeling capabilities using advanced machine learning techniques. The potential establishment of real-time alert systems for ionospheric disturbances could significantly benefit civilian applications, enhancing the operational efficiency of technologies reliant on accurate ionospheric information.
+CY  - Basel
+DA  - 2024/08//
+PY  - 2024
+DO  - 10.3390/rs16152757
+DP  - Web of Science Nextgen
+VL  - 16
+IS  - 15
+SP  - 2757
+J2  - Remote Sens.
+LA  - English
+PB  - MDPI
+SN  - 2072-4292
+L1  - https://www.mdpi.com/2072-4292/16/15/2757/pdf?version=1722159946
+L1  - https://www.mdpi.com/2072-4292/16/15/2757/pdf?version=1722159946
+L1  - https://www.mdpi.com/2072-4292/16/15/2757/pdf?version=1722159946
+KW  - ionospheric irregularities
+KW  - EQUATORIAL LATITUDES
+KW  - global navigation satellite systems (GNSS)
+KW  - STORM
+KW  - amplitude ionospheric scintillation (S4)
+KW  - convolutional gated recurrent unit (ConvGRU)
+KW  - GRU
+KW  - INDEX
+KW  - loss function
+KW  - MODELS
+KW  - PROBABILITY
+KW  - total electron content (TEC)
+ER  - 
+
+TY  - JOUR
+TI  - A carrier phase hybrid model for adjusting the procedures to process ionospheric radio sounding measurements with high temporal resolution
+AU  - Demyanov, V. V.
+AU  - Danilchuk, E. I.
+AU  - Zhang, Baocheng
+AU  - Ratn, D. Venkata
+AU  - Yasyukevich, Y. V.
+T2  - Advances in Space Research
+AB  - We offer a hybrid model of phase of trans-ionospheric GNSS signals. The model allows the simulation of all components of trans-ionospheric signal phase variations due to effects of the background ionosphere, travelling ionospheric disturbances of different scales, Fresnel ionospheric irregularities, and measurement noise in a receiver. The proposed model combines actual TEC and analytical representation of GNSS signal frequency variations. The model was tested when pre-assessing the standard procedures for processing phase measurements and calculating ionospheric indices such as TEC, ROTI, r/, d2fi and fd. The application of the model demonstrates its efficiency and usability in selecting the optimal types and parameters of procedures to filter and de-trend phase measurements and to calculate the ionospheric scintillation indices based on high temporal resolution GNSS data. As a potential practical application, the proposed model is a promising tool for training artificial intelligence algorithms to provide effective automatic detection of specific classes of ionospheric disturbances or ionospheric responses to certain types of impacts. (c) 2025 COSPAR. Published by Elsevier B.V. All rights are reserved, including those for text and data mining, AI training, and similar technologies.
+CY  - London
+DA  - 2025/05/15/
+PY  - 2025
+DO  - 10.1016/j.asr.2025.03.001
+DP  - Web of Science Nextgen
+VL  - 75
+IS  - 10
+SP  - 7711
+EP  - 7725
+J2  - Adv. Space Res.
+LA  - English
+PB  - Elsevier Sci Ltd
+SN  - 0273-1177, 1879-1948
+KW  - Ionosphere
+KW  - IRREGULARITIES
+KW  - PERTURBATIONS
+KW  - SIGNALS
+KW  - GNSS carrier phase model
+KW  - GNSS data with high temporal resolution
+KW  - GNSS remote sensing of the ionosphere
+KW  - Signal model to train AI algorithms
+KW  - Trans-ionosphere signals
+ER  - 
+
+TY  - JOUR
+TI  - Creating a Database to Identify High-Latitude Scintillation Signatures With Unsupervised Machine Learning
+AU  - Bals, Anna-Marie
+AU  - Thakrar, Chintan
+AU  - Deshpande, Kshitija B.
+T2  - Ieee Journal of Radio Frequency Identification
+AB  - In high latitudes, Global Navigation Satellite System (GNSS) signals experience scintillation due to moving irregularity structures in the ionosphere. These develop as a result of different physical mechanisms, which are as yet principally described on an elementary level for certain storm cases and events. Since there are years of GNSS data available from stations around the globe, we are investigating an unsupervised Machine Learning approach to extract a large variety of groups of scintillation events with similar features. We create a database containing high-rate scintillation events from two geomagnetic storm cases and several stations in the high-latitude region of the Northern hemisphere. By clustering high-rate signatures in signal phase and power according to their major signal characteristics with an agglomerative hierarchical clustering, it is possible to extract different groups of similar types of scintillation signatures. As a result of this study, the database of scintillation signatures in various locations in the auroral oval and polar cap evolves and will be further expanded beyond the storm cases studied in this paper. These can then be linked to the geomagnetic conditions and dynamics in the ionosphere through additional datasets from other instruments, therefore potentially helping us to get a further insight into the ionospheric irregularity physics.
+CY  - Piscataway
+DA  - 2022///
+PY  - 2022
+DO  - 10.1109/JRFID.2022.3163913
+DP  - Clarivate Analytics Web of Science
+VL  - 6
+SP  - 240
+EP  - 249
+J2  - IEEE J. Radio Freq. Identif.
+LA  - English
+PB  - Ieee-Inst Electrical Electronics Engineers Inc
+SN  - 2469-7281
+UR  - https://ieeexplore.ieee.org/document/9751145/
+L1  - https://ieeexplore-ieee-org.ez15.periodicos.capes.gov.br/stampPDF/getPDF.jsp?tp=&arnumber=9751145&ref=
+KW  - Machine learning
+KW  - Feature extraction
+KW  - Fluctuations
+KW  - Indexes
+KW  - Noise measurement
+KW  - Global navigation satellite system
+KW  - unsupervised machine learning
+KW  - Databases
+KW  - GLOBAL-MODEL
+KW  - GNSS data noise elimination
+KW  - GNSS scintillation
+KW  - Instruments
+KW  - ionospheric scintillation event detection
+KW  - IONOSPHERIC-SCINTILLATION
+KW  - PHASE-SCINTILLATION
+KW  - Radiofrequency identification
+KW  - Unsupervised learning
+ER  - 
+
+TY  - JOUR
+TI  - Global ionospheric sporadic E intensity prediction from GNSS RO using a novel stacking machine learning method incorporated with physical observations
+AU  - Hu, Tianyang
+AU  - Xu, Xiaohua
+AU  - Luo, Jia
+AU  - Hou, Jialiang
+AU  - Liu, Haifeng
+T2  - Atmospheric Chemistry and Physics
+AB  - Sporadic E (Es) layers, the irregularities of enhanced electron density commonly occurring in the ionospheric E region, are affected by the interactions between distinct atmospheric layers. Es intensity (EsI) is a crucial parameter to describe Es layer characteristics, while there still lacks the method for high-precision EsI prediction due to its complex spatiotemporal variation and physical driving mechanisms. We propose a novel stacking machine learning (SML) method for global EsI prediction, which combines the advantages from different ML models to obtain better performance than using a single ML model. Various Es-related physical observations, including vertical ion convergence, gravity wave potential energy, and solar and geomagnetic indices, are incorporated as the inputs of SML together with the EsI derived from global navigation satellite system (GNSS) radio occultation (RO) measurements. SML performs well in both long-term and short-term EsI prediction and characteristics reconstruction. SML-predicted EsI is in good agreement with GNSS RO-derived EsI, with the mean error (ME) of 0.032 TECU km-1 and root mean square error (RMSE) of 0.158 TECU km-1. Taking ionosonde observations as reference, SML has the RMSE of 1.064 MHz, which is reduced by 20.1 %-40.5 % compared to existing prediction methods. The higher accuracy of our method than methods not incorporating physical observations illustrates the significance of considering multiple related physical factors when constructing the Es prediction model. The proposed method can be expected to provide valuable information for not only ionospheric irregularities monitoring and space weather forecasting but also the mechanisms of Es layer formation and atmospheric coupling.
+CY  - Gottingen
+DA  - 2025///
+PY  - 2025
+DO  - 10.5194/acp-25-11517-2025
+DP  - Web of Science Nextgen
+VL  - 25
+IS  - 18
+SP  - 11517
+EP  - 11534
+J2  - Atmos. Chem. Phys.
+LA  - English
+PB  - Copernicus Gesellschaft Mbh
+SN  - 1680-7316, 1680-7324
+L1  - https://acp.copernicus.org/articles/25/11517/2025/acp-25-11517-2025.pdf
+L1  - https://acp.copernicus.org/articles/25/11517/2025/acp-25-11517-2025.pdf
+L1  - https://acp.copernicus.org/articles/25/11517/2025/acp-25-11517-2025.pdf
+KW  - NETWORKS
+KW  - LAYERS
+KW  - COSMIC RADIO OCCULTATION
+KW  - ENHANCEMENTS
+KW  - NEUTRAL WIND
+KW  - SOLAR-ACTIVITY
+ER  - 
+
+TY  - JOUR
+TI  - Deep learning-based detection and statistical analysis of equatorial spread F using ionogram data in the African sector
+AU  - Sulaiman, Yushau Muhammad
+AU  - Okoh, Daniel
+AU  - Joshua, Benjamin Wisdom
+AU  - Abbas, Mustapha
+T2  - Journal of Atmospheric and Solar-Terrestrial Physics
+AB  - Equatorial Spread F (ESF) is a well-documented phenomenon characterised by electron density perturbations in the F-layer, significantly impacting the propagation of electromagnetic waves. The automatic identification of ESF and its statistical analysis are crucial for understanding the physical mechanisms that drive ionospheric irregularities and for improving predictive models. This study implements a convolutional neural network (CNN), a deep learning model, for the automatic detection of ESF using ionosonde data from a Digisonde (DPS-4) at Ilorin (Geographic: 8.5 degrees N, 4.5 degrees E; Geomagnetic: 4.5 degrees S), an equatorial station in the African sector. We used a dataset of 3,000 manually labelled ionograms randomly selected from the period 2019 to 2021. The dataset was categorised into clear, ESF, and unidentified, with 1,000 images per category. Two models were trained using raw ionograms (RGB-model) and gray-scale preprocessed ionograms (Gray-model). The models achieve overall accuracies of 95.17% and 99.33% for raw and preprocessed ionograms, respectively, when tested on an unseen dataset. Evaluation using three complementary skill scores: F1-score, True Skill Score (TSS) and Heidke Skill Score (HSS) indicates that while both methods enable efficient CNN-based ionogram classification tasks, the grayscale approach requires lower computational load and obtains the largest gains compared to the RGB-image approach. For the first time, we provide classification of 60,326 ionograms across diverse geophysical conditions in the African sector, using both manual classification and machine-learning methods. The main contribution lies in the systematic evaluation and application of the models for ionogram classification tasks. The improved classification performance and robustness of the models under both quiet and disturbed geomagnetic conditions demonstrate their potential for large-scale, automated ionogram analysis.
+CY  - Oxford
+DA  - 2026///
+PY  - 2026
+DO  - 10.1016/j.jastp.2026.106808
+DP  - Web of Science Nextgen
+VL  - 283
+SP  - 106808
+J2  - J. Atmos. Sol.-Terr. Phys.
+LA  - English
+PB  - Pergamon-Elsevier Science Ltd
+SN  - 1364-6826, 1879-1824
+KW  - Convolutional neural network
+KW  - Equatorial spread F
+KW  - HEIGHT
+KW  - Ionogram classification
+KW  - Ionospheric irregularities
+ER  - 
+
+TY  - JOUR
+TI  - Automatic detection of equatorial plasma bubbles using deep neural networks
+AU  - Zhang, Ting
+AU  - Luo, Yifu
+AU  - Zhang, Bin
+AU  - Jiang, Fang
+AU  - Wang, Tianfang
+AU  - Xiao, Si
+AU  - Bai, Xuesong
+AU  - Fu, Liping
+T2  - Journal of Atmospheric and Solar-Terrestrial Physics
+AB  - The equatorial plasma bubble (EPB) is one of the most important phenomena in the Earth's ionosphere. In this paper, we propose a method for the EPB image data processing and automatic labeling, utilizing the Global-scale Observations of the Limb and Disk (GOLD) 135.6 nm nightglow data. The method extracts the central position of EPBs, significantly reducing the workload of manual labeling. Through manual analysis, a dataset of 1,380 image samples was established. Based on the unique features of EPB images, a deep learning model was developed to improve detection accuracy. After optimization and validation, the YOLO-LessHead model achieved a mean Average Precision (mAP@0.5) of 78.39 %, enabling automatic and accurate identification of EPB images. We used the developed model to identify and statistically analyze the GOLD airglow image data from October 2018 to December 2024. The results indicate that EPB occurrence rates show strong seasonal and longitudinal variability, with distinct seasonal patterns across different longitudes. The zonal drift velocities of EPBs increase with enhanced solar radio flux (F10.7) and decrease as geomagnetic activity (Ap index) intensifies. Drift speeds are generally higher and more variable at the magnetic equator, while the northern and southern EIA regions exhibit similar values and trends.
+CY  - Oxford
+DA  - 2026/01//
+PY  - 2026
+DO  - 10.1016/j.jastp.2025.106687
+DP  - Web of Science Nextgen
+VL  - 278
+SP  - 106687
+J2  - J. Atmos. Sol.-Terr. Phys.
+LA  - English
+PB  - Pergamon-Elsevier Science Ltd
+SN  - 1364-6826, 1879-1824
+KW  - Deep learning
+KW  - Equatorial plasma bubbles
+KW  - GOLD
+KW  - Object detection
+KW  - Statistical analysis
+KW  - AIRGLOW
+KW  - DEPLETIONS
+KW  - DRIFT
+KW  - SOLAR
+ER  - 
+
+TY  - JOUR
+TI  - AI-driven versus traditional ionospheric modeling approaches for GNSS positioning in Egypt
+AU  - Abdelmaaboud, Ahmed
+AU  - Fathallah, Tamer
+AU  - Ragheb, Ahmed
+AU  - Gomaa, Ahmed
+AU  - Hassan, Tarek
+T2  - Journal of Applied Geodesy
+AB  - The ionosphere significantly impacts Global Navigation Satellite Systems (GNSS) positioning accuracy, particularly in regions with pronounced ionospheric irregularities and high solar activity, such as Egypt. These regions face more challenges in ionospheric modeling compared to the higher-latitude areas. This study provides a detailed assessment of different approaches to Total Electron Content (TEC) estimation in Egypt and their impact on GNSS positioning accuracy using single-frequency receivers. The approaches include the traditional Klobuchar model, Global Ionospheric Maps (GIMs), and the Artificial Neural Network (ANNTEC) model. This ANN model was developed to predict the TEC over Egypt using 10 years of GNSS observations and ionospheric data. The assessment process is performed in two scenarios: static and kinematic positioning. The positioning accuracy employing each approach is evaluated relative to reference coordinates tied to the International Terrestrial Reference Frame 2020 (ITRF-2020) through the nearest International GNSS Service (IGS) stations. The results indicate that the ANNTEC model outperforms the other approaches in both kinematic and static scenarios. In the static mode, the Root Mean Square Error (RMSE) value of the horizontal positions can be improved by 46.6 % and 24.5 % compared to using the Klobuchar model and the GIMs, respectively. In addition, in the kinematic mode, the RMSE value was reduced by 54.7 % and 25.8 % compared to using the Klobuchar model and the GIMs, respectively. These results demonstrate the potential of employing the ANNTEC model to enhance single-frequency GNSS positioning accuracy in Egypt.
+CY  - Berlin
+DA  - 2026/04/24/
+PY  - 2026
+DO  - 10.1515/jag-2025-0057
+DP  - Web of Science Nextgen
+VL  - 20
+IS  - 2
+SP  - 339
+EP  - 350
+J2  - J. Appl. Geod.
+LA  - English
+PB  - Walter De Gruyter Gmbh
+SN  - 1862-9016, 1862-9024
+KW  - ionosphere
+KW  - EQUATORIAL
+KW  - NEURAL-NETWORK
+KW  - Artificial Intelligence
+KW  - GNSS
+KW  - positioning
+KW  - TEC
+ER  - 
+
+TY  - JOUR
+TI  - Automated Detection of Equatorial Plasma Bubbles From the Magnetic Measurements of Macau Science Satellite-1 Using Machine Learning
+AU  - Rang, Xinyi
+AU  - Xiong, Chao
+AU  - Zheng, Yuhao
+AU  - Huang, Yuyang
+T2  - Space Weather-the International Journal of Research and Applications
+AB  - Equatorial plasma bubbles (EPBs) are plasma density depletion structures that produce magnetic field perturbations through the diamagnetic effect and therefore need to be identified and excluded in high-precision geomagnetic field modeling. Traditional EPB detection methods typically rely on in situ electron density or total electron content data, which are unavailable on the Macau Science Satellite 1 (MSS-1) mission, due to the lack of relevant payloads. To detect the possible diamagnetic signatures caused by EPBs, we propose a machine learning (ML) approach, BMML (Bubble detected from Magnetic data of MSS-1 using Long Short-Term Memory network), to automatically identify EPBs using only magnetic field measurements of MSS-1. The BMML model is trained on time-frequency characteristics of Swarm magnetic data labeled by its Level-2 Ionospheric Bubble Index (IBI) product. Statistical analysis shows that our BMML achieves an accuracy of 0.969 on the test data set of Swarm. In addition, we find that BMML model sometimes is even better than the IBI product in detecting EPBs from Swarm data, for example in identifying small-scale EPBs and distinguishing closely spaced EPBs. When applied to the independent MSS-1 data, BMML shows well generalization, successfully identifying EPB-related diamagnetic signatures. Further statistical analysis of the identified EPBs from MSS-1 shows consistent occurrence distributions with previous studies, which confirms the reliability of our model. The BMML has its advantage to reduce the subjectivity and limitations associated with thresholds setting in traditional approaches for identifying EPBs. In addition, the BMML model can enhance the reliability and accuracy of geomagnetic models of MSS-1 mission, by detecting and excluding EPB-contaminated magnetic data.
+CY  - Washington
+DA  - 2026/03/31/
+PY  - 2026
+DO  - 10.1029/2025SW004818
+DP  - Web of Science Nextgen
+VL  - 24
+IS  - 4
+SP  - e2025SW004818
+J2  - Space Weather
+LA  - English
+PB  - Amer Geophysical Union
+SN  - 1542-7390
+KW  - equatorial plasma bubbles
+KW  - machine learning
+KW  - IRREGULARITIES
+KW  - FIELD
+KW  - Macau science Satellite-1
+KW  - magnetic data
+KW  - SWARM
+ER  - 
+
+TY  - JOUR
+TI  - Cognitive Radio-Based Ionospheric Scintillation Detection: A Low-Cost Framework for GNSS Detection and Monitoring in Equatorial Regions
+AU  - Rodriguez, Jaime Orduy
+AU  - Dos Santos, Walter Abrahao
+AU  - Candido, Claudia Nicoli
+AU  - Traslavina, Danny Stevens
+AU  - Tafur, Cristian Lozano
+AU  - Daza, Pedro Melo
+AU  - Rodriguez Baron, Ivan Felipe
+T2  - Sensors
+AB  - Highlights What are the main findings? The proposed Low-Cost Scintillation Laboratory (LCSL), integrating Software-Defined Radio, Cognitive Radio, and Machine Learning, demonstrated effective real-time detection and monitoring of ionospheric scintillation in equatorial and low-latitude regions, with successful validation using data from Bogot & aacute;, Cartagena, and Santa Marta. The comparative evaluation of cognitive radio algorithms showed that DIMSUMnet provides superior GNSS signal stability, higher C/N0, and faster interference detection under scintillation conditions, outperforming Adapt4 XG1 in environments affected by equatorial plasma bubbles. What are the implications of the main findings? The results confirm that low-cost, cognitive radio-based infrastructures can significantly enhance GNSS resilience in countries with limited space weather monitoring capabilities, reducing dependence on expensive commercial scintillation receivers. The demonstrated adaptability of cognitive radio and ML-based approaches supports their use as a scalable foundation for national and regional ionospheric monitoring networks, with direct benefits for aviation, navigation, and satellite-dependent critical systems in equatorial regions.Highlights What are the main findings? The proposed Low-Cost Scintillation Laboratory (LCSL), integrating Software-Defined Radio, Cognitive Radio, and Machine Learning, demonstrated effective real-time detection and monitoring of ionospheric scintillation in equatorial and low-latitude regions, with successful validation using data from Bogot & aacute;, Cartagena, and Santa Marta. The comparative evaluation of cognitive radio algorithms showed that DIMSUMnet provides superior GNSS signal stability, higher C/N0, and faster interference detection under scintillation conditions, outperforming Adapt4 XG1 in environments affected by equatorial plasma bubbles. What are the implications of the main findings? The results confirm that low-cost, cognitive radio-based infrastructures can significantly enhance GNSS resilience in countries with limited space weather monitoring capabilities, reducing dependence on expensive commercial scintillation receivers. The demonstrated adaptability of cognitive radio and ML-based approaches supports their use as a scalable foundation for national and regional ionospheric monitoring networks, with direct benefits for aviation, navigation, and satellite-dependent critical systems in equatorial regions.Abstract Global Navigation Satellite Systems (GNSS) are highly affected in equatorial regions, especially due to the formation of Equatorial Plasma Bubbles (EPBs), which cause disturbances in the ionosphere resulting in different forms of signal degradation. Despite Colombia's privileged geographic position, its limited monitoring infrastructure hinders the detection and mitigation of these effects. This study proposes the development of a Low-Cost Scintillation Laboratory (LCSL) using a cognitive radio-based approach for real-time scintillation monitoring, aimed at improving GNSS reliability. The system was designed following a Systems Engineering methodology, defining functional architectures and constraints. A communication system model was developed to account for EPBs' effects on GNSS signals, while cognitive radio algorithms within a Software-Defined Radio (SDR) framework enabled real-time detection, monitoring, and alert generation. To implement this approach, monitoring stations were deployed in Bogot & aacute;, Cartagena, and Santa Marta utilized low-cost GNSS receivers integrated with Machine Learning (ML) algorithms for the automatic classification of scintillation events. Additionally, the system's accuracy was validated by comparing experimental data with historical records from the Geophysical Institute of Peru (IGP). The results demonstrated that the integration of cognitive radio and ML-based detection enhanced precision and adaptability compared to traditional methods. The network of monitoring stations effectively validated the system's performance, providing valuable insights into equatorial ionospheric dynamics. This study contributes to the advancement of monitoring methodologies and highlights the importance of accessible infrastructure for mitigating EPB effects on GNSS, ultimately fostering more resilient navigation and communication systems.
+CY  - Basel
+DA  - 2026/03/11/
+PY  - 2026
+DO  - 10.3390/s26061765
+DP  - Web of Science Nextgen
+VL  - 26
+IS  - 6
+SP  - 1765
+J2  - Sensors
+LA  - English
+PB  - MDPI
+SN  - 1424-8220
+ST  - Cognitive Radio-Based Ionospheric Scintillation Detection
+L1  - https://www.mdpi.com/1424-8220/26/6/1765/pdf?version=1773207770
+KW  - machine learning
+KW  - GPS
+KW  - DRIFTS
+KW  - PROPAGATION
+KW  - ionospheric scintillation
+KW  - GNSS
+KW  - SYSTEM
+KW  - cognitive radio
+KW  - PHASE SCINTILLATION
+KW  - space weather monitoring
+ER  - 
+
+TY  - JOUR
+TI  - Improving One-Day-Ahead Forecasting of Low-Latitude Amplitude Scintillation Using an Upsampling-Enhanced LSTM
+AU  - Muangkammuen, Patinya
+AU  - Suthisopapan, Puripong
+AU  - Tongkasem, Napat
+AU  - Supnithi, Pornchai
+AU  - Kruesubthaworn, Anan
+AU  - Klenzing, Jeff
+AU  - Siritaratiwat, Apirat
+T2  - Ieee Transactions on Aerospace and Electronic Systems
+AB  - The scintillation in radio wave propagation, particularly in regions near the magnetic equator, is found to be introduced by the ionospheric irregularities causing unsatisfactory performance in satellite-based applications. In order to mitigate this effect, we design a long short-term memory (LSTM) model to forecast amplitude scintillation at 1-min resolution. In addition, the upsampling-based feature preprocessing is introduced to improve forecasting performance, especially for short-term severe scintillation events. In terms of R-2, which is a popular forecast evaluation metric, our proposed model exhibits about 20% improvement over the same LSTM model without upsampling. Furthermore, although existing studies achieve good forecasting accuracy up to 4 h ahead, the proposed model sets a benchmark with one-day-ahead forecasting, but at the cost of longer training time due to upsampling
+CY  - Piscataway
+DA  - 2026///
+PY  - 2026
+DO  - 10.1109/TAES.2026.3662676
+DP  - Web of Science Nextgen
+VL  - 62
+SP  - 6087
+EP  - 6107
+J2  - IEEE Trans. Aerosp. Electron. Syst.
+LA  - English
+PB  - Ieee-Inst Electrical Electronics Engineers Inc
+SN  - 0018-9251, 1557-9603
+UR  - https://ieeexplore.ieee.org/document/11386865/
+L1  - https://ieeexplore-ieee-org.ez15.periodicos.capes.gov.br/stampPDF/getPDF.jsp?tp=&arnumber=11386865&ref=
+KW  - machine learning
+KW  - Predictive models
+KW  - Indexes
+KW  - Training
+KW  - Global navigation satellite system
+KW  - Data models
+KW  - Forecasting
+KW  - REGION
+KW  - ionospheric scintillation
+KW  - IONOSPHERIC SCINTILLATION
+KW  - PHASE
+KW  - time-series forecasting
+KW  - Aerospace and electronic systems
+KW  - Feature preprocessing
+KW  - Long short term memory
+KW  - long short-term memory (LSTM) network
+KW  - PREDICTION
+KW  - predictive models
+KW  - Satellites
+KW  - SIGNALS
+KW  - Time series analysis
+ER  - 
+
+TY  - JOUR
+TI  - Short-term forecast of ionospheric sporadic E intensity fusing physical parameters via deep learning
+AU  - Hu, Tianyang
+AU  - Xu, Xiaohua
+AU  - Luo, Jia
+AU  - Liu, Haifeng
+T2  - Gps Solutions
+AB  - Ionospheric sporadic E (Es) layers are thin-layer irregularities with abnormaly sharp enhanced densities of electrons and metal ions. Es layers affect the global navigation satellite system (GNSS) navigation and positioning by causing scintillations or loss of signals, while the timely and accurate forecast of Es intensity is difficult due to its complex spatiotemporal characteristics and various influencing factors. We propose a novel convolutional tensor-train long short-term memory-based model fusing physical parameters (Conv-TT-LSTM-Phy) for short-term forecasting of global Es intensity. Conv-TT-LSTM-Phy is trained using Es intensity maps derived from Constellation Observing System for the Meteorology, Ionosphere, and Climate GNSS radio occultation data during 2007-2014, and data of the global distributed vertical ion convergence driven by the wind shear are for the first time introduced into the forecast model. With the ground truth of Es intensity maps as reference, Conv-TT-LSTM-Phy is validated to outperform the other two deep learning models without fusing physical parameters and an empirical model in predicting Es intensity maps, with the reductions in ME/MAE/RMSE reaching 99.5%/80.5%/71.3% compared with empirical model. As to the prediction accuracy, which generally degrades with the increased prediction step, Conv-TT-LSTM-Phy performs best when the prediction time is within 6 h. Conv-TT-LSTM-Phy also reconstructs the morphology of Es intensity accurately. The proposed model can provide valuable information for ionospheric irregularities monitoring and space weather forecasting. Moreover, using Conv-TT-LSTM-Phy as the constraint for PPP can effectively both improve positioning performance and reduce convergence time.
+CY  - Heidelberg
+DA  - 2025///
+PY  - 2025
+DO  - 10.1007/s10291-025-01947-0
+DP  - Web of Science Nextgen
+VL  - 29
+IS  - 4
+SP  - 198
+J2  - GPS Solut.
+LA  - English
+PB  - Springer Heidelberg
+SN  - 1080-5370, 1521-1886
+KW  - Deep learning
+KW  - Global navigation satellite system
+KW  - Ionospheric sporadic E layer
+KW  - LAYERS
+KW  - Radio occultation
+ER  - 
+
+TY  - JOUR
+TI  - Categorizing Characteristic Regions of High-Latitude Scintillations Using a Combination of Isolation Forest and Neural Network Machine Learning Algorithms
+AU  - Thakrar, Chintan
+AU  - Gachancipa, Nicolas
+AU  - Deshpande, Kshitija
+AU  - Bals, Anna-Marie
+AU  - Paxton, Larry
+T2  - Journal of Geophysical Research: Machine Learning and Computation
+AB  - Global Positioning System (GPS) scintillations are radio signal fluctuations due to ionospheric structures or irregularities. In this work, we utilize scintillation data to identify the source region (auroral oval vs. polar cap) of a high latitude irregularity responsible for any given scintillation instance, using a combination of ML and deep learning models. We used available high-rate (50-Hz) GPS data from three Canadian High Arctic Ionospheric Network stations for 2 yrs to develop a categorization methodology based on an unsupervised detection ML model called Isolation Forest (iForest), which detects scintillation instances to be fed to a supervised artificial neural network (ANN) model. The goal is to confidently categorize the high-latitude ionospheric scintillations based on their regions of occurrence. Our method involves using low-rate GPS scintillation indices to threshold high-rate data to be fed to the iForest for event detection. We use satellite data-derived auroral oval and polar cap boundaries to label our ANN data set. Our analysis of these preliminary data sets shows that the iForest algorithm detects events with high accuracy irrespective of the geomagnetic conditions and receiver location. The ANN consistently yielded an F1-score close to 0.7 implying that the model can classify source regions based on the input data. The ANN-based classification of source regions of scintillation events performed better during quiet times than stronger geomagnetic conditions. Our method can be applied to different ionospheric irregularity problems, making this a potentially useful tool for understanding scintillations and their relationship with different irregularity generation mechanisms. © 2026 The Author(s). Journal of Geophysical Research: Machine Learning and Computation published by Wiley Periodicals LLC on behalf of American Geophysical Union.
+DA  - 2026///
+PY  - 2026
+DO  - 10.1029/2024JH000298
+DP  - Scopus
+VL  - 3
+IS  - 1
+J2  - J. geophys. res., Mach. learn. comput.
+LA  - English
+PB  - John Wiley and Sons Inc
+SN  - 2993-5210
+KW  - auroral oval
+KW  - classification
+KW  - machine learning
+KW  - neural network
+KW  - polar cap
+KW  - scintillation
+ER  - 
+
+TY  - CONF
+TI  - A Comprehensive Review of Electron Density Modeling in the Ionosphere Using Machine Learning Techniques
+AU  - Patel, Kahaan
+AU  - Shah, Stavan
+AU  - Surati, Shivangi
+T2  - Lecture Notes in Networks and Systems
+AB  - Ionospheric irregularities and variability can significantly impact various applications, such as satellite communications, navigation, and remote sensing. Accurately characterizing and forecasting ionospheric conditions are therefore essential for mitigating their effects. Advances in machine learning techniques have led to the development of powerful models for ionospheric modeling and forecasting. This comprehensive review synthesizes the cutting-edge Machine Learning (ML)-based approaches for ionospheric studies, covering a broad spectrum of approaches that includes supervised learning, unsupervised learning, and deep learning. The review discusses the advantages and limitations of different approaches, provides insights into model performance, and highlights key challenges and future research directions. A particular focus is given to the development of global ionospheric models using machine learning, which has the potential to revolutionize ionospheric monitoring and forecasting. © The Author(s), under exclusive license to Springer Nature Singapore Pte Ltd. 2026.
+C3  - Lect. Notes Networks Syst.
+DA  - 2026///
+PY  - 2026
+DO  - 10.1007/978-981-96-9196-8_39
+DP  - Scopus
+VL  - 1533 LNNS
+SP  - 591
+EP  - 602
+LA  - English
+PB  - Springer Science and Business Media Deutschland GmbH
+SN  - 978-981-96-9195-1
+KW  - Artificial neural networks
+KW  - Deep learning
+KW  - Global ionospheric models
+KW  - Ionospheric prediction
+KW  - Remote sensing
+KW  - Space weather forecasting
+ER  - 
+
+TY  - CONF
+TI  - Analysis and Prediction of TEC Variations Using Different ML Algorithms
+AU  - Sagar, Madithati Reddy
+AU  - Sudheer, Kuruva Sai
+AU  - Kumar, K. Vinod
+AU  - Ahmed, S. Towseef
+AU  - Krishna, Putta Venkata
+AU  - Sulthana, S. Fowzia
+T2  - 7th International Conference on Mobile Computing and Sustainable Informatics, ICMCSI 2026
+AB  - To estimate the local ionosphere's total electron concentration (TEC) with high precision in order to facilitate the use of satellite location, measurement controlling and navigation, we try to explore an empirical machine learning models for predicting VTEC, or vertical total electron content, on a single station receiver located in Bangalore (IISC) 13.02° N &: 77.57°, which is significant for monitoring space weather and ionospheric irregularities. In this analysis GNSS derived Vertical TEC (VTEC) predicted over IISC using 04 different machine learning models, including Bagged Trees, Random Forest Regression, XG Boost, and K-Nearest Neighbors. These models were evaluated using RMSE and R2 metrics. This study effectively predicted VTEC values and the results obtain is XG Boost and Bagged Trees are performed well with an Root mean square error (RMSE) value of 3.034 and 3.035 respectively and R2 value is of 0.985 and 0.984 respectively. Comparing to other models like KNN and Random forest were not much effective as XG Boost and bagged trees. This models when compare to other deep learning approaches like Recurrent Neural Networks (RNNs) which are complexity in nature, requires more data and also consumes more time along with high GPU is required for training. Accurate TEC prediction is therefore essential for reliable GNSS applications and seism ionospheric studies. © 2026 IEEE.
+C3  - Int. Conf. Mob. Comput. Sustain. Informatics, ICMCSI
+DA  - 2026///
+PY  - 2026
+DO  - 10.1109/ICMCSI67283.2026.11412492
+DP  - Scopus
+SP  - 398
+EP  - 402
+LA  - English
+PB  - Institute of Electrical and Electronics Engineers Inc.
+SN  - 979-8-3315-5519-1
+UR  - https://ieeexplore.ieee.org/document/11412492/
+L1  - https://ieeexplore-ieee-org.ez15.periodicos.capes.gov.br/stampPDF/getPDF.jsp?tp=&arnumber=11412492&ref=
+KW  - Predictive models
+KW  - Electrons
+KW  - Training
+KW  - Global navigation satellite system
+KW  - Analytical models
+KW  - Data models
+KW  - GNSS
+KW  - Bagged Trees
+KW  - KNN
+KW  - R2
+KW  - Random Forest
+KW  - RMSE
+KW  - VTEC
+KW  - XG Boost
+KW  - Nearest neighbor methods
+KW  - Random forests
+KW  - Trees (botanical)
+KW  - Weather
+ER  - 
+
+TY  - JOUR
+TI  - Classification of High-Latitude Source Region-Based Ionospheric Scintillation Signatures Using Machine Learning
+AU  - Bals, Marie
+AU  - Deshpande, Kshitija B.
+AU  - Debchoudhury, Shantanab
+AU  - Imam, Rayan
+AU  - Paxton, Larry J.
+T2  - Journal of Geophysical Research: Machine Learning and Computation
+AB  - This study investigates ionospheric scintillation signatures in GNSS signals at high latitudes with Machine Learning (ML), focusing on different irregularity generation mechanisms in major regions of the ionosphere. The diverse structuring in various scale sizes resulting from these mechanisms might produce distinct scintillation signatures. In the nightside ionosphere, precipitation is predominantly observed in the auroral oval versus density gradients in the polar cap. We apply this physics-based precursor knowledge about the source regions and establish a database of scintillation events from significant geomagnetic activity to explore these differences in scintillation signatures. Scintillation event segments in high-rate (50 Hz) Global Navigation Satellite System (GNSS) signal phase and amplitude are selected as input data to analyze time-dependent signature features. These pre-processed events are collected from stations in the auroral oval and polar cap regions and labeled based on ionospheric conditions during four geomagnetic storms. Using this database, we train an ML model to classify events into polar cap versus auroral oval signatures in two systematic steps. Initially, we compare signatures from two stations in different regions with hierarchical clustering, which applies correlation analysis to group them based on the similarity of their time series features. We train a decision tree model with the correlation results to classify the clustered time series according to their predicted location (auroral vs. polar). We present an ML-focused methodology connecting two predominant high-latitude ionospheric regions with their distinctly observed families of scintillation signatures. This research helps trace the irregularity mechanisms present in these regions through GNSS observations. © 2025 The Author(s). Journal of Geophysical Research: Machine Learning and Computation published by Wiley Periodicals LLC on behalf of American Geophysical Union.
+DA  - 2025///
+PY  - 2025
+DO  - 10.1029/2024JH000499
+DP  - Scopus
+VL  - 2
+IS  - 3
+J2  - J. geophys. res., Mach. learn. comput.
+LA  - English
+PB  - John Wiley and Sons Inc
+SN  - 2993-5210
+KW  - decision tree classification
+KW  - GNSS signatures
+KW  - high-latitude ionospheric irregularities
+KW  - ionospheric irregularity source regions
+KW  - ionospheric scintillation
+KW  - time series clustering
+ER  - 
+
+TY  - CONF
+TI  - Equatorial Spread F Classified by CNN Model from Campina Grande in Brazil during 2024-2025
+AU  - Wang, Z.
+AU  - Qiu, C.
+AU  - Shi, J.K.
+AU  - Zhong, W.D.
+AU  - Liu, Z.K.
+AU  - Wang, G.J.
+AU  - Gao, P.D.
+AU  - Cheng, Z.W.
+T2  - 2025 PhotonIcs and Electromagnetics Research Symposium - Fall, PIERS-FALL 2025 - Proceedings
+AB  - This study introduces an innovative application of a ResNet50-based convolutional neural network (CNN) trained on historical Hainan data. By utilizing the model for automated classification of Equatorial Spread-F (ESF) types in ionograms from Campina Grande, Brazil, during 2024-2025, the results show the pronounced seasonal peak in all ESF occurrences during summer months, with Strong Range Spread-F (SSF) exceeding 17% prevalence, alongside distinct diurnal sequences: RSF and SSF dominate post-sunset, while FSF and MSF peak post-midnight. Temporal shifts in peaks between 2024 and 2025 correlate with electrodynamic processes, particularly post-sunset electric field delays and plasma bubble development via modified Rayleigh-Taylor instability. This approach not only validates CNN-driven automation for large-scale ionogram analysis, but also advances understanding of ESF dynamics in equatorial regions, highlighting longitudinal variations against prior Hainan studies and enabling enhanced space-weather forecasting. © PIERS-FALL 2025.All rights reserved.
+C3  - PhotonIcs Electromagn. Res. Symp. - Fall, PIERS-FALL - Proc.
+DA  - 2025///
+PY  - 2025
+DO  - 10.23919/PIERS-Fall62445.2025.11394404
+DP  - Scopus
+SP  - 1
+EP  - 5
+LA  - English
+PB  - Institute of Electrical and Electronics Engineers Inc.
+SN  - 978-4-88552-363-2
+UR  - https://ieeexplore.ieee.org/document/11394404/
+L1  - https://ieeexplore-ieee-org.ez15.periodicos.capes.gov.br/stampPDF/getPDF.jsp?tp=&arnumber=11394404&ref=
+KW  - Convolutional neural networks
+KW  - Plasmas
+KW  - Data models
+KW  - Delays
+KW  - Electric fields
+KW  - Electrodynamics
+KW  - Electromagnetics
+KW  - Forecasting
+KW  - Manuals
+KW  - Plasma density
+ER  - 
+
+TY  - CONF
+TI  - Deep Learning Based Detection of EPBs in GOLD Airglow Images Towards GNSS-RO Back Propagation Validation
+AU  - Alfonso, Carles Quilis
+AU  - Javadi, Saleh
+AU  - Ludwig-Barbosa, Vinícius
+T2  - Proceedings of the International Technical Meeting of the Satellite Division of The Institute of Navigation, ION GNSS+
+AB  - This study investigates the potential of machine learning techniques for detecting Equatorial Plasma Bubbles (EPBs) using nighttime airglow imagery from the Global-scale Observations of the Limb and Disk (GOLD) mission. EPBs are ionospheric irregularities characterized by significant plasma density depletions that disrupt trans-ionospheric radio wave propagation, affecting satellite navigation and communication systems. We propose and implement a convolutional encoder-decoder neural network specifically designed for precise pixel-level segmentation of EPB structures within GOLD's 135.6 nm radiance images. The convolutional neural network demonstrated remarkable performance, achieving high precision and recall, successfully detecting prominent EPBs as well as subtle features overlooked in manual annotations. Results also reveal the network's capability to generalize beyond explicitly labeled data, indicating its robustness in capturing intricate EPB morphologies. Additionally, a preliminary cross-validation was conducted using GNSS Radio Occultation (RO) data, which showed promising correspondence with the EPB locations identified by the machine learning algorithm. This supports the value of integrating deep learning methods with GNSS-RO techniques to achieve comprehensive global detection and validation of EPBs. © 2025 ION GNSS. All rights re served.
+C3  - Proc. Int. Tech. Meet. Satell. Div. Inst. Navig., ION GNSS+
+DA  - 2025///
+PY  - 2025
+DO  - 10.33012/2025.20392
+DP  - Scopus
+IS  - 2025
+SP  - 3369
+EP  - 3376
+LA  - English
+PB  - Institute of Navigation
+ER  - 
+
+TY  - JOUR
+TI  - Deep Learning Insights Into Ionospheric Sporadic E Irregularities Under Different Solar Activity Conditions
+AU  - Tian, Penghao
+AU  - Yu, Bingkun
+AU  - Ye, Hailun
+AU  - Xue, Xianghui
+AU  - Wu, Jianfei
+AU  - Chen, Tingdi
+T2  - Journal of Geophysical Research: Machine Learning and Computation
+AB  - Solar activity profoundly modulates many atmospheric coupling systems, particularly the morphology of the ionospheric irregularities, which is crucial for reliable radio communication. However, the understanding of its long-term response behavior under different solar activity conditions remains limited, and the exact evolutionary mechanisms of global scale ionospheric coupling system remain poorly constrained. Here we initially show from 2007 to 2018, the weak ionospheric sporadic E scintillation in high latitude regions experienced intensification corresponding with periods of high solar activity. Subsequently, we extend a deep learning model framework called SELF-ANN proposed by Tian to further clarify the underlying relationship between solar activity and ionospheric irregularities. Compared to SELF-ANN, we expand the scope of analysis to include data spanning from 2007 to 2018, thus broadening the investigation into the impacts of solar variability. Using long-term solar activity data and observations of the ionospheric E region irregularity from COSMIC RO, this model was trained to provide solar-dependent ionospheric morphology. Based on the model, we have successfully achieved high-precision modeling of weak ionospheric E region irregularities, which commonly occur and are challenging to detect with ionosondes, under different solar activity conditions. Quantitatively, the model achieves a mean absolute error of 0.004, coupled with a Spearman's R value of 0.589 for weak scintillation. Ionospheric reconstructions under different solar activity conditions can improve the understanding of ionospheric evolutionary mechanisms and underscore the importance of incorporating solar variations into ionosphere changes forecasting to ensure the development of future reliable communications. © 2024 The Author(s). Journal of Geophysical Research: Machine Learning and Computation published by Wiley Periodicals LLC on behalf of American Geophysical Union.
+DA  - 2024///
+PY  - 2024
+DO  - 10.1029/2024JH000279
+DP  - Scopus
+VL  - 1
+IS  - 4
+J2  - J. geophys. res., Mach. learn. comput.
+LA  - English
+PB  - John Wiley and Sons Inc
+SN  - 2993-5210
+KW  - deep learning
+KW  - ionospheric irregularities
+KW  - neural networks
+KW  - sporadic E layer
+ER  - 
+
+TY  - JOUR
+TI  - Regional Spatial Mean of Ionospheric Irregularities Based on K-Means Clustering of ROTI Maps
+AU  - Migoya-Orué, Yenca
+AU  - Abe, Oladipo E.
+AU  - Radicella, Sandro
+T2  - Atmosphere
+AB  - In this paper, we investigate and propose the application of an unsupervised machine learning clustering method to characterize the spatial and temporal distribution of ionospheric plasma irregularities over the Western African equatorial region. The ordinary Kriging algorithm was used to interpolate the rate of change of the total electron content (TEC) index (ROTI) over gridded 0.5° by 0.5° latitude and longitude regional maps in order to simulate the level of ionospheric plasma irregularities in a quasi-real-time scenario. K-means was used to obtain a spatial mean index through an optimal stratification of regional post-processed ROTI maps. The results obtained could be adapted by appropriate K-means algorithms to a real-time scenario, as has been performed for other applications. This method could allow us to monitor plasma irregularities in real time over the African region and, therefore, lead to the possibility of mitigating their effects on satellite-based location systems in the said region. © 2024 by the authors.
+DA  - 2024///
+PY  - 2024
+DO  - 10.3390/atmos15091098
+DP  - Scopus
+VL  - 15
+IS  - 9
+J2  - Atmosphere
+LA  - English
+PB  - Multidisciplinary Digital Publishing Institute (MDPI)
+SN  - 2073-4433
+L1  - https://www.mdpi.com/2073-4433/15/9/1098/pdf?version=1725955060
+KW  - ionospheric irregularities
+KW  - K-means
+KW  - Kriging
+KW  - low-latitude ionosphere
+KW  - optimization sample technique
+KW  - ROTI
+KW  - unsupervised machine learning
+ER  - 
+
+TY  - CONF
+TI  - Artificial Intelligence Applications in Ionospheric Irregularities: A Bibliometric Analysis
+AU  - Kongthon, Alisa
+AU  - Supnithi, Pornchai
+T2  - PICMET 2024 - 2024 Portland International Conference on Management of Engineering and Technology: Technology Management in the Artificial Intelligence Era, Proceedings
+AB  - Ionospheric irregularities such as equatorial plasma bubbles (EPBs) in low-latitude regions often lead to disruptions in trans-ionospheric radio systems, navigation systems and satellite communications. Understanding and monitoring equatorial plasma bubbles is important for improving the reliability of communication and navigation systems. Recently, artificial intelligence (AI) has been applied to a wide variety of satellite communication aspects including ionospheric irregularities detection. This paper aims to apply bibliometric analysis on research publications related to AI applications in ionospheric irregularities. Such analysis can help researchers understand the evolving trends in AI and its diverse sub-fields, guiding future research directions. In addition, researchers can use the results of bibliometric analysis to benchmark their own work against the broader research landscape, identifying areas where their contributions can have the most impact.  © 2024 PICMET.
+C3  - PICMET - Portland Int. Conf. Manag. Eng. Technol.: Technol. Manag. Artif. Intell. Era, Proc.
+DA  - 2024///
+PY  - 2024
+DO  - 10.23919/PICMET64035.2024.10653119
+DP  - Scopus
+SP  - 1
+EP  - 6
+LA  - English
+PB  - Institute of Electrical and Electronics Engineers Inc.
+SN  - 978-1-890843-45-8
+ST  - Artificial Intelligence Applications in Ionospheric Irregularities
+UR  - https://ieeexplore.ieee.org/document/10653119/
+L1  - https://ieeexplore-ieee-org.ez15.periodicos.capes.gov.br/stampPDF/getPDF.jsp?tp=&arnumber=10653119&ref=
+KW  - Plasmas
+KW  - Support vector machines
+KW  - Predictive models
+KW  - Bibliometrics
+KW  - Market research
+KW  - Radio navigation
+KW  - Satellite navigation systems
+ER  - 
+
+TY  - CONF
+TI  - Ionospheric Scintillation Prediction Using Decision Tree and Rainforest Techniques
+AU  - Trachuentong, Sirasake
+AU  - Supnithi, Pornchai
+AU  - Myint, Lin Min Min
+AU  - Saito, Susumu
+T2  - 2024 10th International Conference on Engineering, Applied Sciences, and Technology, ICEAST 2024
+AB  - The ionosphere contains electron density variation. When radio signals transmitted from global navigation satellite systems (GNSS) pass through such medium, additional delays are added. With ionospheric irregularity, fluctuation in GNSS signals known as scintillation are often observed resulting in reduced number of tracked satellites then degrade positioning performances. At present, scintillation is considered random, hence, the ability to detect or predict such phenomenon is crucial to efficient system operation. In this research, we design machine learning algorithm for scintillation prediction. Both Decision Tree (DT) and Random Decision Forest (RF), are implemented to predict daily ionospheric scintillation at King Mongkut's Institute of Technology Ladkrabang (KMITL) station in Thailand (13.73 ° E, 100.77° N). The rate of total electron content change index (ROTI) is also used. Modeling is carried out for four months in March (equinox), June (solstice), September (equinox), and December (solstice) in 2022, representing different seasons in space weather study. The prediction results are evaluated using the S 4 index observations at KMITL station and then compared between DT and RF methods. The designed model has a high potential for scintillation prediction. © 2024 IEEE.
+C3  - Int. Conf. Eng., Appl. Sci., Technol., ICEAST
+DA  - 2024///
+PY  - 2024
+DO  - 10.1109/ICEAST61342.2024.10553652
+DP  - Scopus
+SP  - 89
+EP  - 92
+LA  - English
+PB  - Institute of Electrical and Electronics Engineers Inc.
+SN  - 979-8-3503-8594-6
+UR  - https://ieeexplore.ieee.org/document/10553652/
+L1  - https://ieeexplore-ieee-org.ez15.periodicos.capes.gov.br/stampPDF/getPDF.jsp?tp=&arnumber=10553652&ref=
+KW  - Predictive models
+KW  - Indexes
+KW  - Training
+KW  - Accuracy
+KW  - Global navigation satellite system
+KW  - Decision Tree (DT)
+KW  - Global Positioning System (GPS)
+KW  - Ionospheric Scintillation
+KW  - Random Decision Forest (RF)
+KW  - The rate of TEC index (ROTI)
+KW  - Forestry
+KW  - Radio frequency
+ER  - 
+
+TY  - CONF
+TI  - Equatorial Plasma Bubble Detection using the Convolutional Neural Network (CNN) and Support Vector Machine (SVM)
+AU  - Thanakulketsarat, Thananphat
+AU  - Supnithi, Pornchai
+AU  - Myint, Lin Min Min
+AU  - Hozumi, Kornyanat
+T2  - 2023 35th General Assembly and Scientific Symposium of the International Union of Radio Science, URSI GASS 2023
+AB  - Equatorial plasma bubbles (EPB) refer to the area of low electron density in the Earth's ionosphere near the equator during post sunset and post-midnight. They influence the radio communications and GPS signals. In this work, we study the EPB occurrences and characteristics using the VHF radar images observed at the Chumphon station, Thailand, near the magnetic equator.. We develop an EPB image detection system using a hybrid learning technique with convolutional neural network (CNN) and support vector machine (SVM) and evaluate the accuracy of the proposed CNN-SVM model using two kernels: polynomial kernel and radial basis function (RBF) kernel. © 2023 International Union of Radio Science.
+C3  - Gen. Assem. Sci. Symp. Int. Union Radio Sci., URSI GASS
+DA  - 2023///
+PY  - 2023
+DO  - 10.23919/URSIGASS57860.2023.10265497
+DP  - Scopus
+SP  - 1
+EP  - 5
+LA  - English
+PB  - Institute of Electrical and Electronics Engineers Inc.
+SN  - 978-94-63968-09-6
+UR  - https://ieeexplore.ieee.org/document/10265497/
+L1  - https://ieeexplore-ieee-org.ez15.periodicos.capes.gov.br/stampPDF/getPDF.jsp?tp=&arnumber=10265497&ref=
+KW  - Convolutional neural networks
+KW  - Hybrid learning
+KW  - Kernel
+KW  - Magnetic resonance imaging
+KW  - Plasmas
+KW  - Radar
+KW  - Support vector machines
+ER  - 
+
+TY  - CONF
+TI  - Detecting Equatorial Plasma Bubbles on All-Sky Imager Images Using Convolutional Neural Network
+AU  - Srisamoodkham, Worachai
+AU  - Shiokawa, Kazuo
+AU  - Otsuka, Yuichi
+AU  - Ansari, Kutubuddin
+AU  - Jamjareegulgarn, Punyawi
+T2  - Lecture Notes in Networks and Systems
+AB  - This paper proposes initially to apply convolutional neural network (CNN) for detecting the equatorial plasma bubbles on the ASI images. The considered CNN model is the YOLO v3 tiny model under a deep learning API (Keras), running on top of the machine learning platform (TensorFlow). Our program for EPB detection is written in Python that is extended easily to combine into a space weather web site for detecting and notifying EPBs in our next step. The results show that the YOLO v3-based CNN can detect the EPBs in ASI images with different intensities obtained from many countries. The threshold is tested and selected to be 0.40 suitably for detecting the anomaly (EPB existence). The maximum anomalous value is selected to decide the EPB occurrence. © 2022, The Author(s), under exclusive license to Springer Nature Singapore Pte Ltd.
+C3  - Lect. Notes Networks Syst.
+DA  - 2022///
+PY  - 2022
+DO  - 10.1007/978-981-19-2130-8_38
+DP  - Scopus
+VL  - 461
+SP  - 481
+EP  - 487
+LA  - English
+PB  - Springer Science and Business Media Deutschland GmbH
+SN  - 978-981-19-2129-2
+KW  - ASI
+KW  - Convolution neural network
+KW  - Plasma bubble
+KW  - YOLO
+ER  - 
+
+TY  - CONF
+TI  - Characterizing Global Equatorial Ionospheric Irregularities Through SCINDA-GNSS and COSMIC-RO Observations in High-Solar Activity Period
+AU  - Seif, Aramesh
+AU  - Kumar Panda, Sampad
+AU  - Huzaimy Jusoh, Mohamad
+AU  - Baily, Scott M.
+T2  - 2025 IEEE International Conference on Next-Gen Technologies of Artificial Intelligence and Geoscience Remote Sensing (EarthSense)
+AB  - Ionospheric irregularities at the equatorial region, such as plasma bubbles, scintillation, spread-F phenomena and sporadic E layers are some of the most threatening phenomena to radio wave communications and satellite navigation in the world. These broad nighttime disturbances in the ionosphere are dominantly excited by rapidly varying electric fields in the vicinity of dusk, where time-dependent electrodynamic processes generate ionospheric instability, leading to perturbations in electron densities that extend into the equatorward direction. The well-differentiated behaviour of the patterns of such ionospheric irregularities and their seasonal trends is necessary to reduce their adverse impacts on satellite applications that have become so fundamental to technological life on Earth. Significant progress from both ground-based and space-based observations has increased our understanding of the nature of ionization characteristics, their solar cycle variation, and their vulnerability to geomagnetic storms. Here, we address, in a thorough survey, the complex physical processes that produce equatorial ionospheric irregularities. We also investigate the link between the ionospheric scintillation, equatorial plasma bubbles (EPBs), and sporadic E (Es) layers based on the data from 15 SCINDA ground stations and GNSS radio occultation (RO) measurements. SCINDA reports the real-time S4 index, a key parameter for the detection of scintillation. The study reveals that daytime scintillation is associated with the existence of Es layers and nighttime scintillation was mainly caused by the phenomenon of EPBs. These results demonstrate the unique driving characteristics of ionospheric disturbances and their significance to communication and navigation systems.
+C3  - 2025 IEEE International Conference on Next-Gen Technologies of Artificial Intelligence and Geoscience Remote Sensing (EarthSense)
+DA  - 2025/09//
+PY  - 2025
+DO  - 10.1109/EarthSense66084.2025.11297353
+DP  - IEEE Xplore
+SP  - 1
+EP  - 5
+UR  - https://ieeexplore.ieee.org/document/11297353/
+Y2  - 2026/05/12/16:17:16
+L1  - https://ieeexplore-ieee-org.ez15.periodicos.capes.gov.br/stampPDF/getPDF.jsp?tp=&arnumber=11297353&ref=
+KW  - Equatorial plasma bubbles
+KW  - Global navigation satellite system
+KW  - GNSS
+KW  - Ionospheric Irregularities
+KW  - Pattern recognition
+KW  - Perturbation methods
+KW  - Plasmas
+KW  - Radio navigation
+KW  - Real-time systems
+KW  - Remote sensing
+KW  - Satellite broadcasting
+KW  - Scintillation
+KW  - Sporadic E layer
+KW  - Surveys
+KW  - Time-frequency analysis
+ER  - 
+
+TY  - CONF
+TI  - TEC Variation Prediction through AI and Space Weather Analysis
+AU  - Cholke, Puja
+AU  - Nimbolkar, Aditya
+AU  - Patil, Akshay
+AU  - Sagarkar, Sayali
+AU  - Wadile, Payal
+AU  - Lakde, Vinod
+T2  - 2025 International Conference on Emerging Smart Computing and Informatics (ESCI)
+AB  - Global Navigation Satellite Systems (GNSS) require very precise Total Electron Content (TEC) variation prediction to be operating good, especially in low-latitude regions where ionospheric disturbances are more efficient. Space weather events like solar activity, geomagnetic storms, and ionospheric irregularities have powerful effect on TEC. This research proposes unique method that is AI-driven also data analysis and machine learning models are being used in various fields to predict thermal emission coefficients (TEC) variations. For improving the TEC accuracy, this approach includes data from various sources such as solar indices, geomagnetic activity, and ionospheric characteristics. Hybridmodels and various machine learning techniques are used to represent the non-linear correlations between ionospheric dynamics and space weather phenomena. The challenges that current systems face are low generalization across different geographic locations, uneven data quality, and limited prediction accuracy.
+C3  - 2025 International Conference on Emerging Smart Computing and Informatics (ESCI)
+DA  - 2025/03//
+PY  - 2025
+DO  - 10.1109/ESCI63694.2025.10988340
+DP  - IEEE Xplore
+SP  - 1
+EP  - 6
+LA  - English
+PB  - Institute of Electrical and Electronics Engineers Inc.
+SN  - 979-8-3315-1568-3
+UR  - https://ieeexplore.ieee.org/document/10988340/
+Y2  - 2026/05/12/16:17:18
+L1  - https://ieeexplore-ieee-org.ez15.periodicos.capes.gov.br/stampPDF/getPDF.jsp?tp=&arnumber=10988340&ref=
+KW  - Accuracy
+KW  - Data models
+KW  - Electrons
+KW  - Geomagnetic
+KW  - Geomagnetic storms
+KW  - Global navigation satellite system
+KW  - GNSS
+KW  - Ionosphere
+KW  - Machine learning
+KW  - Machine Learning
+KW  - Meteorology
+KW  - Predictive models
+KW  - Recurrent neural networks
+KW  - Solar Activity
+KW  - Space Weather
+KW  - Total Electron Content
+ER  - 
+
+TY  - CONF
+TI  - Neural network recognition of ionospheric anomaly events based on GNSS RO data
+AU  - Ma, Zhengzheng
+AU  - Xu, Bin
+AU  - Ren, Yali
+T2  - 2021 13th International Symposium on Antennas, Propagation and EM Theory (ISAPE)
+AB  - In order to develop the first generation satellite brain laboratory prototype, we have carried out a technology research in its intelligent cognition system. Specifically, based on GNSS (Global Navigation Satellite System) RO (radio occultation) data, the neural network cognition method of ionospheric anomaly events is established. For the three kinds of ionospheric anomaly events (sporadic E layer, ionospheric plasma bubble and space activity), by establishing input data samples and setting hidden layer, the recognition rates of neural network are 96.4%, 98.3 % and 97.7%, respectively. This result proves the effectiveness of the neural network in ionospheric anomalies recognition. The next improvement aspects include increasing more kinds of physical quantities to the input data samples as well as adding the intensity cognition or classification module of ionospheric anomaly events.
+C3  - 2021 13th International Symposium on Antennas, Propagation and EM Theory (ISAPE)
+DA  - 2021///
+PY  - 2021
+DO  - 10.1109/ISAPE54070.2021.9753460
+DP  - IEEE Xplore
+VL  - Volume1
+SP  - 1
+EP  - 3
+LA  - English
+PB  - Institute of Electrical and Electronics Engineers Inc.
+SN  - 978-1-6654-1812-6
+UR  - https://ieeexplore.ieee.org/document/9753460/
+Y2  - 2026/05/12/16:17:20
+L1  - https://ieeexplore-ieee-org.ez15.periodicos.capes.gov.br/stampPDF/getPDF.jsp?tp=&arnumber=9753460&ref=
+KW  - Antenna theory
+KW  - Biological neural networks
+KW  - Cognition
+KW  - Global navigation satellite system
+KW  - GNSS RO data
+KW  - ionospheric anomaly
+KW  - neural network
+KW  - Plasmas
+KW  - Prototypes
+KW  - recognition
+KW  - satellite brain
+KW  - Satellite broadcasting
+ER  - 
+
+TY  - CONF
+TI  - Global Ionospheric ROTI Prediction Based on DeepONet
+AU  - Wang, Zitong
+AU  - Cai, Dijia
+AU  - Fu, Haiyang
+T2  - 2024 14th International Symposium on Antennas, Propagation and EM Theory (ISAPE)
+AB  - This study extends our previous research published in IEEE Transactions on Geoscience and Remote Sensing [1], which focused on predicting the Slant Total Electron Content (STEC) of the ionosphere using the Deep Operator Network (DeepONet) method. We now advance this work by implementing short-term forecasts of the Rate of Total Electron Content Index (ROTI), broadening the application of the DeepONet operator network in forecasting ionospheric irregularities. This work uses data from February 2023 for training and predicts the ROTI for March 1, 2023, achieving an average Root Mean Square Error (RMSE) accuracy of approximately 0.1 TECU/min. Additionally, the study found that the model's prediction deviations mainly occur near the equator and the poles. This investigation confirms DeepONet's capabilities for effectively forecasting ionospheric conditions, which could significantly improve the operational efficiency of global satellite navigation systems.
+C3  - 2024 14th International Symposium on Antennas, Propagation and EM Theory (ISAPE)
+DA  - 2024/10//
+PY  - 2024
+DO  - 10.1109/ISAPE62431.2024.10840433
+DP  - IEEE Xplore
+SP  - 1
+EP  - 4
+UR  - https://ieeexplore.ieee.org/document/10840433/
+Y2  - 2026/05/12/16:17:32
+L1  - https://ieeexplore-ieee-org.ez15.periodicos.capes.gov.br/stampPDF/getPDF.jsp?tp=&arnumber=10840433&ref=
+KW  - Accuracy
+KW  - DeepONet-ROTI
+KW  - Electrons
+KW  - Forecasting
+KW  - Geomag-netic Storm
+KW  - Indexes
+KW  - Ionosphere
+KW  - Kernel
+KW  - Satellite navigation systems
+KW  - Soft sensors
+KW  - STEC
+KW  - Storms
+KW  - Training
+ER  - 
+
+TY  - JOUR
+TI  - Radar Echo Modeling and Mechanism Analysis of Ionospheric Clutter Based on Turbulence Dynamics
+AU  - Li, Yuanbiao
+AU  - Yu, Lei
+AU  - Wei, Yinsheng
+T2  - IEEE Transactions on Geoscience and Remote Sensing
+AB  - This study analyzes ionospheric turbulence mechanisms and their effects on high-frequency surface wave radar (HFSWR) systems, incorporating experimental validation. We develop an advanced radar echo simulation model using ionospheric turbulence principles and fluid dynamics. We employ Navier–Stokes and Reynolds-averaged Navier–Stokes (RANS) equations with the k-\varepsilon model to simulate ionospheric inhomogeneities under various conditions. Our simulations examine laminar and turbulent flow states, revealing ionospheric irregularity formation and evolution. We identify five distinct types of ionospheric clutter: lamellar distribution, dot distribution, spatial correlation, distance-dependent, and target-like. We validate simulation results against 1290 range–Doppler (RD) spectra from HFSWR measurements. This validation confirms the ability of the model to reproduce observed ionospheric phenomena and clutter patterns. Our findings offer insights into ionospheric layer interactions and their effects on radar signal propagation, advancing ionospheric clutter simulation and mitigation for HFSWR systems.
+DA  - 2025///
+PY  - 2025
+DO  - 10.1109/TGRS.2025.3618480
+DP  - IEEE Xplore
+VL  - 63
+SP  - 1
+EP  - 13
+SN  - 1558-0644
+UR  - https://ieeexplore.ieee.org/document/11194131/
+Y2  - 2026/05/12/16:17:36
+L1  - https://ieeexplore-ieee-org.ez15.periodicos.capes.gov.br/stampPDF/getPDF.jsp?tp=&arnumber=11194131&ref=
+KW  - Clutter
+KW  - Image retrieval
+KW  - Ionosphere
+KW  - Ionospheric dynamics
+KW  - Ions
+KW  - Mathematical models
+KW  - Measurement
+KW  - Nonhomogeneous media
+KW  - Predictive models
+KW  - Radar clutter
+KW  - radar clutter simulation
+KW  - Reflection
+KW  - turbulence mechanism
+ER  - 
+

@@ -1,0 +1,30 @@
+\chapter{Methodology}\label{chap:methodology}
+
+The methodology for the automated detection of Equatorial Plasma Bubbles (EPBs) integrates physics-informed image preprocessing, advanced feature extraction, and ensemble machine learning. This pipeline is built to reliably spot EPB signatures in all-sky airglow imagery while naturally filtering out environmental noise and class imbalance.
+
+\subsection{Dataset Acquisition}
+All optical imagery used in this research was sourced directly from the EMBRACE (Estudo e Monitoramento Brasileiro do Clima Espacial) project, which is maintained by the Brazilian National Institute for Space Research (INPE - Instituto Nacional de Pesquisas Espaciais). This dataset gives us a view of ionospheric conditions across the Brazilian sector, capturing everything from perfectly clear nights to intense EPB events.
+
+\subsection{Physics-Informed Image Preprocessing}
+Raw optical images of the night sky rarely offer perfect viewing conditions; they are often skewed by shifting lunar phases or sensor gradients. To counter this, we apply a domain-specific preprocessing pipeline before any machine learning takes place. First, we model and remove the background illumination using a large Gaussian filter ($\sigma=10$). Subtracting this diffuse modeled light from the original image effectively clears out environmental biases. Next, we use Contrast Limited Adaptive Histogram Equalization (CLAHE) with a clip limit of 0.03. This localized tweak makes the dark, vertical tears of plasma depletions stand out sharply against the night sky. Finally, normalizing all pixel intensities to a standard $[0, 1]$ range keeps the math stable during feature extraction.
+
+\subsection{Data Augmentation and Balancing}
+Since clear skies heavily outnumber EPB events in nocturnal observations, we faced a substantially imbalanced dataset. Left unchecked, a model would simply learn to predict a clear sky every time. We tackled this using a dual-strategy approach. During initial preprocessing, we oversample the minority class by applying a duplication multiplier to the images containing EPBs, being careful to preserve their structural integrity. Later, just before classifier training, we bring in the Synthetic Minority Over-sampling Technique (SMOTE) to interpolate artificial samples in the feature space. Together, these steps guarantee the algorithm trains on balanced data.
+
+\subsection{Feature Extraction via 2DPCA}
+Traditional Principal Component Analysis (PCA) requires flattening a 2D image into a long 1D vector, which inevitably tears apart the natural spatial correlations within the picture. Two-Dimensional Principal Component Analysis (2DPCA) avoids this problem entirely by working directly on the image matrices. Our tests showed that keeping just the first five principal components was entirely sufficient to capture the core visual signatures of EPBs. This cuts down the data size dramatically, lowering both the risk of overfitting and the overall processing time while preserving the spatial relationships that matter most for detection.
+
+\subsection{Stacking Ensemble Classifier}
+Rather than relying on a single algorithm to act as the core classification engine, we built a Stacking Ensemble architecture. This lets us borrow the unique strengths of several different learners at once. We train three distinct base classifiers side-by-side on the 2DPCA-extracted features:
+\begin{itemize}
+    \item \textbf{Support Vector Classifier (SVC):} Uses a Radial Basis Function (RBF) kernel to draw complex decision boundaries.
+    \item \textbf{XGBoost Classifier:} Brought in for its strong non-linear feature extraction and gradient boosting capabilities.
+    \item \textbf{Random Forest Classifier:} Reduces variance by building an ensemble of decision trees based on random subspaces.
+\end{itemize}
+The predictions from these three models feed into a Logistic Regression meta-classifier, which essentially learns how to weigh their output to make the final call (EPB present or absent). Because our preprocessing and feature extraction steps complemented each other so well, the architecture reached strong classification performance right out of the box, letting us skip exhaustive hyperparameter tuning entirely.
+
+\subsection{Model Interpretability and Validation}
+We wanted to be certain the model was actually "seeing" physical features, rather than just exploiting random artifacts like camera borders. To achieve this, we integrated SHapley Additive exPlanations (SHAP) to map out exactly which regions of an image drive the classifier's decisions. We also tested the model over continuous clear-sky sequences to ensure its prediction probabilities hold steady during long operational shifts.
+
+\subsection{Evaluation Metrics}
+Given the original imbalance in the data, relying on just one metric wouldn't tell the whole story. We evaluated the model using Accuracy, Sensitivity (Recall), Specificity, and the F1-Score. Sensitivity tells us how many actual EPBs we caught, ensuring we don't miss critical events. Specificity tracks how well we identified clear skies, keeping false positives in check. Finally, the F1-Score blends precision and sensitivity to give a clear, balanced picture of the model's overall robustness.

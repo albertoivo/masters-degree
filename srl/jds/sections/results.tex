@@ -1,0 +1,84 @@
+\section{Results}\label{sec:results}
+
+\subsection{Study Selection and Temporal Distribution}\label{subsec:study-selection-temporal-distribution}
+
+A total of 9 studies were analyzed in this systematic review, all published between 2022 and 2025: 2022 (1 study), 2023 (2 studies), 2024 (1 study), and 2025 (5 studies). All studies focused on the detection and analysis of Equatorial Plasma Bubbles (EPBs). Table~\ref{tab:study-overview} summarizes the objectives, problem types, and datasets of each study, while Table~\ref{tab:results-techniques} details the techniques, metrics, results, and limitations.
+
+\begin{table}[ht!]
+\caption{Objectives, problem types, and datasets of the included studies.}
+\label{tab:study-overview}
+\centering
+\tiny
+\setlength{\tabcolsep}{2pt}
+\renewcommand{\arraystretch}{1.05}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.04\textwidth}>{\raggedright\arraybackslash}p{0.14\textwidth}>{\raggedright\arraybackslash}p{0.04\textwidth}>{\raggedright\arraybackslash}p{0.20\textwidth}>{\raggedright\arraybackslash}p{0.16\textwidth}>{\raggedright\arraybackslash}p{0.30\textwidth}@{}}
+\hline
+\textbf{ID} & \textbf{Author} & \textbf{Year} & \textbf{Objective} & \textbf{Problem Type} & \textbf{Dataset} \\
+\hline
+P1 & Githio et al. & 2024 & Predict EPB zonal drift velocities. & Prediction / Regression & ASI \& GNSS (Brazil, '13--'17), HWM-14, OMNI db. \\
+P2 & Zhong et al. & 2025 & DL program for EPB detection, segmentation, and feature extraction (latitude, zonal drift). & Detection / Segmentation & OI 630 nm ASI (Qujing, China, '12--'22). \\
+P3 & Yacoub et al. & 2025 & Low-cost XAI method for real-time EPB detection \& classification. & Detection / Classification & Raw \& Radon-transformed ASI (Brazil). \\
+P4 & Thanakulketsarat et al. & 2023 & Real-time plasma bubble detection \& classification via VHF radar. & Classification & VHF radar QL plots (Thailand). \\
+P5 & Srisamoodkham et al. & 2022 & CNN for EPB detection in ASI, integrated into a real-time space weather website. & Detection & ASI (OMTI) from Thailand, tested on AUS/BRA/HI data. \\
+P6 & Siddiqui & 2025 & Identify EPBs in airglow imagery using 2DPCA \& XAI. & Classification / Detection & 630 nm airglow ASI. \\
+P7 & Thanakulketsarat et al. & 2023 & EPB image detection using hybrid learning to study characteristics. & Detection / Classification & VHF radar QL plots (Thailand). \\
+P8 & Okoh et al. & 2025 & Optimize automated EPB detection on ASI via bootstrapping CNN. & Classification / Detection & Raw ASI (Nigeria, OMTI, '15--'20). \\
+P9 & Zhong et al. & 2025 & ML-based feature extraction for a statistical profile of EPB evolution over a solar cycle. & Statistical Analysis / Feature Extraction & OI 630 nm airglow (Qujing, China, '12--'22). \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[ht!]
+\caption{Results, techniques, and limitations of the included studies.}
+\label{tab:results-techniques}
+\centering
+\tiny
+\setlength{\tabcolsep}{2pt}
+\renewcommand{\arraystretch}{1.05}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.04\textwidth}>{\raggedright\arraybackslash}p{0.22\textwidth}>{\raggedright\arraybackslash}p{0.20\textwidth}>{\raggedright\arraybackslash}p{0.14\textwidth}>{\raggedright\arraybackslash}p{0.28\textwidth}@{}}
+\hline
+\textbf{ID} & \textbf{Result} & \textbf{ML Technique} & \textbf{Metric} & \textbf{Limitation} \\
+\hline
+P1 & $r = 0.98$ (train), $0.96$ (val); RMSE = 10.61 \& 10.06 m/s. & Random Forest (RF) & $r$, RMSE & Sensitive to foF2 inaccuracy; trained on high solar activity, tested on moderate; restricted to 23--05 UT. \\
+P2 & ResNet18+CBAM: 99\% precision, 91\% recall, 95\% F1; DeepLab: 88.2\% acc.\ and 78.2\% IoU. & Deep CNN (ResNet18+CBAM, DeepLabV3Plus) & Precision, Recall, F1, IoU, accuracy, mIoU, mAcc, aAcc & Accuracy drops in severe weather; generalization is better during quiet geomagnetic periods. \\
+P3 & 98.17\% acc.\ (raw), 97.35\% acc.\ (Radon). Model size reduced by 70\%. & 2DPCA + RFE + Random Forest + XAI & Accuracy, Precision, Recall, F1, training time & Sensitive to cloudy skies, causing misclassification. \\
+P4 & CNN-SVM (RBF kernel) achieved 93.67\% accuracy. & SVM + CNN + SVD & Accuracy, TPR, FPR, AUC-ROC, confusion matrix & More than $7$ CNN layers yield marginal accuracy gains but high latency. \\
+P5 & YOLOv3 detected EPBs. Best anomaly threshold: 0.40. & YOLOv3-tiny (CNN) & Anomaly threshold \% & YOLOv3-tiny is faster than standard YOLOv3, but less accurate. \\
+P6 & SHAP/LIME showed that vertical extent \& width of the dark plume affect classification. & 2DPCA + SVM/RF/NN + SHAP/LIME (XAI) & Accuracy, Precision, Recall, F1 & Performance varies by instrument and location; struggles with severe contamination; reactive detection. \\
+P7 & CNN-SVM (RBF kernel) achieved 93.08\% accuracy. & CNN + SVM (RBF/Polynomial kernel) & Accuracy & Not reported. \\
+P8 & Ensemble improved accuracy to 99.17\% (mean) and 99.33\% (mode). & Bootstrapping CNN ensemble & Accuracy, confusion matrix & Mean aggregation is sensitive to overconfidence; mode voting needs a fallback for ambiguous cases. \\
+P9 & High solar activity promotes EPB area, PMLE \& velocity. ROF drops/rises near midnight. & Deep CNN (DCNN) & $r$, p-value, standard deviation & Aggregation over 19--07 LT hides interval differences; airglow alone does not provide the full causal mechanism. \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Types of Problems Addressed}\label{subsec:types-of-problems-addressed}
+
+As detailed in Table~\ref{tab:study-overview}, the reviewed studies addressed a spectrum of computational problems, with a clear concentration on detection (7 studies) and classification (5 studies), which were frequently combined within a single pipeline. This pairing reflects a common two-stage workflow in the corpus: first identify whether an EPB signature is present, then categorize its characteristics or confidence level. Notably, only one study (P2) advanced beyond binary presence detection to perform pixel-level morphological segmentation, and only one (P1) addressed the fundamentally different problem of regression-based prediction of zonal drift velocities. The remaining study (P9) employed ML outputs not for real-time detection but for large-scale statistical profiling. This distribution reveals a strong concentration on reactive tasks---classifying events that have already occurred---with a conspicuous scarcity of proactive or predictive frameworks.
+
+\subsection{Data Types and Sources}\label{subsec:data-types-and-sources}
+
+All-Sky Imager (ASI) optical data was used in 7 of the 9 studies, making it the dominant modality (see Table~\ref{tab:study-overview}). VHF radar imagery was employed exclusively by the two Thai-based studies (P4, P7), while GNSS observations appeared only in P1 as a complementary source alongside ASI. No study relied solely on GNSS-derived products such as TEC or ROTI maps. Geographically, the datasets originate from a narrow set of equatorial and low-latitude regions: Brazil (P1, P3), China (P2, P9), Thailand (P4, P5, P7), and Nigeria (P8), with P5 additionally testing on Australian and Hawaiian data. The temporal coverage of individual datasets varied substantially, ranging from short campaign-style collections to the decade-long archive (2012--2022) used by P2 and P9. Notably, only P1 integrated multiple data sources (ASI, GNSS, HWM-14, and OMNI) within a single model, while all other studies operated on a single instrument type.
+
+\subsection{Machine Learning Techniques}\label{subsec:machine-learning-techniques}
+
+As summarized in Table~\ref{tab:results-techniques} and illustrated in Figure~\ref{fig:ml-techniques}, three broad methodological paradigms emerge from the corpus. The first and most prevalent is end-to-end deep learning, in which CNN architectures---including ResNet18+CBAM (P2), YOLOv3-tiny (P5), DeepLabV3Plus (P2), and bootstrapping CNN ensembles (P8)---are applied directly to raw or minimally preprocessed imagery. The second paradigm is hybrid pipelines, where dimensionality reduction (2DPCA or SVD) precedes a traditional classifier such as SVM or Random Forest (P3, P4, P6, P7). These hybrid approaches consistently reported competitive accuracies while operating with substantially smaller model footprints. The third paradigm, present only in the most recent publications (P3, P6), augments either of the above with Explainable AI (XAI) tools---specifically SHAP and LIME---to provide post-hoc interpretability of model decisions. A chronological pattern is evident: the earliest study (P5, 2022) employed a single off-the-shelf detector (YOLOv3-tiny), while studies from 2025 increasingly combined multiple techniques within unified frameworks.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{figures/bar_chart_ml_techniques.pdf}
+\caption{Distribution of machine and deep learning techniques across the included studies.}
+\label{fig:ml-techniques}
+\end{figure}
+
+\subsection{Evaluation Metrics}\label{subsec:evaluation-metrics}
+
+Accuracy was the most frequently reported metric, appearing in 7 of the 9 studies; however, its widespread use as a standalone measure is notable given that several studies acknowledged class-imbalanced datasets, where accuracy alone can be misleading. Precision, recall, and F1-score---which provide a more nuanced view of classifier performance---were reported in only 3 studies (P2, P3, P6). Segmentation-specific metrics such as IoU appeared exclusively in P2, while regression metrics ($r$, RMSE) were confined to P1 and P9. The lack of a shared evaluation protocol across the corpus complicates direct cross-study performance comparisons. Furthermore, only two studies (P3, P5) explicitly reported computational cost indicators (training time or processing speed), despite the fact that real-time deployment is stated as a goal in multiple works.
+
+\subsection{Main Results Reported}\label{subsec:main-results-reported}
+
+Table~\ref{tab:results-techniques} presents the quantitative outcomes of each study. Across the corpus, reported classification and detection accuracies ranged from 86\% to over 99\%, with a clear performance gradient linked to methodological complexity. Hybrid CNN-SVM models (P4, P7) achieved accuracies of 93--94\%, while the dimensionality-reduced pipelines with 2DPCA (P3) reached 97--98\% with a 70\% reduction in model size. The highest accuracies were reported by ensemble and attention-augmented architectures: the bootstrapping CNN ensemble (P8) achieved 99.17--99.33\%, and the ResNet18+CBAM detector (P2) reached 99\% precision.
+
+For segmentation, DeepLabV3Plus (P2) reported 88.2\% pixel accuracy and 78.2\% IoU---the only study to provide spatial overlap metrics. The sole regression study (P1) achieved a correlation coefficient of $r = 0.96$ on validation data for predicting EPB zonal drift velocities.
+
+Two cross-cutting findings are noteworthy. First, studies incorporating XAI (P3, P6) reported that the vertical extent and width of the central dark plume are the features most influential in automated EPB classification. Second, the ML-derived feature extraction pipeline (P2, P9) enabled the construction of solar-cycle-scale statistical profiles, quantifying relationships between solar activity and EPB morphological parameters across a decade of observations.

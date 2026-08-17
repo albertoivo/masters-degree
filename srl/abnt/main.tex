@@ -1,0 +1,58 @@
+% Revisão Sistemática da Literatura — ABNT (abntex2)
+\documentclass[
+    article,
+    12pt,
+    oneside,
+    a4paper,
+    english
+]{abntex2}
+
+% ---
+% Packages
+% ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage[alf]{abntex2cite}
+
+% ---
+% Metadata
+% ---
+\titulo{Detecting Equatorial Plasma Bubbles with Machine Learning}
+\tituloestrangeiro{}
+\autor{
+    Alberto Vieira\thanks{Corresponding author. E-mail: albertoivo@gmail.com}$^{1}$ \and
+    Tiago Maritan$^{1}$
+}
+\data{2026}
+
+% ---
+\begin{document}
+\frenchspacing
+
+\maketitle
+
+\begin{center}
+    {\normalsize
+    $^{1}$Federal University of Paraiba, Jo\~ao Pessoa--PB, Brazil\\
+    $^{2}$Federal University of Campina Grande, Campina Grande--PB, Brazil}
+\end{center}
+\vspace{\onelineskip}
+
+\input{sections/abstract}
+
+\textual
+
+\input{sections/introduction}
+\input{sections/methodology}
+\input{sections/results}
+\input{sections/discussion}
+\input{sections/conclusion}
+
+\postextual
+
+\bibliography{biblio}
+
+\end{document}

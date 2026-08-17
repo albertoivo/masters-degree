@@ -1,0 +1,89 @@
+\section{Results}\label{sec:results}
+
+The performance and robustness of the proposed Equatorial Plasma Bubble detection architecture were evaluated through statistical validation, model interpretability analysis, and continuous temporal application. We explored how the feature extraction behaves, how the model performs on unseen data, why it makes certain decisions, and finally, how it holds up during long observation nights.
+
+\subsection{Feature Extraction and Dimensionality Reduction}
+
+Before feeding any data to our ensemble of classifiers, we needed to make sure the images were reduced to their most essential structural components. We used the Two Dimensional Principal Component Analysis to achieve this. To understand how much information was actually being retained, we looked at the cumulative variance explained by each principal component.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{figs/2dpca_variance.png}
+    \caption{Cumulative explained variance by the principal components derived from the feature extraction process.}
+    \label{fig:2dpca_variance}
+\end{figure}
+
+As we can see in Figure \ref{fig:2dpca_variance}, the algorithm calculates the variance for several components starting from index zero. The plot clearly shows that the first five components, labeled zero to four due to the zero indexed nature of the programming environment, capture the vast majority of the structural information required to identify the plasma bubbles. After the fifth component, the curve flattens out almost entirely. This flattening means that any additional components beyond the first five mostly represent background noise or insignificant artifacts in the airglow images. By restricting our model to use only these five components, we successfully preserved the core features of the bubbles while drastically reducing the computational load and filtering out the environmental noise.
+
+To further understand how this process works in practice, we analyzed the detailed reconstruction error of the features. The model projects the images into a principal subspace and then reconstructs them. By calculating the error between the original image and the reconstructed image, we generate a spatial map of anomalies.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{figs/recon_error_without.png}
+    \caption{Detailed reconstruction error analysis for an image without a plasma bubble. The error is minimal and lacks any distinct structure.}
+    \label{fig:recon_error_without}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{figs/recon_error_with.png}
+    \caption{Detailed reconstruction error analysis for an image with a plasma bubble. The algorithm generates a high reconstruction error exactly where the plasma depletion structures are located.}
+    \label{fig:recon_error_with}
+\end{figure}
+
+As demonstrated in Figures \ref{fig:recon_error_without} and \ref{fig:recon_error_with}, this error mapping acts as a primary spatial feature for our classifiers. For an image of a clear sky, the reconstruction error is minimal and randomly distributed, showing no distinct features. However, when a plasma bubble is present, the algorithm fails to reconstruct the complex depletion structure using only the principal components, resulting in a high error concentrated exactly where the bubble is located. 
+
+\subsection{Classification Performance and Curves}
+
+To verify that the model generalizes well and is not simply memorizing the training dataset, we ran a five fold cross validation. We evaluated its performance using both Receiver Operating Characteristic and Precision Recall curves. This is especially important for our dataset since clear nights occur much more frequently than nights with plasma bubble activity.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{figs/roc_pr_curves.png}
+    \caption{Receiver Operating Characteristic and Precision Recall curves for the detection model.}
+    \label{fig:roc_pr}
+\end{figure}
+
+Figure \ref{fig:roc_pr} illustrates the model performance across different decision thresholds. The Receiver Operating Characteristic curve compares the true positive rate against the false positive rate. Our ensemble model achieved a nearly perfect Area Under the Curve, indicating that it can easily distinguish between images with and without bubbles. However, when dealing with imbalanced datasets, the Precision Recall curve provides a much more realistic picture. It focuses strictly on the positive class, showing the tradeoff between precision, which is how many of the predicted bubbles were actually bubbles, and recall, which is how many of the real bubbles the model successfully found. The fact that the Precision Recall curve also maintains an extremely high Area Under the Curve confirms that our architecture is highly reliable and does not generate false alarms even when clear sky images dominate the dataset.
+
+\subsection{Model Interpretability}
+
+Machine learning models are often seen as black boxes. We wanted to be absolutely certain that our ensemble classifier was looking at the right physical phenomena rather than exploiting random camera glitches or border artifacts. To do this, we used the SHapley Additive exPlanations framework to visualize what the model was paying attention to.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{figs/shap_analysis_without.png}
+    \caption{Interpretability analysis for an image without a plasma bubble. The attribution map displays blue regions, indicating strong evidence for a quiet ionosphere and the absence of any coherent depletion structure.}
+    \label{fig:shap_without}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{figs/shap_analysis_with.png}
+    \caption{Interpretability analysis for an image with an active plasma bubble. The model highlights intense red regions focusing on the vertical depletion structures rising into the upper quadrants, perfectly matching the physical reality of the phenomenon.}
+    \label{fig:shap_with}
+\end{figure}
+
+Figures \ref{fig:shap_without} and \ref{fig:shap_with} display the original images alongside their corresponding spatial attribution maps. In these maps, red areas signify features that push the model toward predicting a plasma bubble, while blue areas push the model toward predicting a clear sky. In Figure \ref{fig:shap_without}, which shows a quiet ionosphere, the explanation values are predominantly blue and scattered, meaning the model found no coherent structure that would indicate a bubble. On the other hand, Figure \ref{fig:shap_with} presents a night with clear plasma bubble activity. The attribution map for this image shows an intense red focus on the vertical depletion structures rising into the upper quadrants of the optical field of view. This aligns perfectly with the physical reality of how these bubbles form and propagate. It gave us great confidence to see that the model learned the actual physics of the ionospheric depletions instead of relying on irrelevant background pixels.
+
+\subsection{Temporal Stability Analysis}
+
+The final step in our evaluation was to see how the model behaves during continuous operation. A practical detection system needs to run constantly throughout the night without triggering false alerts when the sky is clear, while still catching bubbles as soon as they appear.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{figs/temporal_without_epb.png}
+    \caption{Continuous temporal analysis of the model predictions during a quiet night with no plasma bubbles.}
+    \label{fig:temporal_without}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{figs/temporal_with_epb.png}
+    \caption{Continuous temporal analysis of the model predictions during an active night with plasma bubble formation.}
+    \label{fig:temporal_with}
+\end{figure}
+
+To test this, we fed the model two distinct uninterrupted sequences of nocturnal observations. Figure \ref{fig:temporal_without} shows the timeline for a quiet night. Throughout hours of observation, the probability of a bubble being present remained remarkably low, barely fluctuating above zero. This proves the system has strong immunity to false positives.
+
+Conversely, Figure \ref{fig:temporal_with} displays the timeline for an active night. The model starts by outputting low probabilities during the early evening when the ionosphere is stable. As the night progresses and the first signs of plasma depletion appear, the predicted probability rapidly shoots up, crossing the detection threshold. The probability remains high as long as the structures are visible in the camera field of view, and then it naturally drops back down as the structures dissipate towards dawn. These temporal results demonstrate that our architecture is well suited for automated, real time monitoring at observatory stations.
