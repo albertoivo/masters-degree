@@ -3,6 +3,7 @@ Sistema Completo de Reconhecimento de EPBs usando 2DPCA
 Autor: Sistema de ML para Detecção de Bolhas de Plasma Equatorial
 """
 
+import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -1369,7 +1370,7 @@ def plot_classification_examples(X_test: np.ndarray, y_test: np.ndarray,
         return fig
     return None
 
-def plot_2dpca_variance(system: 'EPBRecognitionSystem', axes=None) -> Optional[plt.Figure]:
+def plot_2dpca_variance(system: 'EPBRecognitionSystem', axes=None, save_path: Optional[str] = None, dpi: int = 300) -> Optional[plt.Figure]:
     fig = None
     if axes is None:
         fig, axes = plt.subplots(1, 2, figsize=(12, 4))
@@ -1398,10 +1399,14 @@ def plot_2dpca_variance(system: 'EPBRecognitionSystem', axes=None) -> Optional[p
     
     if fig:
         plt.tight_layout()
+        if save_path:
+            os.makedirs(os.path.dirname(os.path.abspath(save_path)), exist_ok=True)
+            fig.savefig(save_path, dpi=dpi, bbox_inches='tight')
+            print(f"💾 Gráfico salvo: {save_path} ({dpi} DPI)")
         return fig
     return None
 
-def plot_confusion_matrix_analysis(y_test: np.ndarray, y_pred: np.ndarray, ax=None) -> Optional[plt.Figure]:
+def plot_confusion_matrix_analysis(y_test: np.ndarray, y_pred: np.ndarray, ax=None, save_path: Optional[str] = None, dpi: int = 300) -> Optional[plt.Figure]:
     fig = None
     if ax is None:
         fig, ax = plt.subplots(figsize=(6, 5))
@@ -1417,10 +1422,14 @@ def plot_confusion_matrix_analysis(y_test: np.ndarray, y_pred: np.ndarray, ax=No
     
     if fig:
         plt.tight_layout()
+        if save_path:
+            os.makedirs(os.path.dirname(os.path.abspath(save_path)), exist_ok=True)
+            fig.savefig(save_path, dpi=dpi, bbox_inches='tight')
+            print(f"💾 Gráfico salvo: {save_path} ({dpi} DPI)")
         return fig
     return None
 
-def plot_performance_metrics(y_test: np.ndarray, y_proba: np.ndarray, axes=None) -> Optional[plt.Figure]:
+def plot_performance_metrics(y_test: np.ndarray, y_proba: np.ndarray, axes=None, save_path: Optional[str] = None, dpi: int = 300) -> Optional[plt.Figure]:
     fig = None
     if axes is None:
         fig, axes = plt.subplots(1, 3, figsize=(18, 5))
@@ -1472,6 +1481,10 @@ def plot_performance_metrics(y_test: np.ndarray, y_proba: np.ndarray, axes=None)
     
     if fig:
         plt.tight_layout()
+        if save_path:
+            os.makedirs(os.path.dirname(os.path.abspath(save_path)), exist_ok=True)
+            fig.savefig(save_path, dpi=dpi, bbox_inches='tight')
+            print(f"💾 Gráfico salvo: {save_path} ({dpi} DPI)")
         return fig
     return None
 
@@ -1752,7 +1765,9 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
                               target_size: Tuple[int, int] = (64, 64),
                               show_thumbnails: bool = True, thumbnail_interval: int = 10,
                               use_qc: bool = True, threshold_stars: int = 5500,
-                              min_mean_brightness: float = 35.0) -> Optional[pd.DataFrame]:
+                              min_mean_brightness: float = 35.0,
+                              save_path: Optional[str] = None,
+                              dpi: int = 300) -> Optional[pd.DataFrame]:
     """
     Analisa uma sequência temporal de imagens com suporte a controle de qualidade (QC) e detecção de EPB.
     
@@ -2123,6 +2138,11 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
              color=COLORS['text_secondary'], fontweight='normal', 
              bbox=dict(boxstyle='round,pad=0.4', facecolor=COLORS['card_bg'], 
                       edgecolor=COLORS['grid'], linewidth=0.5))
+    
+    if save_path:
+        os.makedirs(os.path.dirname(os.path.abspath(save_path)), exist_ok=True)
+        fig.savefig(save_path, dpi=dpi, bbox_inches='tight', facecolor=fig.get_facecolor())
+        print(f"💾 Timeline salva em alta resolução: {save_path} ({dpi} DPI)")
     
     plt.show()
     plt.rcParams.update(_rc_backup)
@@ -2947,7 +2967,9 @@ def explain_shap_importance(system: 'EPBRecognitionSystem',
                             X_background: np.ndarray,
                             filename: Optional[str] = None,
                             method: str = 'tree',
-                            image_folder: str = 'img-teste') -> np.ndarray:
+                            image_folder: str = 'img-teste',
+                            save_path: Optional[str] = None,
+                            dpi: int = 300) -> np.ndarray:
     """
     Explicação baseada em SHAP: quais regiões da imagem contribuem para a
     decisão de classificação.
@@ -3042,32 +3064,61 @@ def explain_shap_importance(system: 'EPBRecognitionSystem',
         print(f"   As regiões azuis no mapa SHAP mostram evidência de ionosfera")
         print(f"   quieta (ausência de estruturas irregulares).")
 
-    # 5. Visualização — 2 painéis
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    # 5. Visualização — 3 painéis (Original | Overlay SHAP | Mapa SHAP puro)
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
 
-    # Painel 1: Imagem original
+    # Carrega imagem original do disco (alta resolução)
     img = _load_disk_image(filename, image_folder)
     if img is None:
         img = X_sample
+
+    # Percentile clipping para evitar que outliers saturem a escala de cores
+    abs_vals = np.abs(shap_map)
+    p99 = np.percentile(abs_vals[abs_vals > 0], 99) if np.any(abs_vals > 0) else 1e-10
+    vmax = max(p99, 1e-10)
+
+    # Painel 1: Imagem original
     axes[0].imshow(img, cmap='gray')
-    axes[0].set_title('Original Image', fontsize=11, fontweight='bold')
+    axes[0].set_title('Imagem Original', fontsize=11, fontweight='bold')
     axes[0].axis('off')
 
-    # Painel 2: SHAP com sinal (colormap divergente)
-    vmax = max(abs(shap_map.min()), abs(shap_map.max()))
-    if vmax == 0:
-        vmax = 1e-10
-    im1 = axes[1].imshow(shap_map, cmap='RdBu_r', vmin=-vmax, vmax=vmax)
-    axes[1].set_title('SHAP Attribution\n(Red: EPB evidence  |  Blue: No EPB evidence)',
+    # Painel 2: Overlay SHAP sobre a imagem original
+    # Redimensiona o shap_map para o tamanho da imagem original via interpolação
+    from scipy.ndimage import zoom
+    if img.shape != shap_map.shape:
+        zoom_factors = (img.shape[0] / shap_map.shape[0],
+                        img.shape[1] / shap_map.shape[1])
+        shap_resized = zoom(shap_map, zoom_factors, order=1)
+    else:
+        shap_resized = shap_map
+
+    axes[1].imshow(img, cmap='gray')
+    im_overlay = axes[1].imshow(
+        shap_resized, cmap='RdBu_r', vmin=-vmax, vmax=vmax,
+        alpha=0.55, interpolation='bilinear'
+    )
+    axes[1].set_title('Overlay SHAP + Airglow\n(Vermelho: evidência EPB  |  Azul: contra EPB)',
                       fontsize=11, fontweight='bold')
     axes[1].axis('off')
-    plt.colorbar(im1, ax=axes[1], fraction=0.046, label='SHAP value')
+    plt.colorbar(im_overlay, ax=axes[1], fraction=0.046, label='SHAP value')
+
+    # Painel 3: Mapa SHAP puro (quantitativo)
+    im_pure = axes[2].imshow(shap_map, cmap='RdBu_r', vmin=-vmax, vmax=vmax,
+                             interpolation='bilinear')
+    axes[2].set_title('Atribuição SHAP\n(Mapa Quantitativo)',
+                      fontsize=11, fontweight='bold')
+    axes[2].axis('off')
+    plt.colorbar(im_pure, ax=axes[2], fraction=0.046, label='SHAP value')
 
     suptitle = (f'SHAP: {"EPB" if y_sample == 1 else "No EPB"} '
                 f'(Pred: {"EPB" if pred == 1 else "No EPB"}, {prob[1]*100:.1f}%)'
                 f'{" — " + filename if filename else ""}')
     fig.suptitle(suptitle, fontsize=13, fontweight='bold')
     plt.tight_layout()
+    if save_path:
+        os.makedirs(os.path.dirname(os.path.abspath(save_path)), exist_ok=True)
+        fig.savefig(save_path, dpi=dpi, bbox_inches='tight')
+        print(f"💾 Mapa SHAP salvo em alta resolução: {save_path} ({dpi} DPI)")
     plt.show()
 
     return shap_map
