@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Detecção Automática de Bolhas de Plasma Equatoriais com Machine Learning — SBGEA</title>
+  <style>
+    :root {
+      --bg: #05070d;
+      --ink: #e8edf6;
+      --mute: #8d98ad;
+      --line: rgba(255, 255, 255, .08);
+      --red: #ff5a4e;
+      /* OI 630 nm */
+      --green: #5cf2a0;
+      /* OI 557.7 nm */
+      --blue: #6aa8ff;
+      --glass: rgba(16, 22, 36, .55);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    html,
+    body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+      overflow: hidden
+    }
+
+    #sky {
+      position: fixed;
+      inset: 0;
+      z-index: 0
+    }
+
+    .aurora {
+      position: fixed;
+      inset: -20%;
+      z-index: 0;
+      pointer-events: none;
+      filter: blur(80px);
+      opacity: .35;
+      background: radial-gradient(40% 30% at 20% 85%, rgba(255, 90, 78, .45), transparent 70%),
+        radial-gradient(35% 25% at 80% 90%, rgba(92, 242, 160, .30), transparent 70%),
+        radial-gradient(30% 25% at 60% 10%, rgba(106, 168, 255, .20), transparent 70%);
+      animation: drift 24s ease-in-out infinite alternate
+    }
+
+    @keyframes drift {
+      to {
+        transform: translate3d(4%, -3%, 0) rotate(4deg)
+      }
+    }
+
+    .deck {
+      position: relative;
+      z-index: 1;
+      height: 100%
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 5.5vh 6vw 7vh;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(4vw) scale(.98);
+      transition: opacity .7s cubic-bezier(.2, .7, .2, 1), transform .7s cubic-bezier(.2, .7, .2, 1), visibility .7s
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: none
+    }
+
+    .slide.prev {
+      transform: translateX(-4vw) scale(.98)
+    }
+
+    .kicker {
+      font-size: .8rem;
+      letter-spacing: .32em;
+      text-transform: uppercase;
+      color: var(--red);
+      font-weight: 600;
+      margin-bottom: .8rem
+    }
+
+    h1 {
+      font-size: clamp(2rem, 4.2vw, 3.6rem);
+      line-height: 1.08;
+      font-weight: 800;
+      letter-spacing: -.02em
+    }
+
+    h2 {
+      font-size: clamp(1.6rem, 3vw, 2.6rem);
+      font-weight: 750;
+      letter-spacing: -.015em;
+      margin-bottom: 2.5vh
+    }
+
+    h3 {
+      font-size: 1.05rem;
+      font-weight: 650;
+      margin-bottom: .5rem;
+      color: #fff
+    }
+
+    p,
+    li {
+      font-size: clamp(.95rem, 1.25vw, 1.2rem);
+      line-height: 1.55;
+      color: #c9d2e3
+    }
+
+    .grad {
+      background: linear-gradient(90deg, var(--red), #ffb36b 45%, var(--green));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent
+    }
+
+    em {
+      color: #fff;
+      font-style: normal;
+      font-weight: 600
+    }
+
+    .red {
+      color: var(--red)
+    }
+
+    .green {
+      color: var(--green)
+    }
+
+    .blue {
+      color: var(--blue)
+    }
+
+    .grid {
+      display: grid;
+      gap: 2.2vw;
+      flex: 1;
+      min-height: 0;
+      align-items: center
+    }
+
+    .g2 {
+      grid-template-columns: 1fr 1fr
+    }
+
+    .g37 {
+      grid-template-columns: .9fr 1.3fr
+    }
+
+    .g73 {
+      grid-template-columns: 1.35fr .8fr
+    }
+
+    .card {
+      background: var(--glass);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 1.4rem 1.6rem;
+      backdrop-filter: blur(10px)
+    }
+
+    figure {
+      position: relative;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: #0b0f18;
+      cursor: zoom-in
+    }
+
+    figure img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain
+    }
+
+    figcaption {
+      font-size: .78rem;
+      color: var(--mute);
+      padding: .5rem .8rem;
+      border-top: 1px solid var(--line);
+      background: rgba(0, 0, 0, .35)
+    }
+
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 1.4vh;
+      min-height: 0
+    }
+
+    ul.clean {
+      list-style: none
+    }
+
+    ul.clean li {
+      padding-left: 1.6rem;
+      position: relative;
+      margin: .55rem 0
+    }
+
+    ul.clean li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: .62em;
+      width: .6rem;
+      height: .6rem;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 12px var(--red)
+    }
+
+    ul.clean.g li::before {
+      background: var(--green);
+      box-shadow: 0 0 12px var(--green)
+    }
+
+    /* reveal animation */
+    .r {
+      opacity: 0;
+      transform: translateY(22px);
+      filter: blur(6px);
+      transition: all .8s cubic-bezier(.2, .7, .2, 1)
+    }
+
+    .active .r {
+      opacity: 1;
+      transform: none;
+      filter: none
+    }
+
+    .active .d1 {
+      transition-delay: .15s
+    }
+
+    .active .d2 {
+      transition-delay: .3s
+    }
+
+    .active .d3 {
+      transition-delay: .45s
+    }
+
+    .active .d4 {
+      transition-delay: .6s
+    }
+
+    .active .d5 {
+      transition-delay: .75s
+    }
+
+    .active .d6 {
+      transition-delay: .9s
+    }
+
+    /* step-by-step fragments */
+    .frag {
+      opacity: .12;
+      filter: grayscale(1);
+      transition: all .5s
+    }
+
+    .frag.on {
+      opacity: 1;
+      filter: none
+    }
+
+    /* title slide */
+    .title-wrap {
+      margin: auto 0;
+      max-width: 1100px
+    }
+
+    .authors {
+      margin-top: 3vh;
+      font-size: 1.15rem;
+      color: #fff
+    }
+
+    .authors span {
+      color: var(--mute);
+      font-size: .95rem
+    }
+
+    .logos {
+      display: flex;
+      gap: 2.4rem;
+      align-items: center;
+      margin-top: 5vh;
+      flex-wrap: wrap
+    }
+
+    .logo {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, .92);
+      border-radius: 12px;
+      padding: 8px 14px
+    }
+
+    .logo img {
+      height: 100%;
+      width: auto;
+      object-fit: contain
+    }
+
+    .logo.missing {
+      background: transparent;
+      border: 1px dashed rgba(255, 255, 255, .3);
+      color: var(--mute);
+      font-weight: 700;
+      letter-spacing: .1em;
+      padding: 0 1.2rem
+    }
+
+    .badge {
+      display: inline-block;
+      margin-top: 2.4vh;
+      padding: .35rem .9rem;
+      border: 1px solid rgba(255, 90, 78, .5);
+      border-radius: 99px;
+      color: var(--red);
+      font-size: .85rem;
+      letter-spacing: .08em
+    }
+
+    /* all-sky animation */
+    .allsky {
+      position: relative;
+      aspect-ratio: 1;
+      max-height: 62vh;
+      margin: auto;
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, .1), 0 0 80px rgba(255, 90, 78, .25);
+      cursor: default
+    }
+
+    .allsky img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: sepia(1) hue-rotate(-30deg) saturate(2.4) brightness(.95)
+    }
+
+    .allsky.raw img {
+      filter: none
+    }
+
+    .skyctl {
+      display: flex;
+      gap: .8rem;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1.4vh;
+      font-size: .85rem;
+      color: var(--mute)
+    }
+
+    .skyctl button {
+      background: rgba(255, 255, 255, .06);
+      color: #fff;
+      border: 1px solid var(--line);
+      border-radius: 99px;
+      padding: .3rem .9rem;
+      cursor: pointer;
+      font: inherit
+    }
+
+    .skyctl input {
+      width: 180px;
+      accent-color: var(--red)
+    }
+
+    #skytime {
+      font-variant-numeric: tabular-nums;
+      color: #fff;
+      min-width: 5.5em;
+      text-align: center
+    }
+
+    /* physics mini diagram */
+    .layers {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+      margin-top: 1rem
+    }
+
+    .layer {
+      display: flex;
+      justify-content: space-between;
+      padding: .5rem .9rem;
+      border-radius: 10px;
+      font-size: .9rem;
+      border: 1px solid var(--line)
+    }
+
+    /* pipeline */
+    .pipe {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      margin: 2vh 0 3vh
+    }
+
+    .node {
+      flex: 1;
+      text-align: center;
+      padding: 1.2rem .8rem;
+      border-radius: 16px;
+      background: var(--glass);
+      border: 1px solid var(--line);
+      position: relative
+    }
+
+    .node .ic {
+      font-size: 1.9rem;
+      margin-bottom: .4rem
+    }
+
+    .node b {
+      display: block;
+      color: #fff;
+      font-size: 1rem;
+      margin-bottom: .3rem
+    }
+
+    .node small {
+      color: var(--mute);
+      font-size: .82rem;
+      line-height: 1.35;
+      display: block
+    }
+
+    .arrow {
+      width: 3vw;
+      align-self: center;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--red));
+      position: relative;
+      overflow: hidden
+    }
+
+    .arrow::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, #fff, transparent);
+      animation: flow 1.6s linear infinite
+    }
+
+    @keyframes flow {
+      from {
+        transform: translateX(-100%)
+      }
+
+      to {
+        transform: translateX(100%)
+      }
+    }
+
+    /* metrics */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 2.5vh
+    }
+
+    .metric {
+      padding: 1.1rem;
+      border-radius: 16px;
+      background: var(--glass);
+      border: 1px solid var(--line);
+      text-align: center
+    }
+
+    .metric .v {
+      font-size: clamp(1.6rem, 3vw, 2.6rem);
+      font-weight: 800;
+      font-variant-numeric: tabular-nums
+    }
+
+    .metric .l {
+      font-size: .82rem;
+      color: var(--mute);
+      margin-top: .2rem
+    }
+
+    /* tabs */
+    .tabs {
+      display: flex;
+      gap: .5rem;
+      margin-bottom: 1.2vh
+    }
+
+    .tab {
+      padding: .4rem 1rem;
+      border-radius: 99px;
+      border: 1px solid var(--line);
+      color: var(--mute);
+      cursor: pointer;
+      font-size: .88rem;
+      background: transparent;
+      font-family: inherit
+    }
+
+    .tab.on {
+      color: #fff;
+      border-color: var(--red);
+      background: rgba(255, 90, 78, .12)
+    }
+
+    .panes {
+      position: relative;
+      flex: 1;
+      min-height: 0
+    }
+
+    .pane {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity .5s;
+      pointer-events: none
+    }
+
+    .pane.on {
+      opacity: 1;
+      pointer-events: auto
+    }
+
+    /* caveat */
+    .caveat {
+      border-left: 3px solid #ffb36b;
+      padding: .9rem 1.2rem;
+      background: rgba(255, 179, 107, .07);
+      border-radius: 0 12px 12px 0
+    }
+
+    .check {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.4rem;
+      height: 1.4rem;
+      border-radius: 50%;
+      font-size: .8rem;
+      margin-right: .5rem
+    }
+
+    /* refs */
+    .refs li {
+      font-size: .86rem;
+      color: #aeb8cc;
+      margin: .45rem 0;
+      line-height: 1.4
+    }
+
+    .refs li b {
+      color: #fff;
+      font-weight: 600
+    }
+
+    /* chrome */
+    .progress {
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      height: 3px;
+      z-index: 5;
+      background: linear-gradient(90deg, var(--red), var(--green));
+      transition: width .6s
+    }
+
+    .counter {
+      position: fixed;
+      right: 2vw;
+      bottom: 1.6vh;
+      z-index: 5;
+      font-size: .8rem;
+      color: var(--mute);
+      font-variant-numeric: tabular-nums
+    }
+
+    .footer {
+      position: fixed;
+      left: 2vw;
+      bottom: 1.6vh;
+      z-index: 5;
+      font-size: .75rem;
+      color: var(--mute);
+      letter-spacing: .1em
+    }
+
+    .navbtn {
+      position: fixed;
+      top: 50%;
+      z-index: 5;
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, .25);
+      font-size: 2rem;
+      cursor: pointer;
+      padding: 1rem
+    }
+
+    .navbtn:hover {
+      color: #fff
+    }
+
+    #pv {
+      left: .3vw
+    }
+
+    #nx {
+      right: .3vw
+    }
+
+    /* lightbox */
+    #lb {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      background: rgba(2, 3, 8, .92);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s;
+      cursor: zoom-out
+    }
+
+    #lb.on {
+      opacity: 1;
+      pointer-events: auto
+    }
+
+    #lb img {
+      max-width: 94vw;
+      max-height: 92vh;
+      border-radius: 10px;
+      box-shadow: 0 20px 80px rgba(0, 0, 0, .8)
+    }
+
+    /* closing */
+    .big-thanks {
+      font-size: clamp(3rem, 8vw, 7rem);
+      font-weight: 900;
+      letter-spacing: -.04em
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="sky"></canvas>
+  <div class="aurora"></div>
+
+  <main class="deck">
+
+    <!-- 1. TÍTULO -->
+    <section class="slide">
+      <div class="title-wrap">
+        <div class="kicker r">SBGEA · Geofísica Espacial e Aeronomia</div>
+        <h1 class="r d1">Detecção automática de <span class="grad">Bolhas de Plasma Equatoriais</span> em imagens
+          all-sky com Machine Learning</h1>
+        <p class="r d2" style="margin-top:2vh;max-width:820px">Pré-processamento informado pela física + 2DPCA +
+          ensemble de classificadores, com interpretabilidade via SHAP</p>
+        <div class="authors r d3">Alberto I. C. Vieira &nbsp;·&nbsp; Cosme A. O. B. Figueiredo<br><span>Universidade
+            Federal da Paraíba (UFPB) · Universidade Federal de Campina Grande (UFCG)</span></div>
+        <div class="logos r d4">
+          <div class="logo"><img src="assets/logo_inpe.png" alt="INPE"></div>
+          <div class="logo"><img src="assets/logo_embrace.png" alt="EMBRACE" data-fallback="EMBRACE"></div>
+          <div class="logo"><img src="assets/logo_ufpb.png" alt="UFPB"></div>
+          <div class="logo"><img src="assets/logo_ufcg.png" alt="UFCG" data-fallback="UFCG"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. O QUE SÃO EPBs -->
+    <section class="slide">
+      <div class="kicker r">O fenômeno</div>
+      <h2 class="r d1">O que são Bolhas de Plasma Equatoriais?</h2>
+      <div class="grid g37">
+        <div class="stack">
+          <ul class="clean r d2">
+            <li>Após o pôr do sol, a camada F inferior <em>recombina mais rápido</em> que a superior → forte gradiente
+              vertical de densidade.</li>
+            <li>A <em>instabilidade Rayleigh–Taylor</em> faz plasma rarefeito "subir" através do plasma denso, como um
+              fluido leve sob um pesado.</li>
+            <li>Surgem depleções alongadas ao longo das linhas de campo, que <em>derivam para leste</em> durante a
+              noite.</li>
+            <li>Causam <span class="red">cintilação</span> em sinais de GNSS e comunicação via satélite.</li>
+          </ul>
+          <div class="card r d3" style="padding:1rem 1.2rem">
+            <h3>Como enxergamos?</h3>
+            <p style="font-size:.95rem">Imageadores <em>all-sky</em> da rede EMBRACE/INPE registram o airglow <span
+                class="red">OI 630,0 nm</span> (~250 km). As bolhas aparecem como <em>faixas escuras</em> no céu.</p>
+          </div>
+        </div>
+        <div class="r d2">
+          <div class="allsky" id="allsky"><img id="skyimg" src="assets/seq/f00.jpg" alt="Sequência all-sky"></div>
+          <div class="skyctl">
+            <button id="skyplay">❚❚</button>
+            <input type="range" id="skyrange" min="0" max="27" value="0">
+            <span id="skytime">00:03 UT</span>
+            <button id="skyraw" title="Alternar cor falsa 630 nm / original">cor</button>
+          </div>
+          <p style="text-align:center;font-size:.78rem;color:var(--mute);margin-top:.5vh">Cachoeira Paulista (CA) · OI
+            630 nm · 30/01/2025 · 28 quadros (cor falsa)</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. PROBLEMA -->
+    <section class="slide">
+      <div class="kicker r">Motivação</div>
+      <h2 class="r d1">O gargalo da identificação manual</h2>
+      <div class="grid g2">
+        <div class="stack">
+          <div class="card r d2">
+            <h3>👁️ Inspeção visual</h3>
+            <p>Por décadas, especialistas analisam quadro a quadro milhares de imagens por noite, em várias estações.
+            </p>
+          </div>
+          <div class="card r d3">
+            <h3>☁️ Ruído ambiental</h3>
+            <p>Lua, nuvens cirrus, luzes urbanas e brilho do sensor confundem uma depleção tênue.</p>
+          </div>
+          <div class="card r d4">
+            <h3>🧠 Por que não uma rede profunda "crua"?</h3>
+            <p>Custo computacional alto e tendência a aprender artefatos (estrelas, cidades) em vez da física.</p>
+          </div>
+        </div>
+        <div class="r d3 stack" style="align-items:center">
+          <p style="text-align:center;font-size:1.4rem;line-height:1.4">Pergunta central:<br><em class="grad"
+              style="font-size:1.9rem">É possível ensinar um algoritmo a reconhecer a <u>morfologia física</u> de uma
+              bolha?</em></p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;width:100%;margin-top:3vh">
+            <div class="metric">
+              <div class="v red" data-count="572">0</div>
+              <div class="l">imagens rotuladas (EMBRACE)</div>
+            </div>
+            <div class="metric">
+              <div class="v green"><span data-count="255">0</span> / <span data-count="317">0</span></div>
+              <div class="l">com EPB / sem EPB</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. PIPELINE -->
+    <section class="slide">
+      <div class="kicker r">Metodologia</div>
+      <h2 class="r d1">Pipeline de detecção <span style="color:var(--mute);font-size:.6em;font-weight:500">(clique ou →
+          para avançar etapa)</span></h2>
+      <div class="pipe r d2">
+        <div class="node frag">
+          <div class="ic">🌌</div><b>Imagem all-sky</b><small>OI 630 nm, rede EMBRACE/INPE</small>
+        </div>
+        <div class="arrow"></div>
+        <div class="node frag">
+          <div class="ic">🔬</div><b>Pré-processamento físico</b><small>Remove iluminação difusa (filtro gaussiano σ=10)
+            + realce local de contraste (CLAHE)</small>
+        </div>
+        <div class="arrow"></div>
+        <div class="node frag">
+          <div class="ic">🧩</div><b>2DPCA</b><small>Extrai os padrões espaciais dominantes <em>sem destruir a estrutura
+              2D</em></small>
+        </div>
+        <div class="arrow"></div>
+        <div class="node frag">
+          <div class="ic">🗳️</div><b>Comitê de classificadores</b><small>SVM + XGBoost + Random Forest → regressão
+            logística decide</small>
+        </div>
+        <div class="arrow"></div>
+        <div class="node frag">
+          <div class="ic">📈</div><b>Probabilidade de EPB</b><small>+ mapa SHAP explicando a decisão</small>
+        </div>
+      </div>
+      <div class="grid g2 r d3" style="align-items:start">
+        <div class="card">
+          <h3>Intuição para físicos</h3>
+          <p>O 2DPCA funciona como uma <em>decomposição em modos</em> (análoga a EOFs): poucas "imagens-base" descrevem
+            o céu típico. O que <em>não</em> é bem descrito por elas — o resíduo — é justamente a estrutura anômala.</p>
+        </div>
+        <div class="card">
+          <h3>Desbalanceamento</h3>
+          <p>Noites calmas são muito mais frequentes. Usamos <em>data augmentation</em> + <em>SMOTE</em> (amostras
+            sintéticas no espaço de features) para o modelo não "chutar céu limpo" sempre.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. 2DPCA -->
+    <section class="slide">
+      <div class="kicker r">Resultados · extração de features</div>
+      <h2 class="r d1">Poucos modos bastam — e o resíduo revela a bolha</h2>
+      <div class="grid" style="grid-template-columns:1fr;grid-template-rows:auto 1fr 1fr;gap:1.4vh;align-items:stretch">
+        <p class="r d2">Os <em>5 primeiros componentes</em> concentram a informação estrutural; além disso a curva se
+          achata (ruído). O <em>erro de reconstrução</em> se concentra exatamente onde está a depleção.</p>
+        <figure class="r d3"><img src="assets/recon_error_without.png" alt="">
+          <figcaption>Céu sem bolha: erro baixo e sem estrutura</figcaption>
+        </figure>
+        <figure class="r d4"><img src="assets/recon_error_with.png" alt="">
+          <figcaption>Céu com bolha: erro alto alinhado às faixas de depleção</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 6. DESEMPENHO -->
+    <section class="slide">
+      <div class="kicker r">Resultados · desempenho</div>
+      <h2 class="r d1">Validação cruzada (5 folds)</h2>
+      <div class="metrics r d2">
+        <div class="metric">
+          <div class="v"><span data-count="96.9" data-dec="1">0</span>%</div>
+          <div class="l">Acurácia</div>
+        </div>
+        <div class="metric">
+          <div class="v red"><span data-count="95.7" data-dec="1">0</span>%</div>
+          <div class="l">Sensibilidade (bolhas detectadas)</div>
+        </div>
+        <div class="metric">
+          <div class="v green"><span data-count="97.8" data-dec="1">0</span>%</div>
+          <div class="l">Especificidade (céu limpo correto)</div>
+        </div>
+        <div class="metric">
+          <div class="v blue"><span data-count="0.998" data-dec="3">0</span></div>
+          <div class="l">AUC-ROC</div>
+        </div>
+      </div>
+      <div class="grid g73" style="align-items:stretch">
+        <figure class="r d3"><img src="assets/roc_pr_curves.png" alt="">
+          <figcaption>Curvas ROC e Precision–Recall</figcaption>
+        </figure>
+        <figure class="r d4"><img src="assets/image_1.png" alt="">
+          <figcaption>Matriz de confusão (conjunto de teste)</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 7. SHAP -->
+    <section class="slide">
+      <div class="kicker r">Resultados · interpretabilidade</div>
+      <h2 class="r d1">O modelo olha para a física?</h2>
+      <div class="grid g73" style="align-items:stretch">
+        <div class="stack" style="gap:1.4vh">
+          <figure class="r d2" style="flex:1"><img src="assets/shap_analysis_with.png" alt="">
+            <figcaption>Com bolha: atribuição <span class="red">vermelha</span> sobre as estruturas verticais de
+              depleção</figcaption>
+          </figure>
+          <figure class="r d3" style="flex:1"><img src="assets/shap_analysis_without.png" alt="">
+            <figcaption>Sem bolha: atribuição <span class="blue">azul</span> e difusa — nenhuma estrutura coerente
+            </figcaption>
+          </figure>
+        </div>
+        <div class="card r d4">
+          <h3>SHAP em uma frase</h3>
+          <p>Mede quanto cada região da imagem <em>empurra</em> a decisão para "bolha" (<span
+              class="red">vermelho</span>) ou "céu limpo" (<span class="blue">azul</span>).</p>
+          <p style="margin-top:1rem">✔ A atenção cai nas faixas alinhadas ao campo magnético que se estendem para os
+            quadrantes superiores.</p>
+          <p style="margin-top:.6rem">✔ Bordas da câmera, estrelas e luzes não dominam a decisão.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. MONITORAMENTO NOTURNO -->
+    <section class="slide">
+      <div class="kicker r">Resultados · operação contínua</div>
+      <h2 class="r d1">Uma noite inteira, quadro a quadro</h2>
+      <div class="tabs r d2" data-tabs="t8">
+        <button class="tab on">Noite com EPB (CA)</button>
+        <button class="tab">Noite calma (BJL)</button>
+        <button class="tab">Timeline CA</button>
+      </div>
+      <div class="panes r d3" id="t8">
+        <figure class="pane on"><img src="assets/temporal_with_epb.png" alt="">
+          <figcaption>A probabilidade sobe ao surgir a depleção e permanece alta enquanto a estrutura está no campo de
+            visão</figcaption>
+        </figure>
+        <figure class="pane"><img src="assets/timeline_bjl.png" alt="">
+          <figcaption>São João do Cariri (BJL), 22–23/07/2025: 230 imagens, 0 alarmes falsos (probabilidade média 2,3%)
+          </figcaption>
+        </figure>
+        <figure class="pane"><img src="assets/timeline_ca.png" alt="">
+          <figcaption>Cachoeira Paulista (CA): timeline de classificação</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 9. NUVENS -->
+    <section class="slide">
+      <div class="kicker r">Robustez</div>
+      <h2 class="r d1">E quando o céu está nublado?</h2>
+      <div class="grid g73" style="align-items:stretch">
+        <figure class="r d2"><img src="assets/app/app_8_6.png" alt="">
+          <figcaption>CA, 25/06/2026 · 62 imagens: 42 marcadas como nubladas (cinza) pelo filtro de qualidade, 20
+            analisadas</figcaption>
+        </figure>
+        <div class="stack">
+          <div class="card r d3">
+            <h3>☁️ Filtro de qualidade do céu</h3>
+            <p>Antes de classificar, um <em>"porteiro"</em> descarta imagens nubladas ou obstruídas, onde fisicamente
+              não é possível ver bolhas.</p>
+          </div>
+          <div class="caveat r d4">
+            <p><b style="color:#ffb36b">Ainda em evolução:</b> em noites de nuvens intermitentes a classificação oscila.
+              É preciso um descarte de nuvens mais robusto e treinado com mais exemplos.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. MENSAGEM / RESSALVAS -->
+    <section class="slide">
+      <div class="kicker r">Mensagem para levar para casa</div>
+      <h2 class="r d1">Onde estamos — e o que falta</h2>
+      <div class="grid g2" style="align-items:stretch">
+        <div class="card r d2">
+          <h3 class="green" style="font-size:1.25rem">✔ O que já mostramos</h3>
+          <ul class="clean g">
+            <li>A IA reconhece a <em>morfologia física</em> das bolhas (SHAP), não artefatos.</li>
+            <li>~97% de acurácia e AUC ≈ 0,998 em validação cruzada.</li>
+            <li>Estável ao longo de noites inteiras, praticamente sem falsos positivos em noites calmas.</li>
+            <li>Leve: roda em segundos, sem GPU.</li>
+          </ul>
+        </div>
+        <div class="card r d3">
+          <h3 style="font-size:1.25rem;color:#ffb36b">⚠ Ressalvas honestas</h3>
+          <ul class="clean">
+            <li><em>Tempo real "quase":</em> falta integrar o fluxo de aquisição do EMBRACE a um pipeline automático de
+              ML (ingestão → classificação → alerta).</li>
+            <li><em>Substituir a classificação manual ainda não:</em> precisamos de mais imagens de treino (estações,
+              estações do ano, ciclo solar).</li>
+            <li>Descarte automático de imagens nubladas precisa ficar mais robusto.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="r d4" style="text-align:center;margin-top:2.5vh;font-size:1.25rem">Hoje: <em class="grad">ferramenta de
+          triagem e apoio ao especialista</em> → futuro: alerta operacional de clima espacial.</p>
+    </section>
+
+    <!-- 11. PRÓXIMOS PASSOS -->
+    <section class="slide">
+      <div class="kicker r">Próximos passos</div>
+      <h2 class="r d1">Rumo a um sistema operacional</h2>
+      <div class="pipe r d2" style="margin-top:4vh">
+        <div class="node frag">
+          <div class="ic">🗂️</div><b>Mais dados</b><small>Várias estações e um ciclo solar completo</small>
+        </div>
+        <div class="arrow"></div>
+        <div class="node frag">
+          <div class="ic">☁️</div><b>Filtro de nuvens</b><small>Descarte automático confiável</small>
+        </div>
+        <div class="arrow"></div>
+        <div class="node frag">
+          <div class="ic">🔗</div><b>Integração EMBRACE</b><small>Pipeline automático acoplado à aquisição</small>
+        </div>
+        <div class="arrow"></div>
+        <div class="node frag">
+          <div class="ic">📡</div><b>Multi-instrumento</b><small>Combinar com cintilação GNSS e radares</small>
+        </div>
+        <div class="arrow"></div>
+        <div class="node frag">
+          <div class="ic">🔁</div><b>Aprendizado contínuo</b><small>Re-treino com validação de especialistas</small>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12. REFERÊNCIAS -->
+    <section class="slide">
+      <div class="kicker r">Referências</div>
+      <h2 class="r d1">Referências selecionadas</h2>
+      <ul class="refs r d2" style="list-style:none;columns:2;column-gap:3vw">
+        <li><b>Githio, L. et al.</b> (2024). A machine learning approach for estimating the drift velocities of EPBs
+          based on All-Sky Imager and GNSS observations. <i>Adv. Space Res.</i></li>
+        <li><b>Okoh, D. et al.</b> (2025). A bootstrapping CNN technique for optimizing automated detection of EPBs by
+          optical all-sky imagers. <i>Earth and Space Science</i>.</li>
+        <li><b>Zhong, J. et al.</b> (2025). Automatic detection and feature extraction of EPBs from all-sky airglow
+          image based on machine learning. <i>Space Weather</i>.</li>
+        <li><b>Zhong, J. et al.</b> (2025). Statistical analysis of ML-derived EPB characteristics from airglow
+          observations in Southern China during a solar cycle. <i>Space Weather</i>.</li>
+        <li><b>Yacoub, M. et al.</b> (2025). Automatic detection of EPBs in airglow images using 2DPCA and explainable
+          AI. <i>Mach. Learn. Knowl. Extr.</i></li>
+        <li><b>Siddiqui, A.</b> (2025). Enhanced identification of EPBs in airglow imagery via 2DPCA and interpretable
+          AI. <i>IJAAIR</i>.</li>
+        <li><b>Thanakulketsarat, T. et al.</b> (2023). Classification of EPBs using CNN and SVM techniques. <i>Earth,
+            Planets and Space</i>.</li>
+        <li><b>Srisamoodkham, W. et al.</b> (2022). Detecting EPBs on all-sky imager images using CNN. <i>LNNS 461</i>.
+        </li>
+        <li><b>Sedlak, R. et al.</b> (2023). Analysis of 2D airglow imager data with respect to dynamics using machine
+          learning. <i>Atmos. Meas. Tech.</i></li>
+        <li><b>Liu, P. et al.</b> (2022). Statistical analysis of MSTIDs over Japan based on deep learning instance
+          segmentation. <i>Space Weather</i>.</li>
+      </ul>
+      <p class="r d3" style="margin-top:2vh;font-size:.9rem;color:var(--mute)">Dados: Programa EMBRACE / INPE. Apoio:
+        UFPB, UFCG, CAPES, CNPq.</p>
+    </section>
+
+    <!-- 13. OBRIGADO -->
+    <section class="slide" style="justify-content:center;align-items:center;text-align:center">
+      <div class="big-thanks grad r">Obrigado!</div>
+      <p class="r d1" style="font-size:1.5rem;margin-top:1vh">Perguntas?</p>
+      <p class="r d2" style="margin-top:4vh;color:#fff">Alberto I. C. Vieira · Cosme A. O. B. Figueiredo</p>
+      <div class="logos r d3" style="justify-content:center">
+        <div class="logo"><img src="assets/logo_inpe.png" alt="INPE"></div>
+        <div class="logo"><img src="assets/logo_embrace.png" alt="EMBRACE" data-fallback="EMBRACE"></div>
+        <div class="logo"><img src="assets/logo_ufpb.png" alt="UFPB"></div>
+        <div class="logo"><img src="assets/logo_ufcg.png" alt="UFCG" data-fallback="UFCG"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <button class="navbtn" id="pv">‹</button><button class="navbtn" id="nx">›</button>
+  <div class="footer">EPB · ML · SBGEA</div>
+  <div class="counter" id="ct"></div>
+  <div class="progress" id="pg"></div>
+  <div id="lb"><img alt=""></div>
+
+  <script>
+    /* ---------- starfield ---------- */
+    const cv = document.getElementById('sky'), cx = cv.getContext('2d'); let stars = [];
+    function rs() {
+      cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio;
+      stars = Array.from({ length: 260 }, () => ({ x: Math.random() * cv.width, y: Math.random() * cv.height, r: Math.random() * 1.3 * devicePixelRatio + .2, p: Math.random() * 6.28, s: .5 + Math.random() * 1.5 }))
+    }
+    rs(); addEventListener('resize', rs);
+    (function tw(t) {
+      cx.clearRect(0, 0, cv.width, cv.height);
+      for (const s of stars) { const a = .35 + .65 * Math.abs(Math.sin(s.p + t * .0006 * s.s)); cx.fillStyle = `rgba(220,230,255,${a})`; cx.beginPath(); cx.arc(s.x, s.y, s.r, 0, 6.28); cx.fill(); s.x -= .03 * s.s; if (s.x < 0) s.x = cv.width }
+      requestAnimationFrame(tw)
+    })(0);
+
+    /* ---------- logo fallback ---------- */
+    document.querySelectorAll('img[data-fallback]').forEach(i => i.addEventListener('error', () => { const d = i.parentElement; d.classList.add('missing'); d.textContent = i.dataset.fallback }));
+
+    /* ---------- deck ---------- */
+    const S = [...document.querySelectorAll('.slide')]; let cur = 0;
+    const ct = document.getElementById('ct'), pg = document.getElementById('pg');
+    function frags(s) { return [...s.querySelectorAll('.frag')] }
+    function show(n, fromBack) {
+      n = Math.max(0, Math.min(S.length - 1, n));
+      S.forEach((s, i) => { s.classList.toggle('active', i === n); s.classList.toggle('prev', i < n) });
+      const f = frags(S[n]); f.forEach(e => e.classList.toggle('on', !!fromBack));
+      cur = n; ct.textContent = `${n + 1} / ${S.length}`; pg.style.width = `${(n + 1) / S.length * 100}%`;
+      S[n].querySelectorAll('[data-count]').forEach(countUp);
+      location.hash = n + 1;
+    }
+    function next() { const f = frags(S[cur]).filter(e => !e.classList.contains('on')); if (f.length) { f[0].classList.add('on'); return } show(cur + 1) }
+    function prev() { const f = frags(S[cur]).filter(e => e.classList.contains('on')); if (f.length && f.length < frags(S[cur]).length) { f.at(-1).classList.remove('on'); return } show(cur - 1, true) }
+    addEventListener('keydown', e => {
+      if (document.getElementById('lb').classList.contains('on')) { if (e.key === 'Escape') closeLb(); return }
+      if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); next() }
+      if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); prev() }
+      if (e.key === 'Home') show(0); if (e.key === 'End') show(S.length - 1);
+      if (e.key === 'f') document.documentElement.requestFullscreen?.();
+    });
+    document.getElementById('nx').onclick = next; document.getElementById('pv').onclick = prev;
+    document.querySelectorAll('.pipe').forEach(p => p.addEventListener('click', next));
+
+    /* ---------- count-up ---------- */
+    function countUp(el) {
+      const tgt = parseFloat(el.dataset.count), dec = +(el.dataset.dec || 0), t0 = performance.now(), D = 1400;
+      (function st(t) { const k = Math.min(1, (t - t0) / D), e = 1 - Math.pow(1 - k, 3); el.textContent = (tgt * e).toFixed(dec).replace('.', ','); if (k < 1) requestAnimationFrame(st) })(t0)
+    }
+
+    /* ---------- tabs ---------- */
+    document.querySelectorAll('[data-tabs]').forEach(tb => {
+      const panes = [...document.getElementById(tb.dataset.tabs).children];
+      [...tb.children].forEach((b, i) => b.onclick = () => { [...tb.children].forEach(x => x.classList.remove('on')); panes.forEach(x => x.classList.remove('on')); b.classList.add('on'); panes[i].classList.add('on') })
+    });
+
+    /* ---------- lightbox ---------- */
+    const lb = document.getElementById('lb');
+    document.querySelectorAll('figure').forEach(f => f.addEventListener('click', () => { lb.querySelector('img').src = f.querySelector('img').src; lb.classList.add('on') }));
+    function closeLb() { lb.classList.remove('on') } lb.onclick = closeLb;
+
+    /* ---------- all-sky sequence ---------- */
+    const times = ["00:03", "00:08", "00:12", "00:16", "00:20", "00:25", "00:29", "00:33", "00:37", "00:42", "00:46", "00:50", "00:54", "00:59", "01:03", "01:07", "01:11", "01:15", "01:20", "01:24", "01:28", "01:32", "01:37", "01:41", "01:45", "01:49", "01:54", "01:58"];
+    const N = 28, frames = Array.from({ length: N }, (_, i) => { const im = new Image(); im.src = `assets/seq/f${String(i).padStart(2, '0')}.jpg`; return im });
+    const si = document.getElementById('skyimg'), sr = document.getElementById('skyrange'), stt = document.getElementById('skytime'), sp = document.getElementById('skyplay');
+    let fi = 0, playing = true;
+    function setF(i) { fi = (i + N) % N; si.src = frames[fi].src; sr.value = fi; stt.textContent = times[fi] + ' UT' }
+    setInterval(() => { if (playing && S[cur].contains(si)) setF(fi + 1) }, 280);
+    sr.oninput = () => { playing = false; sp.textContent = '▶'; setF(+sr.value) };
+    sp.onclick = () => { playing = !playing; sp.textContent = playing ? '❚❚' : '▶' };
+    document.getElementById('skyraw').onclick = () => document.getElementById('allsky').classList.toggle('raw');
+
+    show((parseInt(location.hash.slice(1)) || 1) - 1);
+  </script>
+</body>
+
+</html>
