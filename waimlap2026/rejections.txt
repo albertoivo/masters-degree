@@ -1,0 +1,50 @@
+Review 1 (Rejection)
+
+The paper proposes an automated pipeline for detecting Equatorial Plasma Bubbles in all-sky airglow imagery from the Brazilian EMBRACE network, combining Gaussian background subtraction and CLAHE preprocessing, Two-Dimensional PCA feature extraction (five components), and a stacking ensemble of SVC, XGBoost, and Random Forest, with duplication and SMOTE for class balance; the authors report 99.80% accuracy and F1 under five-fold cross-validation, AUC ≈ 1.000, SHAP attribution maps, and two nocturnal sequences as evidence of stability. I recommend rejection, because the headline result is not credible as an out-of-sample number: minority-class duplication is described as occurring during initial preprocessing, and SMOTE and 2DPCA appear to be fit on the full dataset before the cross-validation split, so near-identical images almost certainly appear in both training and test folds — and frame-level rather than night-level splitting would produce the same artifact independently. The saturated ROC and PR curves and the bimodal probability histogram are consistent with leakage rather than genuine separability, and SHAP maps would look equally plausible for a leaking model. Compounding this, Figure 1 contradicts its own description (cumulative variance reaches only ~0.58 and is still rising, never flattening), the dataset is not described reproducibly (no image counts, nights, stations, or labeling protocol), no results table or per-fold statistics are given, there are no baselines or ablations, and the evaluation omits the hard negatives the introduction itself motivates — clouds, moonlight, gravity waves. These are not presentational fixes: the entire evaluation must be re-run with night-grouped folds and all resampling and transforms fit inside each fold, after which the results may differ substantially. The underlying idea is sound and worth pursuing in a resubmission. Main comments:
+
+- AUC = 1.000 on both ROC and PR is almost certainly leakage, not performance. The paper itself names the likely cause: minority-class oversampling by "duplication multiplier" is applied during initial preprocessing, i.e. before the 5-fold split. Identical copies of the same image land in train and test. Fig. 4's probability histogram (mass piled at 0 and 1, nothing in between) is the classic signature.
+
+- SMOTE and 2DPCA appear to be fit on the full dataset, also before CV. Both must be fit inside each fold. As written, the 99.80% is not an out-of-sample number.
+
+- Frame-level random splitting is invalid for this data. All-sky images minutes apart on the same night are near-duplicates of one another. Splits must be by night (ideally by station), not by image. Report per-night grouped CV.
+
+- How were the stacking meta-features generated? If the Logistic Regression was trained on the base classifiers' in-sample predictions rather than out-of-fold predictions, that is a third, independent leakage path.
+
+- AUC = 1.000 is internally inconsistent with 99.80% accuracy. Perfect separation plus a bimodal 0/1 probability distribution should give 100% at threshold 0.5. Either the curves and the CV metrics come from different data, or the curves are from a single favourable fold. Clarify which.
+
+Review 2 (Rejection)
+
+Strengths
+
+- The proposal presents a framework guided by the physics of the phenomenon under study.
+- The proposed pipeline is understandable. However, it could be improved by incorporating a more detailed description of each stage, thereby facilitating its subsequent replication.
+- Strategies are incorporated to mitigate the problem of class imbalance.
+- An interpretability component is included that allows for the understanding and analysis of the results obtained.
+
+Weaknesses
+
+- The introduction is too brief and provides only a superficial treatment of the topic. We recommend expanding on the context and rationale of the work.
+- The experiments are not explained in sufficient detail. It is important to describe the experimental procedure, as this will facilitate the replication and validation of the results.
+- The hyperparameter optimization stage is not described. We recommend describing the procedure used to select the hyperparameter values.
+- The characteristics of the dataset are not adequately described. We recommend specifying, among other aspects, the number of records, the number of variables, the number of instances per class, and the class distribution.
+- It is unclear whether the graphs presented in the figure correspond to balanced or unbalanced data. We recommend clarifying this point in the text and in the figure caption.
+- The background information and bibliographic references supporting the proposal are limited. We recommend expanding the review of related studies, especially those that allow for contextualizing and comparing the obtained results with previous research.
+- The proposal is not compared with other related studies. We recommend incorporating a comparison with methods or results reported in the literature to better evaluate the proposal’s performance.
+- It is recommended to conduct experiments using data from other equatorial regions in order to assess the model's generalizability and more robustly validate its performance under different geographic conditions.
+
+Recommendations
+
+- Briefly describe the hardware and software used to conduct the experiments, including relevant specifications to facilitate reproducibility.
+- Make the source code and datasets used in the experiments available, provided that the terms of use and data availability permit it.
+- Illustrate the proposed methodology with a figure that clearly shows the main stages and the workflow.
+- Figures 5 and 6: Remove the text appearing at the top of the figures, as it appears to correspond to the file name (e.g., 06_BJL_20…008.png) and does not provide information relevant to the analysis.
+- Figures 7 and 8: Consider modifying the dark background to improve the visibility of details related to the temporal analysis.
+- Expand the experiments by incorporating additional data from various sources, with the aim of evaluating the robustness and generalizability of the proposal.
+- Explain and describe the content of the manuscript in greater detail, particularly the methodology, the conduct of the experiments, and the results obtained.
+
+Review 3 (Rejection)
+
+This paper presents a machine learning framework for the automatic detection of Equatorial Plasma Bubbles. The proposed pipeline combines physics-informed image preprocessing, 2DPCA, and a stacking ensemble composed of SVM, XGBoost, and Random Forest.
+I consider that the main strength of the paper is the integration of domain-specific preprocessing with relatively lightweight machine learning models while preserving spatial information through 2DPCA. 
+In particular, the manuscript should provide more details about the dataset size, class distribution, train/test separation, and the exact experimental protocol used for SMOTE and image oversampling. 
+I recomend the comparisons with relevant existing methods, including deep-learning-based approaches, would also help establish the practical contribution of the proposed framework.

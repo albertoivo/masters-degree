@@ -1,26 +1,83 @@
 \section{Methodology}\label{sec:methodology}
 
-The methodology for the automated detection of Equatorial Plasma Bubbles integrates physics informed image preprocessing, advanced feature extraction, and ensemble machine learning. This pipeline is built to reliably spot plasma bubble signatures in all sky airglow imagery while naturally filtering out environmental noise and class imbalance.
+The proposed detection system operates as a two-stage cascade (Figure~\ref{fig:pipeline_arch}). Stage~1 evaluates sky transparency on the raw all-sky exposure and withholds cloud-obscured frames. Exposures that pass this gate enter Stage~2, where radiometric preprocessing, 2DPCA matrix projection, and a stacking ensemble estimate the probability of EPB occurrence, accompanied by pixel-space explainability maps.
 
-\subsection{Dataset Acquisition}
-All optical imagery used in this research was sourced directly from the EMBRACE project, which stands for Estudo e Monitoramento Brasileiro do Clima Espacial and is maintained by the Brazilian National Institute for Space Research. This dataset gives us a continuous view of ionospheric conditions across the Brazilian sector, capturing everything from perfectly clear nights to intense bubble events.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.98\textwidth]{figs/pipeline_architecture.png}
+    \caption{Overview of the two-stage cascaded EPB detection pipeline. Stage~1 screens out cloud-contaminated exposures using star-pixel counts and mean luminance inside the circular field of view; Stage~2 applies background subtraction and CLAHE, extracts 2DPCA matrix features ($k=5$, $320$ features), and classifies frames with a stacking ensemble.}
+    \label{fig:pipeline_arch}
+\end{figure}
 
-\subsection{Physics Informed Image Preprocessing}
-Raw optical images of the night sky rarely offer perfect viewing conditions. They are often skewed by shifting lunar phases or sensor gradients. To counter this, we apply a domain specific preprocessing pipeline before any machine learning takes place. First, we model and remove the background illumination using a large Gaussian filter with a standard deviation of 10. Subtracting this diffuse modeled light from the original image effectively clears out environmental biases. Next, we use Contrast Limited Adaptive Histogram Equalization with a clip limit of 0.03. This localized tweak makes the dark, vertical tears of plasma depletions stand out sharply against the night sky. Finally, normalizing all pixel intensities to a standard zero to one range keeps the math stable during feature extraction.
+\subsection{Dataset Acquisition and Characterization}
 
-\subsection{Data Augmentation and Balancing}
-Since clear skies heavily outnumber plasma bubble events in nocturnal observations, we faced a substantially imbalanced dataset. Left unchecked, a model would simply learn to predict a clear sky every time. We approached this issue using a dual strategy. During initial preprocessing, we oversample the minority class by applying a duplication multiplier to the images containing bubbles, being careful to preserve their structural integrity. Later, just before classifier training, we bring in the Synthetic Minority Over sampling Technique to interpolate artificial samples in the feature space. Together, these steps guarantee the algorithm trains on a balanced perspective.
+All optical data were collected by the \textit{Estudo e Monitoramento Brasileiro do Clima Espacial} (EMBRACE) program operated by the Brazilian National Institute for Space Research (INPE). The instruments are fish-eye ($180^\circ$ field of view) all-sky CCD imagers with a narrow-band $630.0\text{ nm}$ filter monitoring atomic oxygen (OI) red-line emissions at $250\text{--}300\text{ km}$ altitude. Each exposure is recorded as a $512 \times 512$ grayscale image ($8\text{-bit}$) at a cadence of $3\text{--}5\text{ minutes}$.
 
-\subsection{Feature Extraction via 2DPCA}
-Most standard dimensionality reduction methods, like traditional Principal Component Analysis, require flattening a 2D image into a long 1D vector. This process inevitably tears apart the natural spatial correlations within the picture. To keep that crucial two dimensional structure intact without paying the heavy computational price of deep convolutional neural networks, we opted for Two Dimensional Principal Component Analysis. Because it works directly on the image matrices, our tests showed that keeping just the first five principal components was entirely sufficient to capture the core visual signatures of the bubbles. This cuts down the data size dramatically, lowering both the risk of overfitting and the overall processing time.
+\begin{table}[htbp]
+\centering
+\caption{Summary of the EMBRACE $630.0\text{ nm}$ all-sky dataset across observatories, lunar illumination regimes, and continuous nocturnal monitoring sequences.}
+\label{tab:dataset}
+\resizebox{\textwidth}{!}{%
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{llrrrr}
+\toprule
+\textbf{Dataset Subset / Observatory} & \textbf{Coordinates} & \textbf{Total} & \textbf{EPB} & \textbf{No-EPB} & \textbf{EPB (\%)} \\
+\midrule
+\multicolumn{6}{l}{\textit{Part A: Labeled Classification Dataset ($N = 572$ images, $16$ nights, $77$ temporal blocks)}} \\
+São João do Cariri (CA) & $7.4^\circ\text{S}, 36.5^\circ\text{W}$ & 310 & 213 & 97 & 68.7\% \\
+Bom Jesus da Lapa (BJL) & $13.3^\circ\text{S}, 43.4^\circ\text{W}$ & 220 & 0 & 220 & 0.0\% \\
+Cachoeira Paulista (CP) & $22.7^\circ\text{S}, 45.0^\circ\text{W}$ & 42 & 42 & 0 & 100.0\% \\
+\quad Low/Moderate Moon ($<50\%$) & All stations & 475 & 255 & 220 & 53.7\% \\
+\quad Bright Lunar Glare ($\ge 50\%$) & All stations & 97 & 0 & 97 & 0.0\% \\
+\textbf{Total Labeled Dataset} & \textbf{3 Stations} & \textbf{572} & \textbf{255} & \textbf{317} & \textbf{44.6\%} \\
+\midrule
+\multicolumn{6}{l}{\textit{Part B: Continuous Nocturnal Sequences ($986$ total frames across $8$ nights)}} \\
+\texttt{BJL\_20250722} (Clear Quiet Sky) & $13.3^\circ\text{S}, 43.4^\circ\text{W}$ & 230 & 0 & 230 & 0.0\% \\
+\texttt{CA\_20251022} (Active EPB Night) & $7.4^\circ\text{S}, 36.5^\circ\text{W}$ & 140 & 126 & 14 & 90.0\% \\
+\texttt{CA\_20260624} (Overcast / Cloudy) & $7.4^\circ\text{S}, 36.5^\circ\text{W}$ & 62 & 0 & 62 & 0.0\% \\
+Five Additional Monitoring Nights & CA / BJL / CP & 554 & -- & -- & Operational \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
 
-\subsection{Stacking Ensemble Classifier}
-Rather than relying on a single algorithm to act as the core classification engine, we built a stacking ensemble architecture. This lets us borrow the unique strengths of several different learners at once. We train three distinct base classifiers side by side on the extracted features. We used a Support Vector Classifier with a Radial Basis Function kernel to draw complex decision boundaries. We also brought in an XGBoost Classifier for its strong non linear feature extraction and gradient boosting capabilities. Finally, a Random Forest Classifier was added to reduce variance by building an ensemble of decision trees based on random subspaces.
+As summarized in Table~\ref{tab:dataset}, the dataset is organized into two parts. Part~A contains $N = 572$ expert-labeled exposures ($255$ with EPBs and $317$ without EPBs, a $1.24:1$ negative-to-positive ratio) sampled across $16$ nights and $77$ non-overlapping $30\text{-minute}$ intervals from three observatories at different magnetic latitudes: São João do Cariri (CA), Bom Jesus da Lapa (BJL), and Cachoeira Paulista (CP). Because class proportions vary across sites (CA contains $213$ EPB exposures and $97$ non-EPB exposures including $62$ overcast frames, BJL provides $220$ quiet-sky exposures, and CP contains $42$ EPB exposures), models trained on unnormalized pixel intensities risk memorizing site-specific luminance baselines. In addition, $97$ non-EPB exposures ($17.0\%$ of Part~A) were acquired under bright lunar illumination ($\ge 50\%$ illuminated fraction, computed astronomically from each exposure timestamp), where intense moon glare creates strong dome gradients. Part~B consists of $8$ continuous full-night sequences ($986$ frames in total) used to test temporal stability and cloud rejection.
 
-The predictions from these three models feed into a Logistic Regression meta classifier, which essentially learns how to weigh their output to make the final call. Because our preprocessing and feature extraction steps complemented each other so well, the architecture reached strong classification performance immediately, letting us skip exhaustive hyperparameter tuning entirely.
+\subsection{Stage 1: Astronomical Sky Quality Control}
 
-\subsection{Model Interpretability and Validation}
-We wanted to be certain the model was actually seeing physical features, rather than just exploiting random artifacts like camera borders. To achieve this, we integrated the SHapley Additive exPlanations framework to map out exactly which regions of an image drive the classifier decisions. We also tested the model over continuous clear sky sequences to ensure its prediction probabilities hold steady during long operational shifts.
+Tropospheric clouds attenuate the $630.0\text{ nm}$ airglow emission and introduce dark patches that contrast-enhancement filters can mistake for plasma depletions. Stars visible in the night sky act as natural optical beacons of atmospheric transparency: under clear skies, thousands of stellar point sources appear across the sensor dome, whereas cloud cover blurs and extinguishes them.
 
-\subsection{Evaluation Metrics}
-Given the original imbalance in the data, relying on just one metric would not be enough. We evaluated the model using Accuracy, Sensitivity, Specificity, and the F1 Score. Sensitivity tells us how many actual bubbles we caught, ensuring we do not miss critical events. Specificity tracks how well we identified clear skies, keeping false positives in check. Finally, the F1 Score blends precision and sensitivity to give a clear, balanced picture of the overall robustness of the model.
+In Stage~1, each raw $512 \times 512$ image $I_{\text{raw}}$ (scaled to $[0, 255]$) is restricted to a circular field-of-view mask of radius $r = 0.44 \min(H, W)$ centered on the dome, excluding the white station code and timestamp text in the four corners. To isolate high-frequency stellar point sources from the diffuse sky background, a smoothed background image is computed via a 2D Gaussian filter with standard deviation $\sigma = 2.0\text{ pixels}$, yielding the high-pass residual:
+\begin{equation}\label{eq:star_residual}
+    R_{\text{high}}(x, y) = I_{\text{raw}}(x, y) - (G_{\sigma=2.0} * I_{\text{raw}})(x, y).
+\end{equation}
+A pixel $(x, y)$ inside the circular FOV mask is identified as a stellar pixel if $R_{\text{high}}(x, y) > 8.0$ and $I_{\text{raw}}(x, y) > 30.0$, where the minimum intensity threshold prevents thermal dark-current noise in dark regions from being counted as stars. Let $N_{\text{star}}$ denote the total number of detected stellar pixels and $\mu_{\text{sky}}$ the mean intensity of $I_{\text{raw}}$. An exposure is flagged as overcast (\texttt{CLOUDY}) and rejected before Stage~2 if $\mu_{\text{sky}} < 35.0$ or $N_{\text{star}} < 4500$. Exposures with $4500 \le N_{\text{star}} < 6500$ are forwarded to Stage~2 with a partial-visibility warning (\texttt{DEGRADED}), while exposures with $N_{\text{star}} \ge 6500$ proceed as high-transparency clear sky (\texttt{CLEAR}).
+
+\subsection{Stage 2: Radiometric Preprocessing and Balancing}
+
+Exposures accepted by Stage~1 are bilinearly resized to $64 \times 64$ pixels, scaled to $[0, 1]$, and processed through three radiometric normalization steps designed to suppress non-ionospheric illumination variations:
+\begin{enumerate}
+    \item Diffuse background subtraction: All-sky optics exhibit radial horizon brightening (the Van Rhijn effect) and smooth gradients from lunar glare. We estimate this slowly varying illumination component using a Gaussian filter with $\sigma = 10\text{ pixels}$ on the $64 \times 64$ grid and subtract it, clipping negative values at zero: $I_{\text{sub}}(x,y) = \max\!\big(0,\, I(x,y) - (G_{\sigma=10} * I)(x,y)\big)$.
+    \item Local contrast equalization: We apply Contrast Limited Adaptive Histogram Equalization (CLAHE, clip limit $= 0.03$) to $I_{\text{sub}}$ so that low-contrast plasma depletion bands become distinguishable without over-amplifying sensor noise in uniform sky regions.
+    \item Intensity normalization and optional FOV masking: The resulting image is min-max normalized to $[0, 1]$, producing the input matrix $\mathbf{X} \in \mathbb{R}^{64 \times 64}$. To test whether peripheral text overlays influence the classifier, we also construct a circularly masked version ($\mathbf{X}_{\text{mask}}$) that zeroes all pixels outside $r = 0.44 \times 64$.
+\end{enumerate}
+
+All dataset partitioning is performed before any data augmentation, subspace fitting, or oversampling. Within training splits only, images may be augmented via transformations consistent with all-sky geometry: small rotations ($\pm 15^\circ$), horizontal flips, mild brightness and contrast adjustments ($\pm 10\%$), and low-amplitude Gaussian noise ($\sigma = 0.02$). After 2DPCA feature extraction and z-score standardization (\texttt{StandardScaler} fitted solely on the training fold), the Synthetic Minority Over-sampling Technique (SMOTE) \cite{chawla2002smote} is applied inside an \texttt{imblearn} pipeline on the training fold to equalize class counts prior to classifier fitting. Validation and test sets are never augmented or resampled.
+
+\subsection{2DPCA Matrix Projection, Stacking Ensemble, and Explainability}
+
+Flattening a $64 \times 64$ image into a $4096$-dimensional vector discards two-dimensional spatial neighborhood structure and requires estimating a $4096 \times 4096$ covariance matrix from a few hundred samples. Following Yang et al. \cite{yang2004two}, 2DPCA computes the $64 \times 64$ image covariance matrix directly from the centered training matrices $\{\mathbf{X}_i \in \mathbb{R}^{64 \times 64}\}_{i=1}^{M}$ with sample mean $\bar{\mathbf{X}} = \frac{1}{M}\sum_{i=1}^{M} \mathbf{X}_i$:
+\begin{equation}\label{eq:2dpca_cov}
+    \mathbf{G} = \frac{1}{M}\sum_{i=1}^{M} (\mathbf{X}_i - \bar{\mathbf{X}})^\top (\mathbf{X}_i - \bar{\mathbf{X}}) \in \mathbb{R}^{64 \times 64}.
+\end{equation}
+Let $\mathbf{W} = [\mathbf{w}_1, \mathbf{w}_2, \dots, \mathbf{w}_k] \in \mathbb{R}^{64 \times k}$ contain the orthonormal eigenvectors of $\mathbf{G}$ associated with the $k$ largest eigenvalues $\lambda_1 \ge \lambda_2 \ge \dots \ge \lambda_k$. Projecting a centered image onto $\mathbf{W}$ yields the principal component matrix $\mathbf{Y}_i = (\mathbf{X}_i - \bar{\mathbf{X}})\mathbf{W} \in \mathbb{R}^{64 \times k}$. Each entry $Y_i(r, c)$, denoted as feature \texttt{PC\_Row\_$r$\_Comp\_$c$}, represents the projection of horizontal image row $r \in \{0, \dots, 63\}$ onto the $c$-th column eigenvector $\mathbf{w}_c$ ($c \in \{0, \dots, k-1\}$), thereby preserving vertical row alignment while compressing horizontal variations. For $k=5$, vectorizing $\mathbf{Y}_i$ produces a $320$-dimensional feature vector $\mathbf{z}_i \in \mathbb{R}^{320}$ ($12.8\times$ compression).
+
+The standardized feature vector $\mathbf{z}_i$ is classified by a two-level Stacking Ensemble \cite{wolpert1992stacked} composed of three diverse base estimators:
+\begin{enumerate}
+    \item A Support Vector Machine (SVM) with a Radial Basis Function (RBF) kernel ($C = 5.0$, $\gamma = \text{scale}$, balanced class weights).
+    \item An XGBoost classifier ($200$ trees, maximum depth $6$, learning rate $0.1$, subsample $0.8$, column subsample $0.8$).
+    \item A Random Forest classifier ($200$ trees, maximum depth $15$, minimum leaf size $2$, balanced class weights).
+\end{enumerate}
+Out-of-fold probability predictions generated by the three base learners via internal 5-fold cross-validation are combined by an $\ell_2$-regularized Logistic Regression meta-classifier ($C = 1.0$).
+
+To interpret model decisions in the $64 \times 64$ image plane, we pair two spatial attribution methods. First, reconstructing the image from its $k$-component projection via $\hat{\mathbf{X}}_i = \bar{\mathbf{X}} + \mathbf{Y}_i \mathbf{W}^\top$ defines the unsupervised reconstruction error map $\mathbf{E}_i = |\mathbf{X}_i - \hat{\mathbf{X}}_i|$, which highlights localized intensity structures not captured by the dominant background modes. Second, we compute supervised SHAP values \cite{lundberg2017unified} for the tree base learners in the $320$-dimensional feature space, reshape the resulting attributions into a matrix $\boldsymbol{\Phi}_{\text{feat}} \in \mathbb{R}^{64 \times k}$, and exploit the linearity of 2DPCA to project them back into pixel space via $\boldsymbol{\Phi}_{\text{pixel}} = \boldsymbol{\Phi}_{\text{feat}}\mathbf{W}^\top \in \mathbb{R}^{64 \times 64}$. Positive values in $\boldsymbol{\Phi}_{\text{pixel}}$ indicate pixels that increase the predicted EPB probability, whereas negative values indicate pixels supporting a quiet-sky decision.
