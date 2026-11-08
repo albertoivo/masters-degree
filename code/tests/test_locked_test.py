@@ -13,8 +13,8 @@ import pandas as pd
 import pytest
 
 from conftest import LABEL_COLUMNS, frame_name, write_png
-from epb_detection_system_v5 import (EPBRecognitionSystemV5, evaluate_locked_test,
-                                     load_test_nights)
+from epb_detection_v5 import (EPBRecognitionSystemV5, evaluate_locked_test,
+                              load_test_nights)
 
 # night -> (site, início, has_epb, cloudy)
 LOCAL_NIGHTS = {
@@ -98,7 +98,7 @@ def test_missing_test_nights_file_raises(four_nights):
 def test_unknown_test_night_warns_and_raises(four_nights, caplog):
     ds = four_nights
     ds['nights_file'].write_text("CA_20251022\nCA_20990101\n")
-    with caplog.at_level(logging.INFO, logger='epb_detection_system_v5'):
+    with caplog.at_level(logging.INFO, logger='epb_detection_v5'):
         with pytest.raises(ValueError, match='CA_20990101'):
             _run(ds)
     assert any('CA_20990101' in r.getMessage() and r.levelno == logging.WARNING

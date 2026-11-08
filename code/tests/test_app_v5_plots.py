@@ -16,7 +16,7 @@ import pandas as pd  # noqa: E402
 import pytest  # noqa: E402
 import nbformat  # noqa: E402
 
-import epb_detection_system_v5 as v5  # noqa: E402
+import epb_detection_v5 as v5  # noqa: E402
 
 _REPO = Path(__file__).resolve().parents[1]
 _NB = _REPO / "app_v5.ipynb"

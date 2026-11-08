@@ -4,7 +4,7 @@ import logging
 import numpy as np
 import pytest
 
-from epb_detection_system_v5 import load_raw_dataset, extract_night_groups
+from epb_detection_v5 import load_raw_dataset, extract_night_groups
 
 
 def _load(ds, **kw):
@@ -53,7 +53,7 @@ def test_empty_test_split_returns_empty(synthetic_dataset):
 def test_warns_for_unknown_test_night(synthetic_dataset, caplog):
     ds = synthetic_dataset
     ds.test_nights_path.write_text("CA_20990101\n")
-    with caplog.at_level(logging.INFO, logger='epb_detection_system_v5'):
+    with caplog.at_level(logging.INFO, logger='epb_detection_v5'):
         _, _, df = _load(ds, include_cloudy=True)
     assert len(df) == 9
     assert any('CA_20990101' in r.getMessage() and r.levelno == logging.WARNING
@@ -63,7 +63,7 @@ def test_warns_for_unknown_test_night(synthetic_dataset, caplog):
 def test_logs_excluded_frames_and_nights(synthetic_dataset, caplog):
     ds = synthetic_dataset
     ds.test_nights_path.write_text("CA_20251022\n")
-    with caplog.at_level(logging.INFO, logger='epb_detection_system_v5'):
+    with caplog.at_level(logging.INFO, logger='epb_detection_v5'):
         _load(ds, include_cloudy=True)
     assert any('3 quadros de 1 noites excluídos' in r.getMessage() for r in caplog.records)
 

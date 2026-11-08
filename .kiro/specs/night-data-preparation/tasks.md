@@ -91,7 +91,7 @@ Python 3.10 (conda env `mestrado`) and bash. Tests in `code/tests/` with `pytest
     - Run `label_queue.py` on the real `util/` and show the user the per-night summary.
     - _Requirements: 4.7_
 
-- [-] 8. Final checkpoint
+- [x] 8. Final checkpoint
   - Re-run `epb_detection_system_v5.ipynb` with the empty `test_nights.txt` and confirm the results are unchanged.
   - Ensure all tests pass, then commit, and ask the user if questions arise.
 

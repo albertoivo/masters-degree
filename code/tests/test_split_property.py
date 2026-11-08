@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 from hypothesis import HealthCheck, given, settings, strategies as st
 
-from epb_detection_system_v5 import load_raw_dataset, extract_night_groups
+from epb_detection_v5 import load_raw_dataset, extract_night_groups
 
 KNOWN_NIGHTS = ['CA_20251022', 'BJL_20250722', 'CA_20260624']
 ABSENT_NIGHTS = ['CA_20990101', 'BJL_20000101', 'STR_20250801']

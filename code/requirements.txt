@@ -1,3 +1,9 @@
+# Dependências (lista legível, versões mínimas).
+# Para reproduzir EXATAMENTE o ambiente da dissertação, use os arquivos travados:
+#   conda env create -f environment.yml        (ambiente completo, recomendado)
+#   pip install -r requirements.lock.txt        (apenas pacotes pip, versões fixas)
+# Este requirements.txt é a referência humana; os lockfiles é que garantem reprodutibilidade.
+
 numpy>=1.21.0
 pandas>=1.3.0
 matplotlib>=3.4.0
@@ -10,3 +16,10 @@ scipy>=1.7.0
 scikit-image>=0.18.0
 xgboost>=1.5.0
 shap>=0.42.0
+opencv-python>=4.5.0
+
+# Para rodar/testar os notebooks:
+nbformat>=5.0.0
+nbconvert>=6.0.0
+pytest>=7.0.0
+hypothesis>=6.0.0
