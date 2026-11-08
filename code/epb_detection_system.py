@@ -222,7 +222,8 @@ def load_epb_dataset(data_folder: str, label_file: str, target_size: Tuple[int, 
                     img = img * fov_m
             
             images.append(img)
-            labels.append(int(row['has_epb']))
+            # has_epb vazio = quadro nublado; versão legada: tratado como 0
+            labels.append(0 if pd.isna(row['has_epb']) else int(row['has_epb']))
             filenames.append(row['filename'])
             
         except Exception as e:

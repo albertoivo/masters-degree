@@ -71,7 +71,8 @@ if [ -d "../data/cloudy" ]; then
                 echo "  - Skipped: $filename (already exists)"
                 ((skipped_entries++))
             else
-                echo "$filename,0,1,,,,,,,,," >> "$OUTPUT_FILE"
+                # has_epb vazio: com céu nublado não é possível dizer se há EPB
+                echo "$filename,,1,,,,,,,,," >> "$OUTPUT_FILE"
                 echo "  + Added: $filename (cloudy)"
                 ((new_entries++))
             fi

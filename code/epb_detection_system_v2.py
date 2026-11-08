@@ -201,6 +201,7 @@ def load_epb_dataset(data_folder: str, label_file: str, target_size: Tuple[int, 
     labels = []
     filenames = []
     errors = []
+    n_undetermined = 0
     
     for idx, row in df.iterrows():
         img_path = Path(data_folder) / row['filename']
@@ -222,7 +223,13 @@ def load_epb_dataset(data_folder: str, label_file: str, target_size: Tuple[int, 
                     img = img * fov_m
             
             images.append(img)
-            labels.append(int(row['has_epb']))
+            # has_epb vazio = quadro nublado (indeterminado). Compatibilidade V4: tratado como 0.
+            # O V5 (epb_detection_system_v5.load_raw_dataset) exclui esses quadros do Estágio 2.
+            if pd.isna(row['has_epb']):
+                n_undetermined += 1
+                labels.append(0)
+            else:
+                labels.append(int(row['has_epb']))
             filenames.append(row['filename'])
             
         except Exception as e:
@@ -236,6 +243,9 @@ def load_epb_dataset(data_folder: str, label_file: str, target_size: Tuple[int, 
     images = np.array(images)
     labels = np.array(labels)
     
+    if n_undetermined:
+        logger.warning(f"{n_undetermined} quadros com has_epb vazio (nublados) tratados como 'No EPB' "
+                       f"(comportamento V4). Use o V5 para excluí-los do Estágio 2.")
     logger.info(f"{len(images)} imagens carregadas com sucesso")
     logger.info(f"Dimensão das imagens: {images.shape[1]}x{images.shape[2]}")
     
@@ -1457,8 +1467,8 @@ def plot_2dpca_variance(system: 'EPBRecognitionSystem', axes=None, save_path: Op
         ax_f1 = ax.twinx()
         c_nums = [r['n_components'] for r in cv_component_results if r['n_components'] <= n_show]
         c_f1s = [r['f1_score'] for r in cv_component_results if r['n_components'] <= n_show]
-        ax_f1.plot(c_nums, c_f1s, 's-', color='#7c3aed', linewidth=2, markersize=6, label='5-Fold CV F1-Score')
-        ax_f1.set_ylabel('Cross-Validated F1-Score', fontsize=10, color='#7c3aed')
+        ax_f1.plot(c_nums, c_f1s, 's-', color='#7c3aed', linewidth=2, markersize=6, label='5-Fold CV F1 (SVM proxy)')
+        ax_f1.set_ylabel('Cross-Validated F1-Score (SVM proxy)', fontsize=10, color='#7c3aed')
         ax_f1.tick_params(axis='y', labelcolor='#7c3aed')
         ax_f1.set_ylim(0.80, 1.02)
         lines1, labels1 = ax.get_legend_handles_labels()
@@ -2225,10 +2235,19 @@ def analyze_temporal_sequence(system: 'EPBRecognitionSystem', image_folder: str,
     # TÍTULO GERAL
     # -------------------------------------------------------------------------
     if df['timestamp'].notna().all():
-        date_str = df['timestamp'].iloc[0].strftime('%Y-%m-%d')
-        time_range = f"{df['timestamp'].iloc[0].strftime('%H:%M')} – {df['timestamp'].iloc[-1].strftime('%H:%M')} UT"
+        t_first, t_last = df['timestamp'].iloc[0], df['timestamp'].iloc[-1]
+        # Indica sempre a noite (data de início) e o intervalo UTC com datas explícitas,
+        # já que as sequências cruzam a meia-noite UTC.
+        night_start = t_first - pd.Timedelta(days=1) if t_first.hour < 12 else t_first
+        night_str = f"Night of {night_start.strftime('%Y-%m-%d')}"
+        if t_first.date() == t_last.date():
+            time_range = (f"{t_first.strftime('%Y-%m-%d %H:%M')} – "
+                          f"{t_last.strftime('%H:%M')} UT")
+        else:
+            time_range = (f"{t_first.strftime('%Y-%m-%d %H:%M')} – "
+                          f"{t_last.strftime('%Y-%m-%d %H:%M')} UT")
         title_text = 'Nocturnal Temporal Analysis of Equatorial Plasma Bubbles'
-        subtitle_text = f'{date_str}  •  {time_range}  •  {len(df)} All-Sky Frames'
+        subtitle_text = f'{night_str}  •  {time_range}  •  {len(df)} All-Sky Frames'
     else:
         title_text = 'Nocturnal Temporal Analysis of Equatorial Plasma Bubbles'
         subtitle_text = f'{len(df)} analyzed images'
@@ -3325,6 +3344,14 @@ def benchmark_baselines(X_train: np.ndarray, y_train: np.ndarray,
               f"{row['specificity']:>7.4f} {row['precision']:>7.4f} {row['f1']:>7.4f} "
               f"{row['auc']:>7.4f} {zs_v} {row['infer_ms']:>8.3f}")
     print(f"{'='*102}")
+    print("   Note: holdout = frame-level stratified split (frames of the same night on both sides);")
+    print("         treat it as an optimistic upper bound. See benchmark_cv(protocol='logo') for the")
+    print("         leave-one-night-out estimate.")
+    if has_zs:
+        n_cp_pos = int(y_zs_te.sum())
+        print(f"   Note: ZS-CP = accuracy on the unseen CP station ({len(y_zs_te)} frames, {n_cp_pos} EPB). "
+              + ("All CP frames are EPB, so ZS-CP is EPB recall only (specificity at CP is untested)."
+                 if n_cp_pos == len(y_zs_te) else ""))
 
     # --- Plot ---
     fig, axes = plt.subplots(1, 2, figsize=(16, 6.5))
@@ -3562,7 +3589,9 @@ def benchmark_cv(X: np.ndarray, y: np.ndarray,
                  include_ablations: bool = True,
                  reference: str = '2DPCA + Stacking (proposed)',
                  random_state: int = 42,
-                 verbose: bool = True) -> dict:
+                 verbose: bool = True,
+                 methods: Optional[List[dict]] = None,
+                 extra_data: Optional[Dict[str, np.ndarray]] = None) -> dict:
     """
     Benchmark PAREADO: todos os modelos são avaliados exatamente nos mesmos folds.
 
@@ -3572,6 +3601,11 @@ def benchmark_cv(X: np.ndarray, y: np.ndarray,
       - 'logo'         : leave-one-group-out (ex.: deixa uma NOITE inteira de fora por vez).
                          Como cada noite é monoclasse, as métricas são calculadas sobre as
                          predições out-of-fold agregadas (pooled) e por noite (acurácia).
+
+    methods: lista opcional de modelos no formato de build_benchmark_methods
+             ({'name', 'group', 'data', 'factory'}). Se None, usa o benchmark padrão.
+    extra_data: arrays adicionais (mesma ordem de y) referenciáveis por m['data'],
+                ex.: {'brightness': F_bright} para modelos que não usam a imagem.
 
     Retorna dict com:
       'folds'   : métricas por (modelo, repetição, fold)   [stratified/group]
@@ -3583,9 +3617,12 @@ def benchmark_cv(X: np.ndarray, y: np.ndarray,
     import time
     from sklearn.model_selection import StratifiedGroupKFold, LeaveOneGroupOut
 
-    methods = build_benchmark_methods(n_components, ensemble_params, include_cnn, include_ablations)
+    if methods is None:
+        methods = build_benchmark_methods(n_components, ensemble_params, include_cnn, include_ablations)
     data_map = {'proc': X, 'raw': X_raw, 'masked': X_masked}
-    methods = [m for m in methods if data_map[m['data']] is not None]
+    if extra_data:
+        data_map.update(extra_data)
+    methods = [m for m in methods if data_map.get(m['data']) is not None]
 
     # ---- Splits ----
     splits = []  # (repeat, fold, train_idx, test_idx)
@@ -3761,6 +3798,212 @@ def plot_benchmark_cv(results: List[dict], metric: str = 'f1',
     return fig
 
 
+def compare_n_components(X: np.ndarray, y: np.ndarray,
+                         k_values: Tuple[int, ...] = (5, 25),
+                         reference_k: int = 5,
+                         protocol: str = 'group',
+                         groups: Optional[np.ndarray] = None,
+                         ensemble_params: Optional[dict] = None,
+                         n_folds: int = 5,
+                         n_repeats: int = 3,
+                         alpha: float = 0.05,
+                         random_state: int = 42,
+                         verbose: bool = True) -> dict:
+    """
+    Teste de significância pareado entre números de componentes 2DPCA usando o
+    sistema COMPLETO (2DPCA + Scaler + SMOTE + Stacking), não o proxy SVM de
+    optimize_n_components.
+
+    Todos os valores de k são avaliados nos mesmos folds (r x k-fold agrupado por
+    defeito) e comparados ao reference_k com o teste t corrigido de Nadeau & Bengio
+    e o teste exato de McNemar (ver benchmark_cv).
+
+    Regra de decisão (parcimônia): mantém-se o reference_k (menor) a menos que outro
+    k seja significativamente MELHOR em F1 (p < alpha e delta > 0).
+
+    Returns:
+        dict de benchmark_cv acrescido de 'decision' (texto) e 'selected_k' (int).
+    """
+    methods = []
+    for k in k_values:
+        methods.append(dict(
+            name=f'k={k}', group='Proposed' if k == reference_k else 'Single learner', data='proc',
+            factory=(lambda kk=k: EPBRecognitionSystem(n_components=kk, balance_data=True,
+                                                        balance_method='smote',
+                                                        ensemble_params=ensemble_params))))
+    res = benchmark_cv(X, y, protocol=protocol, groups=groups, n_folds=n_folds,
+                       n_repeats=n_repeats, reference=f'k={reference_k}',
+                       random_state=random_state, verbose=verbose, methods=methods)
+
+    selected_k = reference_k
+    lines = []
+    st = res['stats']
+    for _, row in st.iterrows():
+        k_other = int(str(row['model']).split('=')[1])
+        if 'p_f1' in row:
+            d, p = row['delta_f1'], row['p_f1']
+            better = (not np.isnan(p)) and p < alpha and d > 0
+            lines.append(f"k={k_other} vs k={reference_k}: ΔF1={d:+.4f} (corrected t-test p={p:.4f}), "
+                         f"ΔAUC={row['delta_auc']:+.4f} (p={row['p_auc']:.4f}), McNemar p={row['p_mcnemar']:.4f}"
+                         f" -> {'significantly better' if better else 'not significantly better'}")
+        else:
+            p = row['p_mcnemar']
+            better = (not np.isnan(p)) and p < alpha and row['mcnemar_other_only'] > row['mcnemar_ref_only']
+            lines.append(f"k={k_other} vs k={reference_k}: McNemar p={p:.4f} -> "
+                         f"{'significantly better' if better else 'not significantly better'}")
+        if better and k_other != selected_k:
+            selected_k = k_other
+    if selected_k == reference_k:
+        decision = (f"Keep k={reference_k}: no larger k is significantly better (alpha={alpha}); "
+                    f"the smaller subspace is preferred by parsimony "
+                    f"({64 * reference_k} features vs. up to {64 * max(k_values)}).")
+    else:
+        decision = f"Use k={selected_k}: significantly better than k={reference_k} (alpha={alpha})."
+    if verbose:
+        print("\n🔬 n_components significance test (full stacking system, paired folds):")
+        for ln in lines:
+            print(f"   • {ln}")
+        print(f"   ➜ {decision}")
+    res['decision'] = decision
+    res['selected_k'] = selected_k
+    return res
+
+
+class _TabularModel:
+    """StandardScaler + LogisticRegression sobre features tabulares (sem imagem)."""
+
+    def __init__(self, random_state: int = 42):
+        self.random_state = random_state
+
+    def fit(self, F: np.ndarray, y: np.ndarray):
+        from sklearn.pipeline import make_pipeline
+        self.pipe_ = make_pipeline(StandardScaler(),
+                                   LogisticRegression(max_iter=3000, class_weight='balanced',
+                                                      random_state=self.random_state)).fit(F, y)
+        return self
+
+    def predict_proba(self, F: np.ndarray) -> np.ndarray:
+        return self.pipe_.predict_proba(F)
+
+
+def brightness_features(X_unprocessed: np.ndarray) -> np.ndarray:
+    """Estatísticas globais de brilho por imagem (média, desvio, p5, p50, p95) — sem estrutura espacial."""
+    flat = X_unprocessed.reshape(len(X_unprocessed), -1)
+    return np.column_stack([flat.mean(1), flat.std(1),
+                            np.percentile(flat, 5, axis=1),
+                            np.percentile(flat, 50, axis=1),
+                            np.percentile(flat, 95, axis=1)])
+
+
+def per_image_zscore(X: np.ndarray) -> np.ndarray:
+    """Normaliza cada imagem para média 0 e desvio 1 (remove nível e contraste globais)."""
+    mu = X.mean(axis=(1, 2), keepdims=True)
+    sd = X.std(axis=(1, 2), keepdims=True) + 1e-6
+    return ((X - mu) / sd).astype(np.float32)
+
+
+def diagnose_confounders(X: np.ndarray, y: np.ndarray, groups: np.ndarray,
+                         X_raw: np.ndarray, df_metadata: pd.DataFrame,
+                         X_masked: Optional[np.ndarray] = None,
+                         n_components: int = 5,
+                         ensemble_params: Optional[dict] = None,
+                         n_folds: int = 5,
+                         random_state: int = 42,
+                         verbose: bool = True) -> dict:
+    """
+    Testa se a classe pode ser prevista por variáveis de "noite" (brilho, lua, carimbos de texto)
+    em vez da morfologia das EPBs, comparando cada variante em dois protocolos:
+
+      • 'stratified' : 5-fold por QUADRO (quadros da mesma noite em treino e teste)
+      • 'logo'       : uma NOITE inteira fora por vez (noites nunca vistas)
+
+    Variantes:
+      - Proposed (preprocessed)            : sistema 2DPCA + Stacking padrão
+      - Proposed + circular FOV mask       : remove cantos (carimbos de data/estação)
+      - Proposed + per-image z-score       : remove nível/contraste global de cada imagem
+      - Brightness statistics only         : 5 estatísticas de brilho da imagem SEM pré-processamento
+      - Moon metadata only                 : moon_illumination + moon_alt do CSV (nenhum pixel)
+
+    Interpretação: se as variantes sem estrutura espacial (brilho, lua) já atingem acurácia alta
+    no protocolo por quadro, a classe é previsível por condições da noite; nesse caso a acurácia
+    por quadro não mede detecção de EPB. A queda stratified -> logo quantifica o quanto o modelo
+    depende de reconhecer a noite.
+    """
+    extra = {'zscore': per_image_zscore(X), 'brightness': brightness_features(X_raw)}
+    moon_cols = [c for c in ['moon_illumination', 'moon_alt'] if c in df_metadata.columns]
+    if moon_cols:
+        extra['moon'] = df_metadata[moon_cols].to_numpy(dtype=float)
+
+    def _sys():
+        return EPBRecognitionSystem(n_components=n_components, balance_data=True,
+                                    balance_method='smote', ensemble_params=ensemble_params)
+
+    methods = [
+        dict(name='Proposed (preprocessed)', group='Proposed', data='proc', factory=_sys),
+        dict(name='Proposed + circular FOV mask', group='Ablation', data='masked', factory=_sys),
+        dict(name='Proposed + per-image z-score', group='Ablation', data='zscore', factory=_sys),
+        dict(name='Brightness statistics only', group='Baseline', data='brightness',
+             factory=lambda: _TabularModel(random_state)),
+    ]
+    if moon_cols:
+        methods.append(dict(name='Moon metadata only', group='Baseline', data='moon',
+                            factory=lambda: _TabularModel(random_state)))
+
+    common = dict(X_masked=X_masked, reference='Proposed (preprocessed)', random_state=random_state,
+                  verbose=False, methods=methods, extra_data=extra)
+    res_s = benchmark_cv(X, y, protocol='stratified', n_folds=n_folds, n_repeats=1, **common)
+    res_l = benchmark_cv(X, y, protocol='logo', groups=groups, **common)
+
+    ss = res_s['summary'].set_index('model')
+    sl = res_l['summary'].set_index('model')
+    rows = []
+    for m in [mm['name'] for mm in methods if mm['name'] in sl.index]:
+        rows.append({
+            'variant': m,
+            'frame_acc': ss.loc[m, 'accuracy_mean'],
+            'frame_auc': ss.loc[m, 'auc_mean'],
+            'night_acc': sl.loc[m, 'accuracy'],
+            'night_sens': sl.loc[m, 'sensitivity'],
+            'night_spec': sl.loc[m, 'specificity'],
+            'night_auc': sl.loc[m, 'auc'],
+            'macro_night_acc': sl.loc[m, 'macro_night_accuracy'],
+            'worst_night_acc': sl.loc[m, 'worst_night_accuracy'],
+        })
+    table = pd.DataFrame(rows)
+    table['drop_frame_to_night'] = table['frame_acc'] - table['night_acc']
+    per_night = res_l['per_group'].pivot(index='group_id', columns='model', values='accuracy')
+    per_night = per_night[[c for c in table['variant'] if c in per_night.columns]]
+    per_night.insert(0, 'label', res_l['per_group'].groupby('group_id')['label'].first())
+    per_night.insert(1, 'n', res_l['per_group'].groupby('group_id')['n'].first())
+
+    findings = []
+    t = table.set_index('variant')
+    for nuisance in ['Brightness statistics only', 'Moon metadata only']:
+        if nuisance in t.index and t.loc[nuisance, 'frame_acc'] >= 0.85:
+            findings.append(f"'{nuisance}' reaches {t.loc[nuisance, 'frame_acc']:.1%} frame-level accuracy "
+                            f"without any EPB morphology: the label is predictable from night conditions.")
+    p = t.loc['Proposed (preprocessed)']
+    if p['drop_frame_to_night'] > 0.2:
+        findings.append(f"Proposed system drops from {p['frame_acc']:.1%} (frame-level) to {p['night_acc']:.1%} "
+                        f"(unseen nights): frame-level metrics mostly reflect recognising the night.")
+    for v in ['Proposed + circular FOV mask', 'Proposed + per-image z-score']:
+        if v in t.index:
+            d = t.loc[v, 'night_acc'] - p['night_acc']
+            findings.append(f"{v}: unseen-night accuracy {t.loc[v, 'night_acc']:.1%} "
+                            f"({d:+.1%} vs. proposed).")
+
+    if verbose:
+        print(f"\n{'='*96}\n🧪 CONFOUNDER DIAGNOSIS — frame-level 5-fold vs. leave-one-night-out "
+              f"({len(np.unique(groups))} nights)\n{'='*96}")
+        print(table.round(3).to_string(index=False))
+        print("\nPer-night accuracy (leave-one-night-out; each night is single-class):")
+        print(per_night.round(3).to_string())
+        print("\nFindings:")
+        for f in findings:
+            print(f"   • {f}")
+    return {'table': table, 'per_night': per_night, 'findings': findings,
+            'stratified': res_s, 'logo': res_l}
+
 
 def evaluate_hard_negatives_and_generalization(
     X: np.ndarray,
@@ -3771,6 +4014,7 @@ def evaluate_hard_negatives_and_generalization(
     system: 'EPBRecognitionSystem',
     util_dir: str = 'util',
     threshold_stars: int = 4500,
+    oof_label: str = 'Out-of-Fold Predictions',
 ) -> Dict[str, pd.DataFrame]:
     """
     Avalia o comportamento do sistema em cenários operacionais críticos ("hard negatives" e generalização):
@@ -3795,32 +4039,47 @@ def evaluate_hard_negatives_and_generalization(
             ('All Labeled Images', np.ones(len(y), dtype=bool)),
         ]
         for label_str, mask in subsets:
+            if mask.sum() == 0:
+                continue
             yt, yp, ypr = y[mask], oof_y_pred[mask], oof_y_proba[mask]
-            cm = confusion_matrix(yt, yp, labels=[0, 1])
-            tn, fp, fn, tp = cm.ravel()
-            acc = (tp + tn) / max(len(yt), 1)
-            sens = tp / max(tp + fn, 1)
-            spec = tn / max(tn + fp, 1)
-            prec = tp / max(tp + fp, 1)
-            f1 = 2 * prec * sens / max(prec + sens, 1e-8)
+            # _binary_metrics devolve NaN quando uma classe está ausente
+            # (ex.: nenhum EPB sob lua brilhante -> sensibilidade/F1 indefinidos, não 0).
+            m = _binary_metrics(yt, yp, ypr)
+            n_pos, n_neg = int(yt.sum()), int((yt == 0).sum())
+            if n_pos == 0:
+                note = 'No EPB frames: only Specificity is defined'
+            elif n_neg == 0:
+                note = 'No quiet frames: only Sensitivity is defined'
+            else:
+                note = ''
             moon_rows.append({
                 'Regime': label_str,
                 'N': int(mask.sum()),
-                'EPB': int(yt.sum()),
-                'No_EPB': int((yt == 0).sum()),
-                'Accuracy': round(acc, 4),
-                'Sensitivity': round(sens, 4),
-                'Specificity': round(spec, 4),
-                'F1': round(f1, 4),
+                'EPB': n_pos,
+                'No_EPB': n_neg,
+                'Accuracy': round(m['accuracy'], 4),
+                'Sensitivity': round(m['sensitivity'], 4) if not np.isnan(m['sensitivity']) else np.nan,
+                'Specificity': round(m['specificity'], 4) if not np.isnan(m['specificity']) else np.nan,
+                'F1': round(m['f1'], 4) if (n_pos > 0 and not np.isnan(m['f1'])) else np.nan,
+                'FP': m['fp'],
+                'Note': note,
             })
     df_moon = pd.DataFrame(moon_rows)
-    print("\n1️⃣ Lunar Illumination Stratification (5-Fold Out-of-Fold Predictions):")
-    print(df_moon.to_string(index=False))
+    print(f"\n1️⃣ Lunar Illumination Stratification ({oof_label}):")
+    print(df_moon.to_string(index=False, na_rep='N/A'))
 
     # 2. Per-Station Performance & Zero-Shot CP Holdout
     station_rows = []
     if 'site' in df_metadata.columns:
         sites = df_metadata['site'].values
+
+        def _what_is_measured(yt):
+            if yt.sum() == len(yt):
+                return 'Sensitivity only (station has EPB frames only)'
+            if yt.sum() == 0:
+                return 'Specificity only (station has quiet frames only)'
+            return 'Accuracy (both classes present)'
+
         for st in ['CA', 'BJL', 'CP']:
             mask = (sites == st)
             if mask.sum() == 0:
@@ -3829,11 +4088,12 @@ def evaluate_hard_negatives_and_generalization(
             acc = np.mean(yt == yp)
             station_rows.append({
                 'Station': st,
-                'Evaluation_Mode': '5-Fold CV (Out-of-Fold)',
+                'Evaluation_Mode': oof_label,
                 'N': int(mask.sum()),
                 'EPB': int(yt.sum()),
                 'No_EPB': int((yt == 0).sum()),
                 'Accuracy': round(float(acc), 4),
+                'Measures': _what_is_measured(yt),
             })
 
         # Zero-Shot Holdout on CP (Trained strictly on CA + BJL)
@@ -3856,6 +4116,7 @@ def evaluate_hard_negatives_and_generalization(
                 'EPB': int(y[mask_cp].sum()),
                 'No_EPB': int((y[mask_cp] == 0).sum()),
                 'Accuracy': round(float(acc_cp), 4),
+                'Measures': _what_is_measured(y[mask_cp]),
             })
             print(f"\n2️⃣ Zero-Shot Cross-Station Generalization (Train: CA+BJL -> Test: CP):")
             print(f"   • Detected {int(yp_cp.sum())}/{int(mask_cp.sum())} EPB frames ({acc_cp*100:.2f}% Recall, "
@@ -3863,6 +4124,14 @@ def evaluate_hard_negatives_and_generalization(
     df_station = pd.DataFrame(station_rows)
     print("\n   Station Breakdown:")
     print(df_station.to_string(index=False))
+    if len(df_station) > 0:
+        single = list(dict.fromkeys(str(r['Station']).split()[0]
+                                    for _, r in df_station.iterrows() if 'only' in r['Measures']))
+        if single:
+            print("\n   ⚠️  Single-class stations: " + ", ".join(single) + ".")
+            print("      For these, 'Accuracy' equals Sensitivity (EPB-only) or Specificity (quiet-only).")
+            print("      The CP zero-shot result therefore measures EPB recall at an unseen station,")
+            print("      not false-alarm behaviour there; BJL measures specificity only.")
 
     # 3. Cloud Contamination & Stage 1 QC Effectiveness on Nocturnal Sequences
     # Train Stage 2 reference on clear-sky frames (cloudy == 0) so overcast night CA_20260624 is unseen
@@ -3880,9 +4149,11 @@ def evaluate_hard_negatives_and_generalization(
 
     qc_rows = []
     seq_specs = [
-        ('BJL_20250722 (Clear Quiet Sky)', os.path.join(util_dir, 'BJL_20250722', 'processed')),
-        ('CA_20260624 (Cloud-Contaminated Sky)', os.path.join(util_dir, 'CA_20260624', 'processed')),
-        ('CA_20251022 (Active EPB Night)', os.path.join(util_dir, 'CA_20251022', 'processed')),
+        # Pastas nomeadas pela data de INÍCIO da noite; os ficheiros usam a data UTC de cada quadro
+        # (ex.: noite CA_20260624 -> quadros O6_CA_20260625_04xxxx..07xxxx UT).
+        ('BJL night 2025-07-22/23 (Clear Quiet Sky)', os.path.join(util_dir, 'BJL_20250722', 'processed')),
+        ('CA night 2026-06-24/25 (Cloud-Contaminated Sky)', os.path.join(util_dir, 'CA_20260624', 'processed')),
+        ('CA night 2025-10-22/23 (Active EPB Night)', os.path.join(util_dir, 'CA_20251022', 'processed')),
     ]
     for seq_label, folder in seq_specs:
         if not os.path.isdir(folder):

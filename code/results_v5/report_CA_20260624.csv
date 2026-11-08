@@ -1,0 +1,63 @@
+filename,verdict,status,label,prob_epb,reliable,sky,star_pixels,raw_mean
+O6_CA_20260625_032430.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,752,32.6
+O6_CA_20260625_032844.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,1473,44.2
+O6_CA_20260625_033258.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,1880,42.0
+O6_CA_20260625_033711.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,816,54.9
+O6_CA_20260625_034125.png,EPB,DEGRADED_EPB,EPB detectada (visibilidade parcial — conferir),0.5396606553858,False,DEGRADED,1861,70.3
+O6_CA_20260625_034539.png,EPB,DEGRADED_EPB,EPB detectada (visibilidade parcial — conferir),0.5356146284126231,False,DEGRADED,1473,71.2
+O6_CA_20260625_034953.png,EPB,DEGRADED_EPB,EPB detectada (visibilidade parcial — conferir),0.8185207832035623,False,DEGRADED,1880,58.4
+O6_CA_20260625_035407.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,606,25.6
+O6_CA_20260625_035821.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,754,52.1
+O6_CA_20260625_040234.png,EPB,DEGRADED_EPB,EPB detectada (visibilidade parcial — conferir),0.8451246984100496,False,DEGRADED,2540,75.0
+O6_CA_20260625_040648.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,297,36.8
+O6_CA_20260625_041102.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,231,24.9
+O6_CA_20260625_041516.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,252,16.5
+O6_CA_20260625_041930.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,291,15.5
+O6_CA_20260625_042344.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,368,31.0
+O6_CA_20260625_042757.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,224,19.0
+O6_CA_20260625_043211.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,505,27.2
+O6_CA_20260625_043625.png,EPB,DEGRADED_EPB,EPB detectada (visibilidade parcial — conferir),0.8282699191439765,False,DEGRADED,2448,61.4
+O6_CA_20260625_044039.png,Sem EPB,QUIET_CLEAR,Sem EPB,0.4872525506951808,True,CLEAR,8113,88.7
+O6_CA_20260625_044453.png,Sem EPB,QUIET_CLEAR,Sem EPB,0.437065905699158,True,CLEAR,6223,88.9
+O6_CA_20260625_044907.png,Sem EPB,QUIET_CLEAR,Sem EPB,0.3111314108300824,True,CLEAR,5065,91.6
+O6_CA_20260625_045320.png,EPB,EPB_DETECTED,EPB detectada,0.6591443050027109,True,CLEAR,11213,102.5
+O6_CA_20260625_045736.png,Sem EPB,DEGRADED_QUIET,Sem EPB (visibilidade parcial — conferir),0.3233225502477861,False,DEGRADED,1756,77.3
+O6_CA_20260625_050150.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,904,71.3
+O6_CA_20260625_050604.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,310,67.6
+O6_CA_20260625_051018.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,510,75.6
+O6_CA_20260625_051432.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,150,66.8
+O6_CA_20260625_051845.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,110,64.2
+O6_CA_20260625_052259.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,116,64.5
+O6_CA_20260625_052713.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,67,59.4
+O6_CA_20260625_053127.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,402,72.7
+O6_CA_20260625_053541.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,648,79.3
+O6_CA_20260625_053955.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,297,76.0
+O6_CA_20260625_054409.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,374,58.5
+O6_CA_20260625_054822.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,685,38.2
+O6_CA_20260625_055236.png,EPB,DEGRADED_EPB,EPB detectada (visibilidade parcial — conferir),0.5593236801756514,False,DEGRADED,2594,62.4
+O6_CA_20260625_055650.png,EPB,EPB_DETECTED,EPB detectada,0.5211022762460058,True,CLEAR,7228,73.7
+O6_CA_20260625_060106.png,Sem EPB,DEGRADED_QUIET,Sem EPB (visibilidade parcial — conferir),0.4224480465562175,False,DEGRADED,4371,61.8
+O6_CA_20260625_060520.png,EPB,EPB_DETECTED,EPB detectada,0.6694783870406503,True,CLEAR,13838,88.9
+O6_CA_20260625_060933.png,Sem EPB,QUIET_CLEAR,Sem EPB,0.48354431689357186,True,CLEAR,6358,79.8
+O6_CA_20260625_061347.png,Sem EPB,QUIET_CLEAR,Sem EPB,0.3574629934735197,True,CLEAR,11397,87.6
+O6_CA_20260625_061801.png,EPB,EPB_DETECTED,EPB detectada,0.5605992508456492,True,CLEAR,5250,75.2
+O6_CA_20260625_062215.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,709,43.5
+O6_CA_20260625_062629.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,1315,47.9
+O6_CA_20260625_063043.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,1294,48.9
+O6_CA_20260625_063456.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,1422,46.4
+O6_CA_20260625_063910.png,EPB,EPB_DETECTED,EPB detectada,0.5618675473287201,True,CLEAR,8088,95.1
+O6_CA_20260625_064324.png,EPB,DEGRADED_EPB,EPB detectada (visibilidade parcial — conferir),0.6421707437352342,False,DEGRADED,3188,79.4
+O6_CA_20260625_064738.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,1266,42.1
+O6_CA_20260625_065152.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,1715,48.6
+O6_CA_20260625_065606.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,1392,48.0
+O6_CA_20260625_070019.png,Sem EPB,DEGRADED_QUIET,Sem EPB (visibilidade parcial — conferir),0.4936340891381269,False,DEGRADED,1992,74.5
+O6_CA_20260625_070433.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,954,58.7
+O6_CA_20260625_070847.png,EPB,DEGRADED_EPB,EPB detectada (visibilidade parcial — conferir),0.6348315454906729,False,DEGRADED,3600,82.8
+O6_CA_20260625_071301.png,Sem EPB,QUIET_CLEAR,Sem EPB,0.2664634832067574,True,CLEAR,4666,81.0
+O6_CA_20260625_071715.png,EPB,DEGRADED_EPB,EPB detectada (visibilidade parcial — conferir),0.8782402519198881,False,DEGRADED,3401,81.7
+O6_CA_20260625_072129.png,Indeterminado,UNDETERMINED_CLOUDY,"Indeterminado — céu nublado, não é possível avaliar EPB",,False,CLOUDY,1000,51.6
+O6_CA_20260625_072542.png,EPB,EPB_DETECTED,EPB detectada,0.7409712625109489,True,CLEAR,4846,90.1
+O6_CA_20260625_072956.png,EPB,DEGRADED_EPB,EPB detectada (visibilidade parcial — conferir),0.785700501352551,False,DEGRADED,1314,70.5
+O6_CA_20260625_073410.png,Sem EPB,DEGRADED_QUIET,Sem EPB (visibilidade parcial — conferir),0.4641368482927953,False,DEGRADED,1798,73.8
+O6_CA_20260625_073824.png,EPB,EPB_DETECTED,EPB detectada,0.6356720898404858,True,CLEAR,4954,89.4
+O6_CA_20260625_074238.png,EPB,DEGRADED_EPB,EPB detectada (visibilidade parcial — conferir),0.6123258128277372,False,DEGRADED,2103,68.9

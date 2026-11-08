@@ -51,3 +51,7 @@ code/suggestion_order.md
 code/suggestion.md
 code/Attention.txt
 .DS_Store
+
+# Kiro / temporários de trabalho
+code/.agents/
+.~lock.*#
