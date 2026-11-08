@@ -223,6 +223,20 @@ predição out-of-night).
 | 0,85 | 0,537 | 0,922 | 0,729 | 0,665 |
 | 0,90 | 0,275 | 1,000 | 0,637 | 0,431 |
 
+As duas matrizes de confusão abaixo (out-of-night, 510 quadros com predição) tornam o efeito do
+limiar visível. Figuras `figs/confusion_matrix_logo.png` (limiar 0,50, padrão) e
+`figs/confusion_matrix_logo_t080.png` (limiar 0,80, operacional recomendado):
+
+| Real \ Previu | No EPB | EPB | | Real \ Previu | No EPB | EPB |
+|---|---|---|---|---|---|---|
+| **No EPB** (0,50) | 21 | 234 | | **No EPB** (0,80) | 227 | 28 |
+| **EPB** (0,50) | 15 | 240 | | **EPB** (0,80) | 88 | 167 |
+
+No limiar 0,50 o modelo marca quase tudo como EPB: dos 255 quadros **sem** bolha, 234 viram
+falso positivo (especificidade 0,08). Em 0,80 esses falsos positivos caem para 28
+(especificidade 0,89), ao custo de mais falsos negativos (88) — a troca que a varredura de
+limiares descreve.
+
 **Descoberta relevante:** o limiar 0,5 é um **ponto de operação mal calibrado**, não o limite do
 modelo. Em 0,5 a especificidade é 0,08 (dispara demais) e a acurácia balanceada fica em 0,512
 (≈ acaso). Subindo o limiar para **0,80**, a especificidade sobe para **0,89** e a acurácia
