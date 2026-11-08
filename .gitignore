@@ -55,3 +55,7 @@ code/Attention.txt
 # Kiro / temporários de trabalho
 code/.agents/
 .~lock.*#
+code/tests/__pycache__/*.pyc
+code/util/__pycache__/*.pyc
+.kiro/*
+.kiro/specs/night-data-preparation/tasks.md
