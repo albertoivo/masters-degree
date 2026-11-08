@@ -994,7 +994,6 @@
     }
 
     @container (width < 600px) {
-
       .table-wrapper table,
       .table-wrapper thead,
       .table-wrapper tbody,
@@ -1199,7 +1198,8 @@
     <section class="slide">
       <div class="kicker r">Resultados · extração de features</div>
       <h2 class="r d1">Extração de características via 2DPCA: onde o modelo enxerga a anomalia</h2>
-      <div class="grid" style="grid-template-columns:1fr;grid-template-rows:auto 1fr 1fr;gap:1.5vh;align-items:stretch">
+      <div class="grid"
+        style="grid-template-columns:1fr;grid-template-rows:auto 1fr 1fr;gap:1.5vh;align-items:stretch">
         <p class="r d2">Os primeiros componentes do 2DPCA capturam a estrutura suave do céu; o <em>resíduo de
             reconstrução</em> (|entrada − reconstrução|) destaca exatamente as faixas de depleção.</p>
         <figure class="fit-fig r d3"><img src="assets/recon_error_without.png" alt="Erro de reconstrução sem EPB">
@@ -1264,8 +1264,7 @@
                 de teste participa do treino), probabilidades brutas sofrem deslocamento pelo brilho noturno.</p>
               <p style="font-size:.94rem">Em <em>t = 0,80</em>, os falsos positivos caem para apenas <b>28 em 255
                   quadros</b> (especificidade <b>89,0%</b>), alcançando acurácia balanceada de <b>77,3%</b> e F1 de
-                <b>0,742</b>.
-              </p>
+                <b>0,742</b>.</p>
             </div>
           </div>
         </div>
@@ -1316,8 +1315,7 @@
               <h3 style="color:#ffb36b">⚠️ Achado central: fator de confusão de brilho</h3>
               <p style="font-size:.95rem">Um baseline trivial usando <b>apenas 5 estatísticas globais de brilho</b> da
                 imagem bruta (média, desvio e percentis — <em>sem nenhuma estrutura espacial</em>) atinge em
-                <em>leave-one-night-out</em>:
-              </p>
+                <em>leave-one-night-out</em>:</p>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
                 <div class="metric" style="padding:.7rem">
                   <div class="v" style="font-size:1.7rem;color:#ffb36b">95,9%</div>
@@ -1415,8 +1413,7 @@
           <div class="grid g2" style="height:100%;align-items:stretch">
             <div tabindex="0" role="region" aria-labelledby="seq-caption" class="table-wrapper">
               <table style="--label-2:'Quadros';--label-3:'% Indet.';--label-4:'Estágio 2';--label-5:'Cascata'">
-                <caption id="seq-caption">📊 Sequências noturnas previstas Out-of-Night (sem a noite no treino)
-                </caption>
+                <caption id="seq-caption">📊 Sequências noturnas previstas Out-of-Night (sem a noite no treino)</caption>
                 <thead>
                   <tr>
                     <th scope="col">Sequência noturna</th>
@@ -1482,15 +1479,13 @@
             <h3>☁️ Porteiro físico: CLEAR · DEGRADED · CLOUDY</h3>
             <p style="font-size:.93rem">Sob nuvens densas ninguém enxerga a ionosfera: o Estágio 1 emite o veredito
               <b>Indeterminado</b> (recall de nuvem <b>54,8%</b>, precisão <b>64,2%</b>). Na noite nublada, a cascata
-              reduz alarmes de EPB de <b>64,5% para 29,0%</b> (apenas <b>11,3%</b> em céu limpo confiável).
-            </p>
+              reduz alarmes de EPB de <b>64,5% para 29,0%</b> (apenas <b>11,3%</b> em céu limpo confiável).</p>
           </div>
           <div class="caveat r d4">
             <p style="font-size:.92rem"><b style="color:#ffb36b">Custo honesto do QC atual:</b> os limiares (contagem de
               estrelas e brilho médio) foram ajustados na <em>única noite nublada rotulada</em> (CA 24/06/2026). Em
               outras noites, o filtro acabou bloqueando quadros legítimos de EPB: <b>19,0% em CA 27/10/2025</b> (8/42) e
-              <b>12,8% em CA 18/12/2025</b> (11/86). Precisa ser revalidado com nuvens de outras noites.
-            </p>
+              <b>12,8% em CA 18/12/2025</b> (11/86). Precisa ser revalidado com nuvens de outras noites.</p>
           </div>
         </div>
       </div>
@@ -1627,8 +1622,7 @@
             <div class="bento-ic">🔬</div>
             <div class="bento-body">
               <b>Pré-processamento físico (δI/I) e atribuição exata</b>
-              <p>Preserva as depleções negativas sem <em>clipping</em> (elevando a AUC para 0,950 na ablação) e projeta
-                a
+              <p>Preserva as depleções negativas sem <em>clipping</em> (elevando a AUC para 0,950 na ablação) e projeta a
                 decisão linear exatamente nos pixels.</p>
             </div>
           </div>
@@ -1740,38 +1734,36 @@
     <section class="slide">
       <div class="kicker r">Referências</div>
       <h2 class="r d1">Referências selecionadas</h2>
-      <ul class="refs r d2">
-        <li><b>Githio, L. et al. (2024).</b> A machine learning approach for estimating the drift velocities of EPBs
-          based on All-Sky Imager and GNSS observations. <i>Advances in Space Research</i>.</li>
-        <li><b>Okoh, D. et al. (2025).</b> A bootstrapping CNN technique for optimizing automated detection of EPBs
-          by
-          optical all-sky imagers. <i>Earth and Space Science</i>.</li>
-        <li><b>Zhong, J. et al. (2025).</b> Automatic detection and feature extraction of EPBs from all-sky airglow
-          image based on machine learning. <i>Space Weather</i>.</li>
-        <li><b>Zhong, J. et al. (2025).</b> Statistical analysis of ML-derived EPB characteristics from airglow
-          observations in Southern China during a solar cycle. <i>Space Weather</i>.</li>
-        <li><b>Yacoub, M. et al. (2025).</b> Automatic detection of EPBs in airglow images using 2DPCA and
-          explainable
-          AI. <i>Mach. Learn. Knowl. Extr.</i></li>
-        <li><b>Siddiqui, A. (2025).</b> Enhanced identification of EPBs in airglow imagery via 2DPCA and
-          interpretable
-          AI. <i>Int. J. Adv. Artif. Intell. Res.</i></li>
-        <li><b>Thanakulketsarat, T. et al. (2023).</b> Classification of EPBs using CNN and SVM techniques.
-          <i>Earth,
-            Planets and Space</i>.
-        </li>
-        <li><b>Srisamoodkham, W. et al. (2022).</b> Detecting EPBs on all-sky imager images using CNN. <i>Lecture
-            Notes
-            in Networks and Systems</i>.</li>
-        <li><b>Sedlak, R. et al. (2023).</b> Analysis of 2D airglow imager data with respect to dynamics using
-          machine
-          learning. <i>Atmos. Meas. Tech.</i></li>
-        <li><b>Liu, P. et al. (2022).</b> Statistical analysis of MSTIDs over Japan based on deep learning instance
-          segmentation. <i>Space Weather</i>.</li>
-      </ul>
-      <p class="r d3" style="margin-top:1.8vh;font-size:1.05rem;color:var(--mute)">Dados observacionais:
-        <em>Programa EMBRACE / INPE</em> &nbsp;·&nbsp; Apoio institucional: <em>UFPB, UFCG, CAPES e CNPq</em>.
-      </p>
+          <ul class="refs r d2">
+            <li><b>Githio, L. et al. (2024).</b> A machine learning approach for estimating the drift velocities of EPBs
+              based on All-Sky Imager and GNSS observations. <i>Advances in Space Research</i>.</li>
+            <li><b>Okoh, D. et al. (2025).</b> A bootstrapping CNN technique for optimizing automated detection of EPBs
+              by
+              optical all-sky imagers. <i>Earth and Space Science</i>.</li>
+            <li><b>Zhong, J. et al. (2025).</b> Automatic detection and feature extraction of EPBs from all-sky airglow
+              image based on machine learning. <i>Space Weather</i>.</li>
+            <li><b>Zhong, J. et al. (2025).</b> Statistical analysis of ML-derived EPB characteristics from airglow
+              observations in Southern China during a solar cycle. <i>Space Weather</i>.</li>
+            <li><b>Yacoub, M. et al. (2025).</b> Automatic detection of EPBs in airglow images using 2DPCA and
+              explainable
+              AI. <i>Mach. Learn. Knowl. Extr.</i></li>
+            <li><b>Siddiqui, A. (2025).</b> Enhanced identification of EPBs in airglow imagery via 2DPCA and
+              interpretable
+              AI. <i>Int. J. Adv. Artif. Intell. Res.</i></li>
+            <li><b>Thanakulketsarat, T. et al. (2023).</b> Classification of EPBs using CNN and SVM techniques.
+              <i>Earth,
+                Planets and Space</i>.</li>
+            <li><b>Srisamoodkham, W. et al. (2022).</b> Detecting EPBs on all-sky imager images using CNN. <i>Lecture
+                Notes
+                in Networks and Systems</i>.</li>
+            <li><b>Sedlak, R. et al. (2023).</b> Analysis of 2D airglow imager data with respect to dynamics using
+              machine
+              learning. <i>Atmos. Meas. Tech.</i></li>
+            <li><b>Liu, P. et al. (2022).</b> Statistical analysis of MSTIDs over Japan based on deep learning instance
+              segmentation. <i>Space Weather</i>.</li>
+          </ul>
+          <p class="r d3" style="margin-top:1.8vh;font-size:1.05rem;color:var(--mute)">Dados observacionais:
+            <em>Programa EMBRACE / INPE</em> &nbsp;·&nbsp; Apoio institucional: <em>UFPB, UFCG, CAPES e CNPq</em>.</p>
     </section>
 
     <!-- 13. OBRIGADO -->
