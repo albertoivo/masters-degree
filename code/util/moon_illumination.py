@@ -11,7 +11,13 @@ def get_site_coordinates(site_code):
         'CP': ('-22.69', '-45.00'),  # Cachoeira Paulista
         'BJL': ('-13.25', '-43.41')  # Bom Jesus da Lapa
     }
-    return sites.get(site_code, ('0.0', '0.0'))
+    if site_code not in sites:
+        raise ValueError(
+            f"Estação sem coordenadas: '{site_code}'. "
+            f"Adicione latitude/longitude em get_site_coordinates "
+            f"(conhecidas: {', '.join(sorted(sites))})."
+        )
+    return sites[site_code]
 
 def main():
     csv_path = 'data/epb_labels.csv'

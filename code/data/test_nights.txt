@@ -1,0 +1,18 @@
+# Noites reservadas para o teste final (conjunto de teste travado).
+#
+# Formato: uma noite por linha, no formato SITE_YYYYMMDD, usando a data de
+# início da noite (quadros antes das 12:00 UT pertencem à data anterior,
+# como em extract_night_groups). Exemplo: BJL_20250722
+#
+# Linhas em branco e linhas que começam com '#' são ignoradas.
+#
+# Regras:
+#   1. Escolha as noites de teste ANTES de ver qualquer resultado do modelo
+#      sobre elas.
+#   2. Depois da primeira avaliação travada (evaluate_locked_test, registrada
+#      em data/test_evaluations.log), NUNCA edite esta lista.
+#   3. Noites listadas aqui são excluídas automaticamente de
+#      load_raw_dataset(split="dev"), que é o padrão.
+#
+# A lista começa vazia: com apenas 7 noites rotuladas, nenhuma pode ser
+# reservada ainda. Adicione noites novas abaixo conforme forem rotuladas.

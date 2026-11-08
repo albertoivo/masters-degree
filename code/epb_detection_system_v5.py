@@ -21,7 +21,10 @@ leave-one-night-out aninhado (nested_logo_evaluate), para que a estimativa não 
 Este módulo reaproveita o V2 (TwoDPCA, QC do Estágio 1, benchmark_cv) e não o altera.
 """
 
+import json
 import logging
+import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
 
@@ -39,7 +42,7 @@ from imblearn.pipeline import Pipeline as ImbPipeline
 
 from epb_detection_system_v2 import (
     EPBRecognitionSystem, CascadedPredictionResult, assess_sky_quality,
-    _binary_metrics,
+    _binary_metrics, extract_night_groups,
 )
 
 logger = logging.getLogger(__name__)
@@ -240,16 +243,59 @@ def preprocess_epb_image_v5(img: np.ndarray,
     return out
 
 
+TEST_NIGHTS_FILE = 'test_nights.txt'
+SPLITS = ('dev', 'test', 'all')
+
+
+def load_test_nights(path: str = "data/test_nights.txt") -> set:
+    """
+    Lê as noites do conjunto de teste travado: uma noite SITE_YYYYMMDD por linha.
+    Linhas em branco e linhas que começam com '#' são ignoradas.
+    Arquivo ausente -> conjunto vazio.
+    """
+    p = Path(path)
+    if not p.exists():
+        return set()
+    nights = set()
+    for line in p.read_text(encoding='utf-8').splitlines():
+        line = line.strip()
+        if line and not line.startswith('#'):
+            nights.add(line)
+    return nights
+
+
 def load_raw_dataset(data_folder: str, label_file: str,
-                     include_cloudy: bool = False) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame]:
+                     include_cloudy: bool = False, split: str = "dev",
+                     test_nights_path: Optional[str] = None) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame]:
     """
     Carrega as imagens rotuladas em resolução ORIGINAL (uint8) + labels + metadados alinhados.
-
     Quadros nublados (cloudy=1 ou has_epb vazio) têm EPB INDETERMINADA:
       include_cloudy=False (padrão) — excluídos; y ∈ {0, 1}. Uso: treino/avaliação do Estágio 2.
       include_cloudy=True           — incluídos com y = -1. Uso: avaliação do Estágio 1 (QC).
+    Conjunto de teste travado (noites em test_nights.txt, ver load_test_nights):
+      split="dev"  (padrão) — só quadros de noites FORA do teste.
+      split="test"          — só quadros de noites do teste (uso exclusivo de evaluate_locked_test).
+      split="all"           — todos os quadros rotulados.
+    test_nights_path=None usa test_nights.txt na mesma pasta de label_file.
     """
+    if split not in SPLITS:
+        raise ValueError(f"split inválido: {split!r}; use um de {SPLITS}")
     df = pd.read_csv(label_file)
+    if split != 'all':
+        if test_nights_path is None:
+            test_nights_path = Path(label_file).parent / TEST_NIGHTS_FILE
+        test_nights = load_test_nights(test_nights_path)
+        nights = extract_night_groups(df) if len(df) else np.array([], dtype=str)
+        missing = sorted(test_nights - set(nights))
+        for night in missing:
+            logger.warning(f"Noite de teste {night} não tem quadros em {label_file} (erro no id da noite?).")
+        in_test = np.isin(nights, list(test_nights))
+        keep_mask = in_test if split == 'test' else ~in_test
+        excluded = ~keep_mask
+        if excluded.any():
+            logger.info(f"split={split!r}: {int(excluded.sum())} quadros de "
+                        f"{len(set(nights[excluded]))} noites excluídos.")
+        df = df[keep_mask].reset_index(drop=True)
     cloudy_col = df['cloudy'].fillna(0).astype(int) if 'cloudy' in df.columns else pd.Series(0, index=df.index)
     undetermined = df['has_epb'].isna() | (cloudy_col == 1)
     if (df['has_epb'].notna() & (cloudy_col == 1)).any():
@@ -267,6 +313,8 @@ def load_raw_dataset(data_folder: str, label_file: str,
         except Exception as e:  # imagem ausente/corrompida
             logger.warning(f"{row['filename']}: {e}")
     df = df.loc[keep].reset_index(drop=True)
+    if not raws:
+        return np.empty((0, 0, 0), dtype=np.uint8), np.empty(0, dtype=int), df
     shapes = {r.shape for r in raws}
     if len(shapes) != 1:
         raise ValueError(f"Imagens com resoluções diferentes: {shapes}")
@@ -651,6 +699,119 @@ def evaluate_sequences_out_of_night(X: np.ndarray, y: np.ndarray, groups: np.nda
                      'cascaded_epb_pct': round(100 * casc_epb / n, 1),
                      'cascaded_clear_sky_epb_pct': round(100 * casc_reliable_epb / n, 1)})
     return pd.DataFrame(rows)
+
+
+# ============================================================================
+# CONJUNTO DE TESTE TRAVADO
+# ============================================================================
+
+TEST_EVALUATIONS_LOG = 'test_evaluations.log'
+
+
+def _git_commit() -> str:
+    """Hash do commit atual do repositório deste módulo ('unknown' se git não estiver disponível)."""
+    try:
+        out = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=Path(__file__).resolve().parent,
+                             capture_output=True, text=True, timeout=10)
+        return out.stdout.strip() if out.returncode == 0 and out.stdout.strip() else 'unknown'
+    except (OSError, subprocess.SubprocessError):
+        return 'unknown'
+
+
+def _json_safe(value):
+    """Converte tipos numpy/NaN para JSON válido (NaN -> null)."""
+    if isinstance(value, dict):
+        return {str(k): _json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(v) for v in value]
+    if isinstance(value, (np.integer,)):
+        return int(value)
+    if isinstance(value, (float, np.floating)):
+        return None if np.isnan(value) else float(value)
+    return value
+
+
+def evaluate_locked_test(make_model: Callable[[], EPBRecognitionSystemV5], note: str,
+                         data_folder: str = "data/all-images",
+                         label_file: str = "data/epb_labels.csv",
+                         test_nights_path: Optional[str] = None,
+                         log_path: Optional[str] = None) -> dict:
+    """
+    ÚNICA forma de pontuar o conjunto de teste travado (noites de test_nights.txt).
+
+    Treina make_model() em TODAS as noites de desenvolvimento (split="dev"), prevê cada noite
+    de teste e anexa uma linha JSON a log_path (padrão: test_evaluations.log na pasta de
+    label_file) com data/hora UTC, commit git, noites de teste, note e métricas.
+    Cada chamada é registrada: o teste deve ser olhado poucas vezes, com o modelo já escolhido.
+
+    make_model: sem argumentos; devolve um EPBRecognitionSystemV5 (ou objeto com fit/predict_proba
+        sobre imagens pré-processadas e, opcionalmente, rotation_by_site / target_size /
+        preprocess_params, usados para pré-processar as imagens brutas).
+    test_nights_path=None usa test_nights.txt na pasta de label_file.
+
+    Levanta ValueError se o conjunto de teste estiver vazio, se alguma noite de teste não tiver
+    quadros rotulados (não nublados) ou se o treino tiver uma só classe.
+    Returns: {'summary': métricas pooled (_binary_metrics + macro/pior noite),
+              'per_night': DataFrame por noite, 'test_nights': lista, 'log_entry': dict gravado}
+    """
+    if test_nights_path is None:
+        test_nights_path = Path(label_file).parent / TEST_NIGHTS_FILE
+    if log_path is None:
+        log_path = Path(label_file).parent / TEST_EVALUATIONS_LOG
+    test_nights = sorted(load_test_nights(test_nights_path))
+    if not test_nights:
+        raise ValueError(f"Conjunto de teste vazio: nenhuma noite em {test_nights_path}.")
+
+    raw_te, y_te, df_te = load_raw_dataset(data_folder, label_file, split='test',
+                                           test_nights_path=test_nights_path)
+    groups_te = extract_night_groups(df_te) if len(df_te) else np.array([], dtype=str)
+    missing = [n for n in test_nights if n not in set(groups_te)]
+    if missing:
+        raise ValueError(f"Noites de teste sem quadros rotulados (não nublados): {missing}")
+
+    raw_dev, y_dev, df_dev = load_raw_dataset(data_folder, label_file, split='dev',
+                                              test_nights_path=test_nights_path)
+    if len(np.unique(y_dev)) < 2:
+        raise ValueError("Treino (split='dev') precisa das duas classes.")
+
+    model = make_model()
+    prep = dict(rotation_by_site=getattr(model, 'rotation_by_site', None),
+                target_size=getattr(model, 'target_size', (64, 64)),
+                **getattr(model, 'preprocess_params', V5_PREPROCESS))
+    X_dev = preprocess_batch(raw_dev, sites=df_dev['site'].astype(str).values, **prep)
+    X_te = preprocess_batch(raw_te, sites=df_te['site'].astype(str).values, **prep)
+    model.fit(X_dev, y_dev)
+    proba = model.predict_proba(X_te)[:, 1]
+    pred = (proba >= 0.5).astype(int)
+
+    per_night = pd.DataFrame([{'night': g, 'n': int((groups_te == g).sum()),
+                               'n_epb': int(y_te[groups_te == g].sum()),
+                               'accuracy': float(np.mean(pred[groups_te == g] == y_te[groups_te == g])),
+                               'mean_proba': float(np.mean(proba[groups_te == g]))}
+                              for g in test_nights])
+    summary = _binary_metrics(y_te, pred, proba)
+    summary['balanced_accuracy'] = _balanced_accuracy(y_te, pred)
+    summary['macro_night_accuracy'] = float(per_night['accuracy'].mean())
+    summary['worst_night_accuracy'] = float(per_night['accuracy'].min())
+    summary['n_test_frames'] = int(len(y_te))
+    summary['n_dev_frames'] = int(len(y_dev))
+    summary['n_dev_nights'] = int(len(set(extract_night_groups(df_dev))))
+
+    entry = _json_safe({
+        'timestamp': datetime.now(timezone.utc).isoformat(timespec='seconds'),
+        'git_commit': _git_commit(),
+        'test_nights': test_nights,
+        'note': note,
+        'metrics': summary,
+        'per_night': per_night.to_dict(orient='records'),
+    })
+    log_path = Path(log_path)
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(log_path, 'a', encoding='utf-8') as fh:
+        fh.write(json.dumps(entry, ensure_ascii=False) + '\n')
+    logger.info(f"Avaliação do teste travado registrada em {log_path}.")
+    return {'summary': summary, 'per_night': per_night, 'test_nights': test_nights,
+            'log_entry': entry}
 
 
 # ============================================================================

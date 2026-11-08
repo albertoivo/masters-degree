@@ -1,0 +1,491 @@
+{
+  "pbtResults": {
+    "2.2 Write property test for the split partition": {
+      "status": "passed",
+      "lastRunTimestamp": 1794162528693
+    },
+    "5.3 Write property test for kappa": {
+      "status": "passed",
+      "lastRunTimestamp": 1794162539415
+    },
+    "7.2 Write property test for the queue": {
+      "status": "passed",
+      "lastRunTimestamp": 1794162740505
+    },
+    "7.4 Write property test for merge preserving existing rows": {
+      "status": "passed",
+      "lastRunTimestamp": 1794162857818
+    },
+    "7.5 Write property test for invalid input": {
+      "status": "passed",
+      "lastRunTimestamp": 1794162870953
+    }
+  },
+  "executionHistory": {
+    "1. Test infrastructure": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162040101
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162048727
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162238116
+      }
+    ],
+    "2.1 Implement `load_test_nights` and the `split` parameter of `load_raw_dataset`": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162040155
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162246618
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162471980
+      }
+    ],
+    "2.2 Write property test for the split partition": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162040206
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162480166
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162674856
+      }
+    ],
+    "2.3 Implement `evaluate_locked_test`": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162040244
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162480899
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162675617
+      }
+    ],
+    "2.4 Write unit tests for `load_test_nights` and `evaluate_locked_test`": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162040289
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162773886
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794163106744
+      }
+    ],
+    "2.5 Create `data/test_nights.txt`": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162040337
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162049663
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162238305
+      }
+    ],
+    "3. Checkpoint - Ensure all tests pass, ask the user if questions arise.": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162040386
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794163193325
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794163264707
+      }
+    ],
+    "4.1 Add `--offline` and `--clean-only` to `util/embrace.sh`": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162040437
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162050709
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162239418
+      }
+    ],
+    "4.2 Create `util/regen_clean.sh`": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162040489
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162247524
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162472038
+      }
+    ],
+    "4.3 Create `util/check_clean.py`": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162040536
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162248745
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162473096
+      }
+    ],
+    "4.4 Write offline test for `embrace.sh` flags": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162040624
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162482126
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162676908
+      }
+    ],
+    "4.5 Run `regen_clean.sh` and `check_clean.py` on the real `util/` folders": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162040669
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162774423
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794163144477
+      }
+    ],
+    "5.1 Write `data/LABELING_PROTOCOL.md`": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162040709
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162051581
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162240265
+      }
+    ],
+    "5.2 Implement `util/label_agreement.py`": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162040753
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162249468
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162473897
+      }
+    ],
+    "5.3 Write property test for kappa": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162040799
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162482863
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162677617
+      }
+    ],
+    "5.4 Write unit tests for `label_agreement.py`": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162040842
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162689791
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162765903
+      }
+    ],
+    "6. Checkpoint - Ensure all tests pass, ask the user if questions arise.": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162040889
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794163268934
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794163321946
+      }
+    ],
+    "7.1 Implement `util/label_queue.py`": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162040949
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162250187
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162474549
+      }
+    ],
+    "7.2 Write property test for the queue": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162041001
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162690432
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162766667
+      }
+    ],
+    "7.3 Implement `util/merge_labels.py`": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162041041
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162483665
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162678325
+      }
+    ],
+    "7.4 Write property test for merge preserving existing rows": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162041087
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162775406
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794163106880
+      }
+    ],
+    "7.5 Write property test for invalid input": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162041137
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162776460
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794163107215
+      }
+    ],
+    "7.6 Make `util/moon_illumination.py` fail on unknown stations": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162041181
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162052431
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162241189
+      }
+    ],
+    "7.7 Write unit tests for queue, merge and moon script": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162041237
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162777061
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794163107793
+      }
+    ],
+    "7.8 Generate the real labeling queue": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162041290
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794163145311
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794163189021
+      }
+    ],
+    "8. Final checkpoint": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162041343
+      },
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794163327165
+      }
+    ],
+    "5. Labeling protocol and agreement check": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794162765952
+      }
+    ],
+    "2. Locked test split": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794163106813
+      }
+    ],
+    "4. Clean images for existing nights": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794163144545
+      }
+    ],
+    "7. Labeling queue and merge": [
+      {
+        "executionId": "8be963a8-589d-4078-9f12-4593dd0a486e",
+        "chatSessionId": "sess_0d7ec8d5-92d1-4084-b27d-a59fd99c43cd",
+        "timestamp": 1794163189073
+      }
+    ]
+  }
+}
