@@ -1,7 +1,13 @@
 """
 EPB Detection System — V5
 
-Mudanças em relação ao V4 (módulo epb_detection_system_v2), por ordem de prioridade:
+Sistema de detecção de EPB (produto atual). Reaproveita o núcleo compartilhado
+(epb_core_v5: TwoDPCA, QC do Estágio 1, EPBRecognitionSystem, métricas) e acrescenta o
+pré-processamento com sinal, a orientação por estação, o classificador linear e a
+avaliação por noite.
+
+Mudanças em relação ao V4 (sistema de stacking do núcleo, EPBRecognitionSystem), por ordem
+de prioridade:
 
   1. Detrend com sinal: perturbação relativa δI/I = I / fundo − 1, sem cortar valores negativos.
      No V4, `img - fundo` seguido de `clip(·, 0)` zerava as depleções (as próprias bolhas).
@@ -18,7 +24,7 @@ Mudanças em relação ao V4 (módulo epb_detection_system_v2), por ordem de pri
 Avaliação: a unidade independente é a NOITE. Hiperparâmetros são escolhidos com
 leave-one-night-out aninhado (nested_logo_evaluate), para que a estimativa não seja otimista.
 
-Este módulo reaproveita o V2 (TwoDPCA, QC do Estágio 1, benchmark_cv) e não o altera.
+Este módulo reaproveita o núcleo compartilhado (epb_core_v5) e não o altera.
 """
 
 import json
@@ -40,7 +46,7 @@ from sklearn.model_selection import LeaveOneGroupOut, ParameterGrid
 from sklearn.svm import SVC
 from imblearn.pipeline import Pipeline as ImbPipeline
 
-from epb_detection_system_v2 import (
+from epb_core_v5 import (
     EPBRecognitionSystem, CascadedPredictionResult, assess_sky_quality,
     _binary_metrics, extract_night_groups,
 )
@@ -699,6 +705,99 @@ def evaluate_sequences_out_of_night(X: np.ndarray, y: np.ndarray, groups: np.nda
                      'cascaded_epb_pct': round(100 * casc_epb / n, 1),
                      'cascaded_clear_sky_epb_pct': round(100 * casc_reliable_epb / n, 1)})
     return pd.DataFrame(rows)
+
+
+# ============================================================================
+# SENSIBILIDADE AO LIMIAR DE DECISÃO
+# ============================================================================
+
+def threshold_sweep(y: np.ndarray, y_proba: np.ndarray,
+                    thresholds: Optional[np.ndarray] = None) -> pd.DataFrame:
+    """
+    Varre limiares de decisão sobre as probabilidades OUT-OF-NIGHT e devolve, para cada limiar,
+    as métricas binárias agregadas (pooled) nos quadros COM predição.
+
+    A unidade de avaliação continua a ser a noite: use as probabilidades out-of-night de
+    logo_predict / nested_logo_evaluate (cada noite prevista por um modelo que não a viu).
+    Quadros sem predição (y_proba = NaN, divisão de treino monoclasse) são ignorados.
+
+    Esta análise é descritiva: ela mostra o compromisso sensibilidade/especificidade ao longo
+    do limiar. NÃO escolhe um limiar para o conjunto de teste travado — o limiar operacional é
+    fixado no desenvolvimento (ver data/LOCKED_TEST_POLICY.md, regra 4).
+
+    Args:
+        y: rótulos verdadeiros (0/1), alinhados com y_proba
+        y_proba: probabilidade de EPB por quadro (NaN onde não há predição)
+        thresholds: limiares a testar; padrão = 0.05, 0.10, …, 0.95
+
+    Returns:
+        DataFrame com uma linha por limiar: threshold, n, sensitivity, specificity,
+        balanced_accuracy, precision, f1, accuracy, youden_j (= sens + spec − 1).
+    """
+    if thresholds is None:
+        thresholds = np.round(np.arange(0.05, 0.96, 0.05), 2)
+    ok = ~np.isnan(y_proba)
+    yt, pr = y[ok], y_proba[ok]
+    rows = []
+    for t in thresholds:
+        pred = (pr >= t).astype(int)
+        m = _binary_metrics(yt, pred, pr)
+        sens, spec = m['sensitivity'], m['specificity']
+        bal = np.nanmean([sens, spec])
+        youden = (sens + spec - 1) if not (np.isnan(sens) or np.isnan(spec)) else np.nan
+        rows.append({'threshold': float(t), 'n': int(ok.sum()),
+                     'sensitivity': sens, 'specificity': spec,
+                     'balanced_accuracy': bal, 'precision': m['precision'],
+                     'f1': m['f1'], 'accuracy': m['accuracy'], 'youden_j': youden})
+    return pd.DataFrame(rows)
+
+
+def best_threshold(sweep: pd.DataFrame, criterion: str = 'balanced_accuracy') -> dict:
+    """
+    Melhor limiar de uma varredura de threshold_sweep segundo um critério.
+
+    criterion: 'balanced_accuracy' (padrão) ou 'youden_j' ou 'f1'. Em caso de empate, escolhe
+    o limiar mais próximo de 0.5 (operação mais neutra). Devolve a linha vencedora como dict.
+    """
+    if criterion not in sweep.columns:
+        raise ValueError(f"critério inválido: {criterion!r}")
+    s = sweep.dropna(subset=[criterion]).copy()
+    if s.empty:
+        raise ValueError("varredura sem valores válidos para o critério.")
+    best = s[criterion].max()
+    cand = s[s[criterion] >= best - 1e-12].copy()
+    cand['dist_meio'] = (cand['threshold'] - 0.5).abs()
+    return cand.sort_values(['dist_meio', 'threshold']).iloc[0].drop('dist_meio').to_dict()
+
+
+def plot_threshold_sensitivity(sweep: pd.DataFrame, criterion: str = 'balanced_accuracy',
+                               save_path: Optional[str] = None, dpi: int = 200) -> plt.Figure:
+    """
+    Curvas de sensibilidade, especificidade e acurácia balanceada vs. limiar, com o limiar
+    operacional padrão (0.5) e o melhor limiar pelo critério marcados.
+    """
+    bt = best_threshold(sweep, criterion)
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.plot(sweep['threshold'], sweep['sensitivity'], 'o-', color='#d62728', label='Sensibilidade')
+    ax.plot(sweep['threshold'], sweep['specificity'], 's-', color='#1f77b4', label='Especificidade')
+    ax.plot(sweep['threshold'], sweep['balanced_accuracy'], '^-', color='#2ca02c',
+            label='Acurácia balanceada')
+    ax.axvline(0.5, color='#888888', ls='--', lw=1.4, label='Limiar padrão (0.5)')
+    ax.axvline(bt['threshold'], color='#9467bd', ls=':', lw=1.8,
+               label=f"Melhor {criterion} (t={bt['threshold']:.2f})")
+    ax.set_xlabel('Limiar de decisão')
+    ax.set_ylabel('Métrica (out-of-night, pooled)')
+    ax.set_ylim(-0.02, 1.02)
+    ax.set_title('Sensibilidade ao limiar de decisão (leave-one-night-out)',
+                 fontsize=11, fontweight='bold')
+    ax.legend(loc='lower center', fontsize=8.5, ncol=2)
+    ax.grid(alpha=0.3)
+    plt.tight_layout()
+    if save_path:
+        Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(save_path, dpi=dpi, bbox_inches='tight')
+        print(f"💾 Figura gravada: {save_path}")
+    return fig
 
 
 # ============================================================================
