@@ -1119,7 +1119,7 @@
           </div>
           <div class="card r d3">
             <h3>☁️ Ruído ambiental e fatores de confusão</h3>
-            <p>Lua, nuvens, vinheteamento óptico e variações de brilho entre noites confundem depleções tênues.</p>
+            <p>Nuvens, poluição luminosa urbana, gradientes radiais de iluminação e variações naturais do <em>airglow</em> confundem depleções tênues.</p>
           </div>
           <div class="card r d4">
             <h3>🧠 Por que não uma rede profunda "crua"?</h3>
@@ -1450,7 +1450,7 @@
                 </tbody>
               </table>
               <p style="padding:.6rem .9rem;font-size:.8rem;color:var(--mute)">*Avaliado no corte padrão; reflete que
-                sem BJL no treino só resta 1 noite calma de céu limpo (com 80% de lua).</p>
+                sem BJL no treino só resta 1 noite calma de céu limpo (de outra estação e outra época: CA, outono).</p>
             </div>
             <div class="card" style="display:flex;flex-direction:column;justify-content:center;gap:1rem">
               <h3>🔍 Relatório (In-Sample) vs. Teste Cego (Out-of-Night)</h3>
@@ -1458,9 +1458,9 @@
                 3 vias (<em>EPB</em>, <em>Sem EPB</em>, <em>Indeterminado</em> + alerta <em>conferir</em>) com o modelo
                 final ajustado sobre o conjunto completo.</p>
               <p style="font-size:.95rem">Já no teste cego <em>out-of-night</em> (tabela ao lado), quando retiramos a
-                noite calma de BJL (lua 4%) do treino, o modelo aprende apenas com a outra noite calma (CA, lua 80%) e
-                dispara falso positivo em BJL — provando visualmente por que <b>precisamos de mais noites calmas sem
-                  lua</b>.</p>
+                noite calma de BJL do treino, o modelo aprende calma apenas a partir de CA (outra estação, outra época do ano) e
+                dispara falso positivo em BJL — provando visualmente por que <b>precisamos de mais noites calmas em diferentes
+                  sítios e épocas do ano</b>.</p>
             </div>
           </div>
         </div>
@@ -1500,14 +1500,14 @@
       <div class="grid g2" style="align-items:stretch">
         <div class="stack r d2" style="justify-content:space-between">
           <div tabindex="0" role="region" aria-labelledby="nights-caption" class="table-wrapper">
-            <table style="--label-2:'Classe';--label-3:'Quadros';--label-4:'Lua';--label-5:'Observação'">
+            <table style="--label-2:'Classe';--label-3:'Quadros';--label-4:'Sazonalidade';--label-5:'Observação'">
               <caption id="nights-caption">🗓️ As 7 noites rotuladas atuais (4 com EPB · 3 sem EPB)</caption>
               <thead>
                 <tr>
                   <th scope="col">Noite (Estação/Data)</th>
                   <th scope="col">Classe</th>
                   <th scope="col">Quadros</th>
-                  <th scope="col">Lua média</th>
+                  <th scope="col">Sazonalidade</th>
                   <th scope="col">Observação</th>
                 </tr>
               </thead>
@@ -1516,50 +1516,50 @@
                   <th scope="row">CA 2025-10-22</th>
                   <td><span class="pill epb">EPB</span></td>
                   <td>85</td>
-                  <td>2%</td>
-                  <td>Primavera/Verão (época de EPB)</td>
+                  <td>Primavera</td>
+                  <td>Temporada de EPB</td>
                 </tr>
                 <tr>
                   <th scope="row">CA 2025-10-27</th>
                   <td><span class="pill epb">EPB</span></td>
                   <td>42</td>
-                  <td>34%</td>
+                  <td>Primavera</td>
                   <td>19,0% bloqueado pelo QC</td>
                 </tr>
                 <tr>
                   <th scope="row">CA 2025-12-18</th>
                   <td><span class="pill epb">EPB</span></td>
                   <td>86</td>
-                  <td>1%</td>
+                  <td>Verão</td>
                   <td>12,8% bloqueado pelo QC</td>
                 </tr>
                 <tr>
                   <th scope="row">CP 2024-02-09</th>
                   <td><span class="pill epb">EPB</span></td>
                   <td>42</td>
-                  <td>0%</td>
+                  <td>Verão</td>
                   <td>Única noite de CP (só EPB)</td>
                 </tr>
                 <tr>
                   <th scope="row">BJL 2025-07-22</th>
                   <td><span class="pill quiet">Sem EPB</span></td>
                   <td>220</td>
-                  <td>4%</td>
-                  <td>Inverno · única noite de BJL</td>
+                  <td>Inverno</td>
+                  <td>Única noite de BJL (só calma)</td>
                 </tr>
                 <tr>
                   <th scope="row">CA 2025-04-07</th>
                   <td><span class="pill quiet">Sem EPB</span></td>
                   <td>35</td>
-                  <td>80%</td>
-                  <td>Outono · luar intenso</td>
+                  <td>Outono</td>
+                  <td>Transição · céu limpo</td>
                 </tr>
                 <tr>
                   <th scope="row">CA 2026-06-24</th>
                   <td><span class="pill cloudy">Nublada</span></td>
                   <td>62</td>
-                  <td>81%</td>
-                  <td>Inverno · usada só no Estágio 1</td>
+                  <td>Inverno</td>
+                  <td>Usada só no Estágio 1 (QC)</td>
                 </tr>
               </tbody>
             </table>
@@ -1580,24 +1580,24 @@
             <div class="bento-ic">🌗</div>
             <div class="bento-body">
               <b style="font-size:.98rem">1. Noites mistas (formação ou dissipação no meio da noite)</b>
-              <p style="font-size:.86rem">As mais valiosas (hoje = 0): as duas classes ocorrem com o mesmo céu, mesma
-                lua e mesmo sensor — impossível acertar só "reconhecendo a noite".</p>
+              <p style="font-size:.86rem">As mais valiosas (hoje = 0): as duas classes ocorrem com a mesma atmosfera de fundo,
+                mesma época e mesmo sensor — impossível acertar só "reconhecendo a noite".</p>
             </div>
           </div>
           <div class="bento-item" style="padding:.7rem 1rem">
             <div class="bento-ic">🌌</div>
             <div class="bento-body">
-              <b style="font-size:.98rem">2. Noites calmas sem lua na época de EPB (out–mar, em CA)</b>
-              <p style="font-size:.86rem">Desacoplam estação do ano e brilho noturno, testando exatamente onde o modelo
+              <b style="font-size:.98rem">2. Noites calmas no pico da temporada de EPB (out–mar, em CA)</b>
+              <p style="font-size:.86rem">Desacoplam época do ano e densidade sazonal de fundo, testando exatamente onde o modelo
                 mais erra hoje.</p>
             </div>
           </div>
           <div class="bento-item" style="padding:.7rem 1rem">
-            <div class="bento-ic">🌕</div>
+            <div class="bento-ic">⚡</div>
             <div class="bento-body">
-              <b style="font-size:.98rem">3. Noites com EPB sob lua forte (≥ 50%)</b>
-              <p style="font-size:.86rem">Hoje não há nenhuma noite de EPB com lua alta (máx. 34%), enquanto duas noites
-                sem EPB têm 80–81%.</p>
+              <b style="font-size:.98rem">3. Noites com EPB fora de época (outono/inverno) ou com perturbação</b>
+              <p style="font-size:.86rem">Hoje todas as EPBs estão em verão/primavera. Amostras fora de época quebram a
+                correlação espúria com a emissão sazonal da ionosfera.</p>
             </div>
           </div>
           <div class="bento-item" style="padding:.7rem 1rem">
@@ -1605,7 +1605,7 @@
             <div class="bento-body">
               <b style="font-size:.98rem">4. As duas classes em cada estação (CP, BJL, CA, STR)</b>
               <p style="font-size:.86rem">Hoje CP só tem EPB e BJL só tem noite calma; adicionar 1–2 noites da classe
-                faltante em cada uma.</p>
+                faltante em cada sítio (desacopla iluminação urbana local e resposta óptica de cada observatório).</p>
             </div>
           </div>
         </div>
@@ -1689,8 +1689,8 @@
           <div class="node frag">
             <div class="step-head"><span class="ic">🗂️</span><span class="step-num">PASSO 1</span></div>
             <b>30 a 40 noites + Teste Travado</b>
-            <small>Rotular noites mistas, calmas de verão e EPB com lua forte em CA/CP/BJL/STR para povoar o conjunto de
-              teste final independente.</small>
+            <small>Rotular noites mistas, calmas no verão e ambas as classes em CA/CP/BJL/STR para quebrar acoplamentos sazonais
+              e de estação no conjunto de teste independente.</small>
           </div>
           <div class="arrow"></div>
           <div class="node frag">
