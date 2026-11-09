@@ -1100,7 +1100,7 @@
             <span id="skytime">00:03 UT</span>
             <button id="skyraw" title="Alternar cor falsa 630 nm / original">cor</button>
           </div>
-          <p style="text-align:center;font-size:.78rem;color:var(--mute);margin-top:.5vh">Cachoeira Paulista (CA) · OI
+          <p style="text-align:center;font-size:.78rem;color:var(--mute);margin-top:.5vh">Cariri (CA) · OI
             630 nm · 30/01/2025 · 28 quadros (cor falsa)</p>
         </div>
       </div>
@@ -1232,7 +1232,7 @@
         </div>
         <div class="metric">
           <div class="v blue"><span data-count="0.791" data-dec="3">0</span></div>
-          <div class="l">AUC-ROC (<b>0,950</b> sem achatamento radial)</div>
+          <div class="l">AUC-ROC (PR AUC = 0,843)</div>
         </div>
       </div>
       <div class="tabs r d2" data-tabs="t6" style="margin-bottom:1vh">
@@ -1295,9 +1295,9 @@
                     <td><b class="green">0,950</b></td>
                   </tr>
                   <tr>
-                    <th scope="row">+ Achatamento radial (em t = 0,80)</th>
-                    <td><b>77,3%</b></td>
-                    <td><b>89,0%</b></td>
+                    <th scope="row">+ Achatamento radial (= config atual do V5)</th>
+                    <td>51,2%</td>
+                    <td>8,2%</td>
                     <td>0,791</td>
                   </tr>
                   <tr>
@@ -1308,8 +1308,10 @@
                   </tr>
                 </tbody>
               </table>
-              <p style="padding:.55rem .9rem;font-size:.78rem;color:var(--mute)">A remoção de estrelas + fundo no domo
-                (sem achatamento radial) eleva a AUC para <b>0,950</b> e a acurácia balanceada para <b>78,6%</b>.</p>
+              <p style="padding:.55rem .9rem;font-size:.78rem;color:var(--mute)">Ablação no limiar padrão (t = 0,5). A
+                config atual do V5 mantém o achatamento radial; seu desempenho forte (especif. 89,0%) vem da calibração
+                do limiar em 0,80. A ablação sugere que <b>desligar o radial</b> já elevaria a AUC para <b>0,950</b> —
+                a confirmar com mais noites.</p>
             </div>
             <div class="card" style="display:flex;flex-direction:column;justify-content:center;gap:1rem">
               <h3 style="color:#ffb36b">⚠️ Achado central: fator de confusão de brilho</h3>
@@ -1367,14 +1369,14 @@
             <p style="font-size:.88rem;color:var(--mute);margin-bottom:.35rem">Inclinação das faixas medida via tensor
               de estrutura (tolerância ±25°):</p>
             <div class="qbar-row">
-              <div class="qbar-head"><span>Cachoeira Paulista (CA · 213 quadros EPB)</span><b class="green">5,4° ±
+              <div class="qbar-head"><span>Cariri (CA · 213 quadros EPB)</span><b class="green">5,4° ±
                   20,9°</b></div>
               <div class="qbar-track">
                 <div class="qbar-fill" style="width:62%;background:linear-gradient(90deg,var(--green),#6aa8ff)"></div>
               </div>
             </div>
             <div class="qbar-row">
-              <div class="qbar-head"><span>Cachoeira / CP (42 quadros EPB)</span><b class="green">0,5° ± 6,1°</b></div>
+              <div class="qbar-head"><span>Cachoeira Paulista (CP · 42 quadros EPB)</span><b class="green">0,5° ± 6,1°</b></div>
               <div class="qbar-track">
                 <div class="qbar-fill" style="width:56%;background:linear-gradient(90deg,var(--green),#6aa8ff)"></div>
               </div>
