@@ -54,12 +54,17 @@ from epb_core_v5 import (
 logger = logging.getLogger(__name__)
 
 # Parâmetros do pré-processamento V5 (σ do fundo = mesma fração da imagem do V4: 10 px em 64 px).
+# Nota sobre as imagens do EMBRACE: não existe lua nas fotos do EMBRACE. O equipamento é
+# configurado para não operar / mirar em outro lugar do céu e a lua não aparece no domo;
+# gradientes assimétricos de borda devem-se no máximo à poluição luminosa da cidade.
 V5_PREPROCESS = dict(
     detrend='ratio',            # item 1
     remove_stars=True,          # item 2
     star_size=7,                # px na resolução original (512)
-    masked_background=True,     # item 2
-    radial_flatten=True,        # item 2: remove o gradiente radial (horizonte + vinheteamento)
+    masked_background=True,     # item 2: convolução gaussiana normalizada no domo já remove
+                                # van Rhijn, vinheteamento e poluição luminosa suave de borda
+    radial_flatten=False,       # item 2b testado e descartado: redundante com masked_background e
+                                # nocivo na ablação por noite (bal. acc 0,512 vs. 0,786 sem ele)
     order='downsample_first',   # reduz para 64 px antes de processar (item 3 testado e descartado:
                                 # 'fullres' teve acurácia balanceada por noite 0,70 vs. 0,75)
     contrast='zscore',          # item 3
@@ -139,7 +144,7 @@ def preprocess_epb_image_v5(img: np.ndarray,
                             remove_stars: bool = True,
                             star_size: int = 7,
                             masked_background: bool = True,
-                            radial_flatten: bool = True,
+                            radial_flatten: bool = False,
                             order: str = 'fullres',
                             contrast: str = 'zscore',
                             bg_sigma_frac: float = 10 / 64,
@@ -981,10 +986,8 @@ def plot_linear_attribution(system: EPBRecognitionSystemV5, X_sample: np.ndarray
 PREPROCESS_LADDER = [
     ('V4 equivalent (subtract + clip + CLAHE)', dict(V4_EQUIVALENT)),
     ('+1 signed δI/I (no clip)', dict(V4_EQUIVALENT, detrend='ratio', contrast='zscore', zclip=4.0)),
-    ('+2 star removal + background inside dome',
-     dict(V4_EQUIVALENT, detrend='ratio', contrast='zscore', zclip=4.0,
-          remove_stars=True, masked_background=True)),
-    ('+2 radial flattening (= V5 default)', dict(V5_PREPROCESS)),
+    ('+2 star removal + background inside dome (= V5 default)', dict(V5_PREPROCESS)),
+    ('alt. 2b: + radial flattening', dict(V5_PREPROCESS, radial_flatten=True)),
     ('alt. 3: full-res processing, downsample last', dict(V5_PREPROCESS, order='fullres')),
 ]
 

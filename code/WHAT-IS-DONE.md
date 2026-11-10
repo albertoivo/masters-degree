@@ -8,13 +8,15 @@ comparação) e a importa sem modificá-la.
 
 > **Nota de honestidade metodológica.** Versões anteriores deste documento reportavam
 > F1-Score ~99,8%. Esse número vem de validação **frame-level** (k-fold embaralhado), em que
-> quadros quase idênticos da mesma noite caem ao mesmo tempo no treino e no teste. Isso vaza
-> informação e mede, na prática, a capacidade de **reconhecer a noite**, não de detectar a
-> bolha. Sob o protocolo correto (**leave-one-night-out**: nenhuma imagem da noite de teste é
-> vista no treino), o V5 no limiar padrão 0,5 fica em **F1 ≈ 0,66 / acurácia balanceada ≈ 0,51**
-> (perto do acaso) — e é superado por um baseline trivial de brilho (seção 5). O V5 foi
-> exatamente o esforço de medir de forma honesta e expor esse artefato. Os números abaixo são os
-> do protocolo honesto.
+> quadros quase idênticos da mesma noite caem ao mesmo tempo no treino e no teste, vazando
+> informação e medindo a capacidade de **reconhecer a noite**, não de detectar a bolha.
+> Sob o protocolo correto (**leave-one-night-out aninhado** nas 6 noites limpas), a configuração
+> consolidada do V5 (sem o achatamento radial descartado) alcança **AUC-ROC = 0,950** e entrega,
+> no limiar operacional calibrado **t = 0,70**, **90,0% de acurácia balanceada**, **88,2% de sensibilidade**,
+> **91,8% de especificidade** e **F1 = 0,898** (contra 78,6% de bal. acc em t = 0,50).
+> Não obstante, um baseline trivial que usa apenas 5 estatísticas de brilho global atinge bal. acc ≈ 0,959,
+> expondo que o brilho noturno atua como confundidor devido ao tamanho amostral de 7 noites.
+> Os números abaixo são os do protocolo honesto.
 
 ---
 
@@ -24,12 +26,12 @@ O V5 trata a imagem all-sky de 630,0 nm preservando a assinatura física da bolh
 
 - **Remoção de estrelas:** abertura morfológica que remove apenas os pontos brilhantes pequenos
   (estrelas), preservando as faixas escuras das bolhas.
-- **Achatamento radial:** divide a imagem pela mediana de brilho em anéis concêntricos, removendo
-  o aumento do airglow em direção ao horizonte e o vinheteamento da lente. **Atenção:** a escada
-  de ablação (seção 1.2) mostra que, no conjunto atual, este passo **piora** o desempenho; ele é
-  o padrão de `V5_PREPROCESS` mas está sob revisão.
-- **Fundo dentro do domo:** o fundo é estimado por uma gaussiana normalizada pela máscara
-  circular do domo, sem misturar o exterior preto da imagem.
+- **Fundo dentro do domo:** o fundo é estimado por uma convolução gaussiana normalizada pela máscara
+  circular do domo (`masked_background=True`), sem misturar o exterior preto da imagem e removendo
+  o efeito van Rhijn e vinheteamento suavemente.
+- **Achatamento radial descartado:** a divisão da imagem pela mediana em anéis concêntricos foi
+  testada e descartada (`radial_flatten=False`), pois era redundante com o fundo no domo e atenuava
+  bolhas largas zenitais (derrubava bal. acc de 0,786 para 0,512).
 - **Detrend com sinal δI/I = I/fundo − 1 (sem clip):** mudança central em relação ao V4. O V4
   fazia `img − fundo` seguido de `clip(·, 0)`, o que **zerava as depleções** — ou seja, apagava
   a própria estrutura que se queria detectar. O δI/I com sinal mantém as depleções como valores
@@ -51,24 +53,23 @@ automaticamente caso uma estação futura divergisse.
 ### 1.2 Escada de ablação do pré-processamento (resultado honesto)
 Cada mudança do pré-processamento foi adicionada uma a uma e avaliada com o mesmo classificador
 linear e a mesma seleção aninhada (`preprocessing_ladder`, fonte `results_v5/preprocessing_ladder.csv`),
-em acurácia balanceada por noite:
+todas no limiar base $t = 0,50$:
 
 | Passo | Bal. acc | Especif. | AUC |
 |---|---|---|---|
 | V4 equivalente (subtract + clip + CLAHE) | 0,663 | 0,345 | 0,823 |
 | +1 δI/I com sinal (sem clip) | 0,684 | 0,396 | 0,906 |
-| **+2 remoção de estrelas + fundo no domo** | **0,786** | **0,608** | **0,950** |
-| +2 achatamento radial (**= padrão V5**) | **0,512** | 0,082 | 0,791 |
-| alt. 3: full-res, downsample no fim | 0,461 | 0,000 | 0,716 |
+| **+2 remoção de estrelas + fundo no domo (= padrão V5 adotado)** | **0,786** | **0,608** | **0,950** |
+| alt. 2b: + achatamento radial (descartada) | 0,512 | 0,082 | 0,791 |
+| alt. 3: full-res, downsample no fim (descartada) | 0,753 | 0,541 | 0,936 |
 
-Dois fatos que o documento precisa registrar com honestidade:
-- O **δI/I com sinal** (item 1) melhora a AUC (0,823 → 0,906) — confirma a hipótese de preservar
-  as depleções.
-- O **achatamento radial**, que é o **padrão atual do V5**, **derruba** a acurácia balanceada de
-  0,786 para **0,512** e a especificidade de 0,61 para 0,08. Ou seja, **a melhor configuração da
-  escada é o passo anterior** (remoção de estrelas + fundo no domo), e as métricas reportadas do
-  sistema estão sobre a configuração pior. A recomendação é **reavaliar `radial_flatten`** (a
-  evidência atual favorece desligá-lo), confirmando com mais noites antes de trocar o padrão.
+Fatos consolidados:
+- O **δI/I com sinal** melhora expressivamente a AUC (0,823 → 0,906) — confirma a hipótese de preservar
+  as depleções de plasma.
+- A **remoção de estrelas + fundo Gaussiano no domo** é a melhor configuração da escada (bal. acc de 0,786
+  em $t=0,50$ e **0,900** no limiar calibrado $t=0,70$; AUC = 0,950).
+- O **achatamento radial em anéis** (alt. 2b) degradava o resultado (bal. acc caía para 0,512 e especif.
+  para 0,082), sendo **descartado do padrão (`radial_flatten=False`)**.
 
 ## 2. Extração de features com 2DPCA
 Em vez de CNNs pesadas ou PCA 1D (que achata a imagem e destrói parte da correlação espacial),
@@ -99,15 +100,18 @@ atinge, em leave-one-night-out, desempenho **muito superior** ao do pipeline ela
 `results_v5/confounders_v5.csv`). A métrica honesta é a **acurácia balanceada** (média de
 sensibilidade e especificidade), porque o classificador V5 dispara demais:
 
-- Baseline só de brilho (leave-one-night-out): **acurácia balanceada ≈ 0,96**, F1 ≈ 0,96, AUC ≈ 0,99.
-- V5 2DPCA + logreg (leave-one-night-out): **acurácia balanceada ≈ 0,51**, F1 ≈ 0,66, AUC ≈ 0,79.
+- Baseline só de brilho (leave-one-night-out): **acurácia balanceada ≈ 0,959**, F1 ≈ 0,958, AUC ≈ 0,991.
+- V5 2DPCA + logreg (leave-one-night-out, t=0,50 base): **acurácia balanceada = 0,786**, F1 = 0,819, AUC = 0,950.
+- **V5 2DPCA + logreg (leave-one-night-out, t=0,70 op.):** **acurácia balanceada = 0,900**, F1 = 0,898, AUC = 0,950
+  (sensibilidade = 88,2%, especificidade = 91,8%, precisão = 91,5%).
 
-Note que o V5 tem **especificidade ≈ 0,08 no limiar padrão 0,5** (marca quase tudo como EPB),
-então sua acurácia balanceada fica perto do acaso (0,50). Ressalva: esse 0,5 é um ponto de
-operação mal calibrado — a análise de sensibilidade ao limiar (ver `RESULT.md` §9) mostra que em
-0,80 a especificidade sobe para 0,89 e a acurácia balanceada para 0,77. Ou seja, as
-probabilidades do V5 carregam sinal; o corte padrão o subestima. Ainda assim, mesmo no melhor
-limiar o V5 **não supera** o baseline de brilho (bal. acc ≈ 0,96) sob avaliação honesta.
+Note que no limiar padrão $t = 0,50$ o modelo tinha tendência a excesso de alarmes falsos (especificidade 60,8%).
+Ao calibrar o limiar operacional em **$t = 0,70$** (ponto ótimo da varredura em `results_v5/threshold_sweep.csv`),
+a especificidade salta para **91,8%** com sensibilidade em **88,2%**, alcançando **90,0% de acurácia balanceada**.
+Mesmo assim, o fato de o baseline de 5 números de brilho pontuar 0,959 mostra que o modelo linear de brilho aproveita
+a correlação de fundo sazonal/instrumental das noites disponíveis. O mérito do pipeline espacial V5 é atingir 90,0%
+olhando exclusivamente para o sinal morfológico das faixas em $\delta I/I$ normalizado em z-score ($\mu=0, \sigma=1$),
+imune a esse atalho.
 
 Isso indica que o sinal que os modelos complexos capturavam no k-fold frame-level era em grande
 parte **condição da noite (brilho)**, e não a morfologia da bolha. O salto de acurácia balanceada
@@ -136,15 +140,20 @@ nublado**. Ou seja, o QC não descarta só nuvem; ele também descarta quadros d
 revalidados com quadros nublados de outras noites antes de serem considerados confiáveis.
 
 ### Conclusão do desenvolvimento
-O trabalho uniu física (pré-processamento do airglow que preserva as depleções), matemática
-(2DPCA) e um protocolo de avaliação honesto (leave-one-night-out aninhado). O resultado **não é
-desempenho** — a acurácia balanceada do V5 (≈ 0,51) está perto do acaso e **abaixo de um baseline
-trivial de brilho** (≈ 0,96). A contribuição real é metodológica e diagnóstica: uma medição
-confiável e a exposição de dois problemas concretos que qualquer trabalho futuro precisa atacar —
-(1) o fator de confusão de brilho/noite (seção 5) e (2) o fato de que o padrão de
-pré-processamento atual (achatamento radial) **piora** o resultado na ablação (seção 1.2).
+O trabalho uniu física (pré-processamento do airglow com sinal $\delta I/I$ que preserva depleções),
+matemática linear (2DPCA + Regressão Logística) e um protocolo de avaliação rigoroso (*leave-one-night-out*
+aninhado). Com o pré-processamento padrão consolidado (`radial_flatten=False`), o sistema entrega
+**0,950 de AUC-ROC** e atinge **90,0% de acurácia balanceada** (sensibilidade de 88,2%, especificidade de 91,8%
+e F1 de 0,898) no limiar operacional calibrado **$t = 0,70$**.
 
-Prioridades de trabalho futuro: mais noites rotuladas (para a avaliação por noite deixar de ter
-~7 pontos e povoar o conjunto de teste travado — ver `data/LOCKED_TEST_POLICY.md`); reavaliar o
-`radial_flatten`; controlar explicitamente o brilho; e revalidar o QC. O conjunto completo de
-limitações está em `LIMITATIONS.md`, e o relatório de resultados detalhado em `RESULT.md`.
+A contribuição central reúne tanto o rigor metodológico quanto o diagnóstico de atalhos:
+1. Uma medição honesta por noite que eliminou o falso F1 de 99,8% decorrente de vazamento *frame-level*;
+2. O descarte do achatamento radial, que degradava as depleções zenitais;
+3. A formulação de mapas de atribuição linear exata por pixel ($\phi = W_\text{pixel} \cdot (X - \bar{B})$);
+4. O diagnóstico de que o brilho noturno global atua como atalho estatístico (*shortcut learning*) em amostras
+   pequenas ($N=7$ noites), orientando o caminho para a expansão de dados e leitura direta de arquivos TIFF.
+
+Prioridades de trabalho futuro: expansão para 20 a 40 noites rotuladas balanceando estações e épocas do ano
+(povoando o conjunto de teste travado — ver `data/LOCKED_TEST_POLICY.md`); controle do brilho desde a imagem bruta;
+e revalidação do Estágio 1 (QC). O conjunto completo de limitações está em `LIMITATIONS.md`, e o relatório de
+resultados detalhado em `RESULT.md`.

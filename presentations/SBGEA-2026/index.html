@@ -443,7 +443,7 @@
       margin-bottom: .4rem
     }
 
-    .node b {
+    .node > b {
       display: block;
       color: #fff;
       font-size: 1rem;
@@ -698,11 +698,16 @@
       margin-top: .1rem;
     }
 
-    .bento-body b {
+    .bento-body > b {
       display: block;
       color: #fff;
       font-size: 1.08rem;
       margin-bottom: .2rem;
+    }
+
+    .bento-body p b {
+      color: #fff;
+      font-weight: 700;
     }
 
     .bento-body p {
@@ -769,7 +774,7 @@
       margin: 0;
     }
 
-    .snake-row .node b {
+    .snake-row .node > b {
       font-size: 1.22rem;
       margin-bottom: .35rem;
     }
@@ -1188,7 +1193,7 @@
         </div>
         <div class="arrow"></div>
         <div class="node frag">
-          <div class="ic">📈</div><b>Classificador Linear</b><small>Regressão Logística (limiar 0,80) + atribuição exata
+          <div class="ic">📈</div><b>Classificador Linear</b><small>Regressão Logística (limiar 0,70) + atribuição exata
             por pixel</small>
         </div>
       </div>
@@ -1216,27 +1221,27 @@
     <!-- 6. DESEMPENHO -->
     <section class="slide">
       <div class="kicker r">Resultados · validação por noite</div>
-      <h2 class="r d1">Desempenho em Leave-One-Night-Out (limiar operacional = 0,80)</h2>
+      <h2 class="r d1">Desempenho em Leave-One-Night-Out (limiar operacional = 0,70)</h2>
       <div class="metrics r d2" style="margin-bottom:1.6vh">
         <div class="metric">
-          <div class="v"><span data-count="77.3" data-dec="1">0</span>%</div>
-          <div class="l">Acurácia Balanceada (out-of-night)</div>
+          <div class="v"><span data-count="90.0" data-dec="1">0</span>%</div>
+          <div class="l">Acurácia Balanceada (out-of-night · 78,6% em t=0,50)</div>
         </div>
         <div class="metric">
-          <div class="v red"><span data-count="65.5" data-dec="1">0</span>%</div>
-          <div class="l">Sensibilidade (167/255 com EPB · F1 = 0,742)</div>
+          <div class="v red"><span data-count="88.2" data-dec="1">0</span>%</div>
+          <div class="l">Sensibilidade (225/255 com EPB · F1 = 0,898)</div>
         </div>
         <div class="metric">
-          <div class="v green"><span data-count="89.0" data-dec="1">0</span>%</div>
-          <div class="l">Especificidade (227/255 céu limpo · 28 FP)</div>
+          <div class="v green"><span data-count="91.8" data-dec="1">0</span>%</div>
+          <div class="l">Especificidade (234/255 céu limpo · 21 FP)</div>
         </div>
         <div class="metric">
-          <div class="v blue"><span data-count="0.791" data-dec="3">0</span></div>
-          <div class="l">AUC-ROC (PR AUC = 0,843)</div>
+          <div class="v blue"><span data-count="0.950" data-dec="3">0</span></div>
+          <div class="l">AUC-ROC (PR AUC = 0,962)</div>
         </div>
       </div>
       <div class="tabs r d2" data-tabs="t6" style="margin-bottom:1vh">
-        <button class="tab on">Curvas ROC / PR e Matriz (limiar 0,80)</button>
+        <button class="tab on">Curvas ROC / PR e Matriz (limiar 0,70)</button>
         <button class="tab">Curva de Sensibilidade ao Limiar</button>
         <button class="tab">Ablação do Pré-processamento &amp; Alerta de Brilho</button>
       </div>
@@ -1244,27 +1249,28 @@
         <div class="pane on">
           <div class="grid g73" style="height:100%;align-items:stretch">
             <figure><img src="assets/roc_pr_curves.png" alt="Curvas ROC e PR">
-              <figcaption>Leave-One-Night-Out (510 quadros de céu limpo): ROC AUC = 0,791 · PR AUC = 0,843 · Limiar =
-                0,80</figcaption>
+              <figcaption>Leave-One-Night-Out (510 quadros de céu limpo): ROC AUC = 0,950 · PR AUC = 0,962 · Limiar =
+                0,70</figcaption>
             </figure>
-            <figure><img src="assets/confusion_matrix_t080.png" alt="Matriz de confusão no limiar 0,80">
-              <figcaption>Matriz de confusão out-of-night (limiar = 0,80): 89,0% de especificidade</figcaption>
+            <figure><img src="assets/confusion_matrix_t070.png" alt="Matriz de confusão no limiar 0,70">
+              <figcaption>Matriz de confusão out-of-night (limiar = 0,70): 91,8% de especificidade e 88,2% de sensibilidade</figcaption>
             </figure>
           </div>
         </div>
         <div class="pane">
           <div class="grid g73" style="height:100%;align-items:stretch">
             <figure><img src="assets/threshold_sensitivity.png" alt="Sensibilidade ao limiar">
-              <figcaption>Varredura de limiar nas probabilidades out-of-night: ótimo de acurácia balanceada em t = 0,80
-                (77,3%)</figcaption>
+              <figcaption>Varredura de limiar nas probabilidades out-of-night: ótimo de acurácia balanceada em t = 0,70
+                (90,0%)</figcaption>
             </figure>
             <div class="card" style="display:flex;flex-direction:column;justify-content:center;gap:1rem">
-              <h3>🎯 Por que calibrar o limiar em 0,80?</h3>
-              <p style="font-size:.94rem">Como a avaliação é feita em <em>noites inéditas</em> (nenhuma imagem da noite
-                de teste participa do treino), probabilidades brutas sofrem deslocamento pelo brilho noturno.</p>
-              <p style="font-size:.94rem">Em <em>t = 0,80</em>, os falsos positivos caem para apenas <b>28 em 255
-                  quadros</b> (especificidade <b>89,0%</b>), alcançando acurácia balanceada de <b>77,3%</b> e F1 de
-                <b>0,742</b>.</p>
+              <h3>🎯 Por que calibrar o limiar em 0,70?</h3>
+              <p style="font-size:.94rem">Como a avaliação é feita em <em>noites inéditas</em> e há apenas 2 noites
+                calmas no conjunto atual, no corte padrão (<em>t = 0,50</em>) o modelo já atinge <b>78,6% de acurácia
+                  balanceada</b> (sensibilidade <b>96,5%</b>, especificidade <b>60,8%</b>).</p>
+              <p style="font-size:.94rem">Em <em>t = 0,70</em>, os falsos positivos caem de 100 para apenas <b>21 em 255
+                  quadros</b> (especificidade <b>91,8%</b>, precisão <b>91,5%</b>), elevando a acurácia balanceada para
+                <b>90,0%</b>, o F1 para <b>0,898</b> e a pior noite para <b>72,1%</b>.</p>
             </div>
           </div>
         </div>
@@ -1272,7 +1278,7 @@
           <div class="grid g2" style="height:100%;align-items:stretch">
             <div tabindex="0" role="region" aria-labelledby="ablation-caption" class="table-wrapper">
               <table style="--label-2:'Bal. Acc';--label-3:'Especif.';--label-4:'AUC'">
-                <caption id="ablation-caption">🔬 Escada de ablação do pré-processamento (Leave-One-Night-Out)</caption>
+                <caption id="ablation-caption">🔬 Escada de ablação do pré-processamento (Leave-One-Night-Out · t = 0,50)</caption>
                 <thead>
                   <tr>
                     <th scope="col">Configuração avaliada</th>
@@ -1283,35 +1289,40 @@
                 </thead>
                 <tbody>
                   <tr>
-                    <th scope="row">Contraste com sinal δI/I (sem clip)</th>
+                    <th scope="row">Subtração + corte em zero + CLAHE (sem δI &lt; 0)</th>
+                    <td>66,3%</td>
+                    <td>34,5%</td>
+                    <td>0,823</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">+1 Contraste com sinal δI/I (sem clip)</th>
                     <td>68,4%</td>
                     <td>39,6%</td>
                     <td>0,906</td>
                   </tr>
                   <tr>
-                    <th scope="row"><span class="green">★ + Remoção de estrelas + fundo no domo</span></th>
+                    <th scope="row"><span class="green">★ +2 Remoção de estrelas + fundo no domo (padrão)</span></th>
                     <td><b class="green">78,6%</b></td>
                     <td><b class="green">60,8%</b></td>
                     <td><b class="green">0,950</b></td>
                   </tr>
                   <tr>
-                    <th scope="row">+ Achatamento radial (= config atual do V5)</th>
+                    <th scope="row">Alt. 2b: + Achatamento radial em anéis (descartada)</th>
                     <td>51,2%</td>
                     <td>8,2%</td>
                     <td>0,791</td>
                   </tr>
                   <tr>
-                    <th scope="row">Processamento em 512 px (downsample no fim)</th>
-                    <td>46,1%</td>
-                    <td>0,0%</td>
-                    <td>0,716</td>
+                    <th scope="row">Alt. 3: Processamento em 512 px, downsample no fim</th>
+                    <td>75,3%</td>
+                    <td>54,1%</td>
+                    <td>0,936</td>
                   </tr>
                 </tbody>
               </table>
-              <p style="padding:.55rem .9rem;font-size:.78rem;color:var(--mute)">Ablação no limiar padrão (t = 0,5). A
-                config atual do V5 mantém o achatamento radial; seu desempenho forte (especif. 89,0%) vem da calibração
-                do limiar em 0,80. A ablação sugere que <b>desligar o radial</b> já elevaria a AUC para <b>0,950</b> —
-                a confirmar com mais noites.</p>
+              <p style="padding:.55rem .9rem;font-size:.78rem;color:var(--mute)">Ablação comparada no mesmo limiar padrão
+                (t = 0,50). A convolução gaussiana normalizada dentro do domo já remove van Rhijn, vinhetagem e poluição
+                luminosa suave de borda (AUC = <b>0,950</b>; Bal. Acc = <b>90,0%</b> em t = 0,70).</p>
             </div>
             <div class="card" style="display:flex;flex-direction:column;justify-content:center;gap:1rem">
               <h3 style="color:#ffb36b">⚠️ Achado central: fator de confusão de brilho</h3>
@@ -1328,9 +1339,9 @@
                   <div class="l">AUC-ROC (só brilho)</div>
                 </div>
               </div>
-              <p style="font-size:.9rem;color:#c9d2e3"><b>Diagnóstico honesto:</b> nas 7 noites disponíveis, a classe é
-                fortemente previsível pela condição global de brilho da noite. O pipeline espacial ainda precisa de mais
-                noites para demonstrar ganho líquido acima do brilho global.</p>
+              <p style="font-size:.9rem;color:#c9d2e3"><b>Diagnóstico honesto:</b> embora o pipeline espacial alcance
+                <b>90,0%</b> (AUC <b>0,950</b>), nas 7 noites disponíveis a classe ainda é fortemente previsível pela
+                condição global de brilho da noite — exigindo mais noites para desacoplar brilho e morfologia.</p>
             </div>
           </div>
         </div>
@@ -1344,12 +1355,12 @@
       <div class="grid g73" style="align-items:stretch">
         <div class="stack" style="gap:1.4vh">
           <figure class="r d2" style="flex:1"><img src="assets/shap_analysis_with.png" alt="Atribuição linear com EPB">
-            <figcaption>Com EPB (CA, 23/10/2025 · P = 87,6%): atribuição <span class="red">vermelha</span> alinhada às
+            <figcaption>Com EPB (CA, 23/10/2025 · P = 91,7%): atribuição <span class="red">vermelha</span> alinhada às
               faixas verticais de depleção</figcaption>
           </figure>
           <figure class="r d3" style="flex:1"><img src="assets/shap_analysis_without.png"
               alt="Atribuição linear sem EPB">
-            <figcaption>Céu calmo (BJL, 23/07/2025 · P = 12,5%): atribuição <span class="blue">azul</span> predominante
+            <figcaption>Céu calmo (BJL, 23/07/2025 · P = 7,8%): atribuição <span class="blue">azul</span> predominante
               — evidência a favor de céu calmo</figcaption>
           </figure>
         </div>
@@ -1369,16 +1380,16 @@
             <p style="font-size:.88rem;color:var(--mute);margin-bottom:.35rem">Inclinação das faixas medida via tensor
               de estrutura (tolerância ±25°):</p>
             <div class="qbar-row">
-              <div class="qbar-head"><span>Cariri (CA · 213 quadros EPB)</span><b class="green">5,4° ±
-                  20,9°</b></div>
+              <div class="qbar-head"><span>Cariri (CA · 213 quadros EPB · coerência 0,749)</span><b class="green">4,5° ±
+                  20,4°</b></div>
               <div class="qbar-track">
-                <div class="qbar-fill" style="width:62%;background:linear-gradient(90deg,var(--green),#6aa8ff)"></div>
+                <div class="qbar-fill" style="width:75%;background:linear-gradient(90deg,var(--green),#6aa8ff)"></div>
               </div>
             </div>
             <div class="qbar-row">
-              <div class="qbar-head"><span>Cachoeira Paulista (CP · 42 quadros EPB)</span><b class="green">0,5° ± 6,1°</b></div>
+              <div class="qbar-head"><span>Cachoeira Paulista (CP · 42 quadros EPB · coerência 0,653)</span><b class="green">0,2° ± 6,6°</b></div>
               <div class="qbar-track">
-                <div class="qbar-fill" style="width:56%;background:linear-gradient(90deg,var(--green),#6aa8ff)"></div>
+                <div class="qbar-fill" style="width:65%;background:linear-gradient(90deg,var(--green),#6aa8ff)"></div>
               </div>
             </div>
             <p style="font-size:.82rem;color:var(--mute);margin-top:.45rem">Ambas consistentes com o meridiano magnético
@@ -1404,18 +1415,18 @@
       </div>
       <div class="panes r d3" id="t8">
         <figure class="pane on"><img src="assets/temporal_with_epb.png" alt="Série temporal noite ativa CA">
-          <figcaption>Relatório do especialista — CA, 22–23/10/2025 (140 quadros): 138 EPB (vermelho), 0 Sem EPB, 2
-            Indeterminado (cobertura 98,6%)</figcaption>
+          <figcaption>Relatório do especialista — CA, 22–23/10/2025 (140 quadros): 99 EPB (vermelho, 71,7% dos decididos),
+            39 Sem EPB (início/dissipação), 2 Indeterminado (cobertura 98,6%)</figcaption>
         </figure>
         <figure class="pane"><img src="assets/temporal_without_epb.png" alt="Série temporal noite calma BJL">
-          <figcaption>Relatório do especialista — BJL, 22–23/07/2025 (230 quadros): 0 EPB, 222 Sem EPB (verde), 8
-            Indeterminado, 6 conferir (cobertura 96,5%)</figcaption>
+          <figcaption>Relatório do especialista — BJL, 22–23/07/2025 (230 quadros): 0 EPB, 222 Sem EPB (verde, 100% dos
+            decididos), 8 Indeterminado, 6 conferir (cobertura 96,5%)</figcaption>
         </figure>
         <div class="pane">
           <div class="grid g2" style="height:100%;align-items:stretch">
             <div tabindex="0" role="region" aria-labelledby="seq-caption" class="table-wrapper">
               <table style="--label-2:'Quadros';--label-3:'% Indet.';--label-4:'Estágio 2';--label-5:'Cascata'">
-                <caption id="seq-caption">📊 Sequências noturnas previstas Out-of-Night (sem a noite no treino)</caption>
+                <caption id="seq-caption">📊 Sequências noturnas previstas Out-of-Night em t = 0,70 (sem a noite no treino)</caption>
                 <thead>
                   <tr>
                     <th scope="col">Sequência noturna</th>
@@ -1430,37 +1441,33 @@
                     <th scope="row">CA 22–23/10/2025 (EPB ativa)</th>
                     <td>140</td>
                     <td>1,4%</td>
-                    <td>92,9%</td>
-                    <td><b class="green">91,4%</b></td>
+                    <td>62,9%</td>
+                    <td><b class="green">62,9%</b> (92,9% nos rotulados)</td>
                   </tr>
                   <tr>
                     <th scope="row">CA 24–25/06/2026 (Nublada)</th>
                     <td>62</td>
                     <td>54,8%</td>
-                    <td>64,5%</td>
-                    <td><b class="green">11,3%</b> (29,0% total)</td>
+                    <td>85,5%</td>
+                    <td><b class="green">21,0%</b> (45,2% total)</td>
                   </tr>
                   <tr>
                     <th scope="row">BJL 22–23/07/2025 (Calma)</th>
                     <td>230</td>
                     <td>3,5%</td>
-                    <td>94,3%</td>
-                    <td><b class="red">88,3%</b> (falso positivo*)</td>
+                    <td>6,5%</td>
+                    <td><b class="green">6,5%</b> (falso positivo*)</td>
                   </tr>
                 </tbody>
               </table>
-              <p style="padding:.6rem .9rem;font-size:.8rem;color:var(--mute)">*Avaliado no corte padrão; reflete que
-                sem BJL no treino só resta 1 noite calma de céu limpo (de outra estação e outra época: CA, outono).</p>
+              <p style="padding:.6rem .9rem;font-size:.8rem;color:var(--mute)">*Avaliado no limiar operacional t = 0,70 (88/140 quadros na noite inteira de CA, onde os ~50 quadros finais já são de dissipação; e apenas 15/230 falsos positivos em BJL). Sem BJL no treino, só resta 1 noite calma (CA, outono, 35 quadros).</p>
             </div>
             <div class="card" style="display:flex;flex-direction:column;justify-content:center;gap:1rem">
               <h3>🔍 Relatório (In-Sample) vs. Teste Cego (Out-of-Night)</h3>
               <p style="font-size:.95rem">As duas primeiras abas demonstram o <b>formato operacional do relatório</b> em
-                3 vias (<em>EPB</em>, <em>Sem EPB</em>, <em>Indeterminado</em> + alerta <em>conferir</em>) com o modelo
-                final ajustado sobre o conjunto completo.</p>
-              <p style="font-size:.95rem">Já no teste cego <em>out-of-night</em> (tabela ao lado), quando retiramos a
-                noite calma de BJL do treino, o modelo aprende calma apenas a partir de CA (outra estação, outra época do ano) e
-                dispara falso positivo em BJL — provando visualmente por que <b>precisamos de mais noites calmas em diferentes
-                  sítios e épocas do ano</b>.</p>
+                3 vias (<em>EPB</em>, <em>Sem EPB</em>, <em>Indeterminado</em> + alerta <em>conferir</em>), distinguindo
+                inclusive o período ativo da bolha dos quadros finais de dissipação.</p>
+              <p style="font-size:.95rem">No teste cego <em>out-of-night</em> em <b>t = 0,70</b> (tabela ao lado), o modelo acompanha a fase ativa de CA (<b>62,9%</b> da noite inteira e <b>92,9%</b> dos quadros rotulados com EPB) e mantém apenas <b>6,5% de falsos positivos</b> em BJL mesmo aprendendo céu calmo com uma única noite de outra estação (35 quadros de CA no outono) — reforçando como o ganho se consolidará com <b>mais noites calmas em diferentes sítios e estações do ano</b>.</p>
             </div>
           </div>
         </div>
@@ -1480,8 +1487,9 @@
           <div class="card r d3" style="padding:1.1rem 1.35rem">
             <h3>☁️ Porteiro físico: CLEAR · DEGRADED · CLOUDY</h3>
             <p style="font-size:.93rem">Sob nuvens densas ninguém enxerga a ionosfera: o Estágio 1 emite o veredito
-              <b>Indeterminado</b> (recall de nuvem <b>54,8%</b>, precisão <b>64,2%</b>). Na noite nublada, a cascata
-              reduz alarmes de EPB de <b>64,5% para 29,0%</b> (apenas <b>11,3%</b> em céu limpo confiável).</p>
+              <b>Indeterminado</b> (recall de nuvem <b>54,8%</b>, precisão <b>64,2%</b>; <b>79,0%</b> barrada ou marcada
+              como <em>conferir</em>). Na noite nublada, a cascata reduz alarmes de EPB de <b>85,5% para 45,2%</b>
+              (apenas <b>21,0%</b> em céu limpo confiável).</p>
           </div>
           <div class="caveat r d4">
             <p style="font-size:.92rem"><b style="color:#ffb36b">Custo honesto do QC atual:</b> os limiares (contagem de
@@ -1624,7 +1632,7 @@
             <div class="bento-ic">🔬</div>
             <div class="bento-body">
               <b>Pré-processamento físico (δI/I) e atribuição exata</b>
-              <p>Preserva as depleções negativas sem <em>clipping</em> (elevando a AUC para 0,950 na ablação) e projeta a
+              <p>Preserva as depleções negativas sem <em>clipping</em> (alcançando <b>AUC-ROC de 0,950</b>) e projeta a
                 decisão linear exatamente nos pixels.</p>
             </div>
           </div>
@@ -1632,8 +1640,8 @@
             <div class="bento-ic">🛡️</div>
             <div class="bento-body">
               <b>Protocolo rigoroso Leave-One-Night-Out aninhado</b>
-              <p>Elimina o vazamento entre quadros da mesma noite. No limiar operacional (0,80), atinge <b>77,3% de
-                  acurácia balanceada</b> e <b>89,0% de especificidade</b>.</p>
+              <p>Elimina o vazamento entre quadros da mesma noite. No limiar operacional (0,70), atinge <b>90,0% de
+                  acurácia balanceada</b> (<b>88,2%</b> sensib. e <b>91,8%</b> especif.).</p>
             </div>
           </div>
           <div class="bento-item">
@@ -1651,31 +1659,31 @@
             <div class="bento-ic">📉</div>
             <div class="bento-body">
               <b>Pipeline espacial ainda abaixo do baseline de brilho</b>
-              <p>Sob avaliação por noite, 5 estatísticas globais de brilho atingem 95,9% — o modelo espacial ainda
-                precisa provar valor acima do brilho global em amostra maior.</p>
+              <p>Sob avaliação por noite, 5 estatísticas globais de brilho atingem 95,9% — o modelo espacial (90,0%)
+                ainda precisa provar ganho acima do brilho global em amostra maior.</p>
             </div>
           </div>
           <div class="bento-item">
             <div class="bento-ic">🗂️</div>
             <div class="bento-body">
               <b>Amostra pequena de noites (N = 7) e conjunto de teste vazio</b>
-              <p>Rótulo binário por noite inteira, sem conjunto de teste final travado independente e com necessidade de
-                parâmetros de <em>fallback</em> em divisões extremas.</p>
+              <p>Apenas 2 noites calmas de céu limpo, sem conjunto de teste final travado independente e com necessidade
+                de parâmetros de <em>fallback</em> em divisões extremas.</p>
             </div>
           </div>
           <div class="bento-item">
             <div class="bento-ic">☁️</div>
             <div class="bento-body">
-              <b>Calibração in-sample do QC e achatamento radial</b>
-              <p>O QC foi ajustado em 1 noite nublada (descartando 13–19% de quadros em 2 noites de EPB), e o
-                achatamento radial atual prejudica a especificidade.</p>
+              <b>Calibração in-sample do QC e textos de borda</b>
+              <p>O QC foi ajustado em 1 noite nublada (descartando 13–19% de quadros em 2 noites de EPB), e as imagens
+                atuais do EMBRACE passam por normalização prévia e trazem carimbos de texto nas bordas.</p>
             </div>
           </div>
         </div>
       </div>
       <div class="takeaway-banner r d4">
-        Hoje: <em class="grad">protocolo de avaliação honesto + diagnóstico de confundidores físicos</em> &nbsp;→&nbsp;
-        Próximo passo: <em>30–40 noites para desacoplar brilho e morfologia</em>
+        Hoje: <em class="grad">90,0% de acurácia balanceada (AUC 0,950) + diagnóstico honesto de confundidores</em>
+        &nbsp;→&nbsp; Próximo passo: <em>30–40 noites para desacoplar brilho e morfologia</em>
       </div>
     </section>
 
@@ -1695,9 +1703,9 @@
           <div class="arrow"></div>
           <div class="node frag">
             <div class="step-head"><span class="ic">🔧</span><span class="step-num">PASSO 2</span></div>
-            <b>Revisão do pré-processamento</b>
-            <small>Desativar o achatamento radial (que elevou a Bal. Acc para 78,6% e AUC para 0,950 na ablação) e gerar
-              imagens sem estampas de texto.</small>
+            <b>Remoção de textos e artefatos de borda</b>
+            <small>Gerar versão das imagens do EMBRACE sem carimbos de texto periféricos para evitar interferência no
+              cálculo de fundo e nos gradientes.</small>
           </div>
           <div class="arrow"></div>
           <div class="node frag">

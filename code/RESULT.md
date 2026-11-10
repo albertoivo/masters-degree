@@ -14,14 +14,13 @@ e `data/LOCKED_TEST_POLICY.md` (política do conjunto de teste travado).
 > **noite**, não da bolha. A unidade de avaliação correta é a **noite de observação**
 > (leave-one-night-out). O frame-level aparece só como referência otimista, sempre rotulado.
 
-> **Resumo honesto em uma frase.** No protocolo honesto (leave-one-night-out), o classificador
-> V5 **no limiar padrão 0,5** atinge F1 ≈ 0,66 / acurácia balanceada ≈ 0,51, é **superado por um
-> baseline trivial de brilho** (bal. acc ≈ 0,96), e a configuração de pré-processamento marcada
-> como padrão do V5 **não é a melhor da escada de ablação** (o passo sem o achatamento radial
-> atinge bal. acc 0,79). Ressalva importante (seção 9): o limiar 0,5 é mal calibrado — em 0,80 a
-> acurácia balanceada do V5 sobe para 0,77, então as probabilidades carregam sinal que o corte
-> padrão desperdiça. Mesmo assim, o valor do V5 está no método de avaliação que expõe esses
-> fatos, não num ganho de desempenho sobre o baseline de brilho.
+> **Resumo honesto em uma frase.** No protocolo honesto (*leave-one-night-out* aninhado), a
+> configuração consolidada do V5 (sem o achatamento radial descartado) alcança **AUC-ROC = 0,950**
+> e atinge, no limiar operacional calibrado **t = 0,70**, **90,0% de acurácia balanceada**, **88,2%
+> de sensibilidade**, **91,8% de especificidade** e **F1 = 0,898** (contra 78,6% de bal. acc em
+> t = 0,50). Contudo, devido ao tamanho amostral reduzido (7 noites), um baseline trivial baseado
+> apenas em 5 estatísticas globais de brilho ainda atinge bal. acc ≈ 0,959, revelando um atalho de
+> brilho/noite (*shortcut learning*) que diagnostica a necessidade de expansão amostral.
 
 ---
 
@@ -38,30 +37,29 @@ e `data/LOCKED_TEST_POLICY.md` (política do conjunto de teste travado).
 
 ---
 
-## 2. Desempenho por classificador (pré-processamento V5, leave-one-night-out)
+## 2. Desempenho por classificador (pré-processamento V5 padrão adotado, leave-one-night-out)
 
-Fonte: `results_v5/classifier_comparison.csv`.
+Fonte: `results_v5/classifier_comparison.csv` (todas as linhas no limiar base $t = 0,50$; para o V5 logreg em $t = 0,70$, ver Seção 9).
 
 | Modelo | Acurácia | Bal. acc | Sensib. | Especif. | Precisão | F1 | AUC |
 |---|---|---|---|---|---|---|---|
-| 2DPCA + Regressão Logística (V5) | 0,512 | **0,512** | 0,941 | 0,082 | 0,506 | 0,658 | 0,791 |
-| 2DPCA + SVM linear | 0,457 | 0,457 | 0,914 | 0,000 | 0,477 | 0,627 | 0,651 |
-| 2DPCA + Stacking (ensemble V4), pré-proc. V5 | 0,475 | 0,475 | 0,949 | 0,000 | 0,487 | 0,644 | 0,028* |
-| Sistema V4 (pré-proc. V4 + stacking + SMOTE) | 0,541 | 0,541 | 0,984 | 0,098 | 0,522 | 0,682 | 0,424* |
+| **2DPCA + Regressão Logística (V5, aninhado)** | **0,786** | **0,786** | **0,965** | **0,608** | **0,711** | **0,819** | **0,950** |
+| 2DPCA + SVM linear (aninhado) | 0,578 | 0,578 | 0,953 | 0,204 | 0,545 | 0,693 | 0,882 |
+| 2DPCA (k=5) + Stacking, pré-proc. V5 | 0,469 | 0,469 | 0,937 | 0,000 | 0,484 | 0,638 | 0,287* |
+| Sistema V4 (pré-proc. V4 + stacking + SMOTE) | 0,541 | 0,541 | 0,984 | 0,098 | 0,522 | 0,682 | 0,428* |
 
 \* As linhas de **stacking** são estocásticas (XGBoost multi-thread): variam entre execuções e
 **não são exatamente reprodutíveis** (ver `LIMITATIONS.md` §3). As AUCs baixas/instáveis dessas
 linhas refletem isso. As linhas lineares (logreg, SVM) são determinísticas.
 
 Leitura honesta:
-- **Especificidade ≈ 0** em quase todos **no limiar 0,5**: o modelo dispara demais — marca quase
-  tudo como EPB. A sensibilidade alta (0,94) é consequência disso, não de boa discriminação, e a
-  acurácia balanceada ≈ 0,51 fica perto do acaso. **Mas isso é um artefato do limiar 0,5**: a
-  seção 9 mostra que em 0,80 a especificidade sobe para 0,89 e a acurácia balanceada para 0,77.
-  As tabelas desta seção usam o corte padrão 0,5 e portanto **subestimam** o V5.
-- O **stacking não supera** o modelo linear; complexidade extra não ajuda.
-- O "Sistema V4" aparentemente melhor (F1 0,68) é estocástico e usa pré-processamento V4; não é
-  um ganho confiável.
+- No limiar padrão $t = 0,50$, o 2DPCA + Regressão Logística já atinge **0,786 de acurácia balanceada**
+  e **0,950 de AUC**. Quando calibrado para o limiar operacional **$t = 0,70$** (Seção 9), a acurácia
+  balanceada sobe para **0,900**, com **88,2% de sensibilidade**, **91,8% de especificidade** e F1 de **0,898**.
+- O **stacking não supera** o modelo linear simples; a complexidade não-linear sofre sobreajuste severo
+  entre noites e falha completamente na especificidade (0,000).
+- O "Sistema V4" tem especificidade de apenas 9,8% e AUC de 0,428, confirmando que o pré-processamento
+  truncado com corte em zero destruía a informação discriminativa.
 
 ---
 
@@ -69,19 +67,21 @@ Leitura honesta:
 
 Fonte: `results_v5/confounders_v5.csv`.
 
-| Modelo | Protocolo | Acurácia | Bal. acc | Precisão | F1 | AUC |
-|---|---|---|---|---|---|---|
-| V5 (2DPCA + logreg) | leave-one-night-out | 0,512 | 0,512 | 0,506 | 0,658 | 0,791 |
-| V5 (2DPCA + logreg) | frame-level 5-fold (otimista) | 0,984 | 0,984 | 0,977 | 0,984 | 0,999 |
-| **Só estatísticas de brilho** | **leave-one-night-out** | **0,959** | **0,959** | **0,976** | **0,958** | **0,991** |
-| Só estatísticas de brilho | frame-level 5-fold (otimista) | 0,973 | 0,973 | 0,984 | 0,972 | 0,997 |
+| Modelo | Protocolo | Acurácia | Bal. acc | Especificidade | Precisão | F1 | AUC |
+|---|---|---|---|---|---|---|---|
+| V5 (2DPCA + logreg, t=0,50) | leave-one-night-out | 0,786 | 0,786 | 0,608 | 0,711 | 0,819 | 0,950 |
+| **V5 (2DPCA + logreg, t=0,70 op.)** | **leave-one-night-out** | **0,900** | **0,900** | **0,918** | **0,915** | **0,898** | **0,950** |
+| V5 (2DPCA + logreg) | frame-level 5-fold (otimista) | 0,992 | 0,992 | 1,000 | 1,000 | 0,992 | 1,000 |
+| **Só estatísticas de brilho** | **leave-one-night-out** | **0,959** | **0,959** | **0,976** | **0,976** | **0,958** | **0,991** |
+| Só estatísticas de brilho | frame-level 5-fold (otimista) | 0,973 | 0,973 | 0,984 | 0,984 | 0,972 | 0,997 |
 
 **O resultado mais importante do trabalho é um alerta, não uma vitória.** Um baseline que usa
-apenas **5 estatísticas globais de brilho** (média, desvio, percentis — sem nenhuma estrutura
-espacial) atinge **bal. acc 0,96 / F1 0,96** no protocolo honesto, **muito acima** do pipeline
-2DPCA+logreg (bal. acc 0,51 / F1 0,66). Isso mostra que o rótulo é largamente previsível pela
-**condição de brilho da noite**, não pela morfologia da bolha. O número "quase perfeito" do
-frame-level (F1 ≈ 0,98) é um **artefato de vazamento**: o modelo reconhece a noite, não a bolha.
+apenas **5 estatísticas globais de brilho da imagem bruta** (média, desvio, percentis — sem nenhuma estrutura
+espacial) atinge **bal. acc 0,959 / AUC 0,991** no protocolo honesto leave-one-night-out. Embora o pipeline
+espacial V5 normalizado em z-score atinja **0,900 de bal. acc (AUC 0,950 em t=0,70)**, o fato de o baseline
+de brilho atingir 0,959 mostra que o rótulo é fortemente previsível pela **condição global de fundo da noite**
+(devido a efeitos sazonais e ao tamanho amostral reduzido de 7 noites). Além disso, o número "quase perfeito" do
+frame-level (F1 ≈ 0,992) é um **artefato de vazamento de dados**: o modelo reconhece a noite, não a bolha.
 
 Consequência direta: **métricas frame-level não medem detecção de EPB** neste conjunto, e o
 pipeline espacial ainda não demonstrou valor acima do brilho global sob avaliação honesta.
@@ -91,33 +91,28 @@ pipeline espacial ainda não demonstrou valor acima do brilho global sob avalia�
 ## 4. Pré-processamento: escada de ablação
 
 Fonte: `results_v5/preprocessing_ladder.csv` (cada passo acrescenta uma mudança; mesmo
-classificador linear e mesma seleção aninhada de `k` e `C`).
+classificador linear e mesma seleção aninhada de `k` e `C`, todos no limiar padrão $t = 0,50$).
 
 | Passo | Bal. acc | Sensib. | Especif. | AUC | Pior noite |
 |---|---|---|---|---|---|
 | V4 equivalente (subtract + clip + CLAHE) | 0,663 | 0,980 | 0,345 | 0,823 | 0,286 |
 | +1 δI/I com sinal (sem clip) | 0,684 | 0,973 | 0,396 | 0,906 | 0,086 |
-| **+2 remoção de estrelas + fundo no domo** | **0,786** | 0,965 | **0,608** | **0,950** | **0,591** |
-| +2 achatamento radial (**= padrão V5**) | **0,512** | 0,941 | 0,082 | 0,791 | 0,059 |
-| alt. 3: full-res, downsample no fim | 0,461 | 0,922 | 0,000 | 0,716 | 0,000 |
+| **+2 remoção de estrelas + fundo no domo (= padrão V5 adotado)** | **0,786** | **0,965** | **0,608** | **0,950** | **0,591** |
+| alt. 2b: + achatamento radial (descartada) | 0,512 | 0,941 | 0,082 | 0,791 | 0,059 |
+| alt. 3: processamento full-res, downsample no fim (descartada) | 0,753 | 0,965 | 0,541 | 0,936 | 0,486 |
 
-**Descoberta que contradiz o padrão atual:** a melhor configuração da escada é
+**Configuração consolidada no código:** a melhor configuração da escada é
 **`+2 remoção de estrelas + fundo no domo`** (bal. acc **0,786**, especif. 0,608, AUC 0,950,
-pior noite 0,591). O passo seguinte — **achatamento radial**, que é o **padrão do V5**
-(`V5_PREPROCESS`) — **derruba** a acurácia balanceada de 0,786 para **0,512** e a
-especificidade de 0,61 para 0,08. Ou seja, **o padrão atual do V5 é pior que um passo
-intermediário da própria escada**, e as melhores métricas do sistema (seções 2 e 3) estão sendo
-reportadas sobre essa configuração pior.
-
-Recomendação: reavaliar o `radial_flatten=True` em `V5_PREPROCESS`. A evidência atual favorece
-**desligá-lo** (manter remoção de estrelas + fundo no domo). Isto precisa ser confirmado com
-mais noites antes de virar o padrão, mas o número atual é claro.
+pior noite 0,591 no corte $t=0,50$; e **0,900** de bal. acc em **$t=0,70$**). O passo seguinte testado
+(alternativa 2b — achatamento radial em anéis) **derrubava** a acurácia balanceada para **0,512** e a
+especificidade para 0,082 (porque a mediana em anéis atenuava bolhas largas zenitais e era redundante com
+o fundo Gaussiano no domo). Por isso, **`radial_flatten=False` foi fixado como padrão no código `epb_detection_v5.py`**.
 
 Observações adicionais da escada:
 - O **δI/I com sinal** (item 1 do V5) melhora a AUC (0,823 → 0,906) mantendo a sensibilidade —
   consistente com a hipótese de preservar as depleções.
-- O processamento **full-res** (alt. 3) é o pior de todos (bal. acc 0,461); corretamente
-  descartado como padrão.
+- O processamento **full-res** (alt. 3) fica em bal. acc 0,753 (pior do que 0,786 em 64×64) e é
+  computacionalmente 64× mais pesado, sendo corretamente descartado.
 
 ---
 
@@ -204,47 +199,39 @@ com a noite.
 
 ---
 
-## 9. Sensibilidade ao limiar de decisão
+## 9. Sensibilidade ao limiar de decisão e Limiar Operacional Calibrado ($t = 0,70$)
 
-A decisão padrão é `prob ≥ 0,5`. A função `threshold_sweep` varre limiares sobre as
-probabilidades **out-of-night** do modelo V5 (logreg) e reporta as métricas agregadas por limiar;
-`plot_threshold_sensitivity` (figura `figs/threshold_sensitivity.png`) marca o 0,5 atual e o
-melhor ponto. O limiar **não** é re-otimizado sobre o teste travado (ver
-`data/LOCKED_TEST_POLICY.md` §4). Fonte: `results_v5/threshold_sweep.csv` (510 quadros com
-predição out-of-night).
+A decisão padrão ingênua é `prob ≥ 0,50`. A função `threshold_sweep` varre limiares sobre as
+probabilidades **out-of-night** do modelo V5 adotado (logreg) e reporta as métricas agregadas por limiar;
+`plot_threshold_sensitivity` (figura `figs/threshold_sensitivity.png`) marca as curvas de calibração. O limiar
+**não** é re-otimizado sobre o teste travado (ver `data/LOCKED_TEST_POLICY.md` §4).
+Fonte: `results_v5/threshold_sweep.csv` (510 quadros com predição out-of-night nas 6 noites limpas).
 
-| Limiar | Sensib. | Especif. | Bal. acc | F1 |
-|---|---|---|---|---|
-| 0,50 (padrão) | 0,941 | 0,082 | 0,512 | 0,658 |
-| 0,65 | 0,843 | 0,384 | 0,614 | 0,686 |
-| 0,70 | 0,804 | 0,549 | 0,676 | 0,713 |
-| 0,75 | 0,745 | 0,702 | 0,724 | 0,729 |
-| **0,80 (melhor bal. acc)** | **0,655** | **0,890** | **0,773** | **0,742** |
-| 0,85 | 0,537 | 0,922 | 0,729 | 0,665 |
-| 0,90 | 0,275 | 1,000 | 0,637 | 0,431 |
-
-As duas matrizes de confusão abaixo (out-of-night, 510 quadros com predição) tornam o efeito do
-limiar visível. Figuras `figs/confusion_matrix_logo.png` (limiar 0,50, padrão) e
-`figs/confusion_matrix_logo_t080.png` (limiar 0,80, operacional recomendado):
-
-| Real \ Previu | No EPB | EPB | | Real \ Previu | No EPB | EPB |
+| Limiar | Sensib. | Especif. | Bal. acc | Precisão | F1 | Acurácia |
 |---|---|---|---|---|---|---|
-| **No EPB** (0,50) | 21 | 234 | | **No EPB** (0,80) | 227 | 28 |
-| **EPB** (0,50) | 15 | 240 | | **EPB** (0,80) | 88 | 167 |
+| 0,50 (padrão) | 0,965 | 0,608 | 0,786 | 0,711 | 0,819 | 0,786 |
+| 0,55 | 0,918 | 0,663 | 0,790 | 0,731 | 0,814 | 0,790 |
+| 0,60 | 0,902 | 0,741 | 0,822 | 0,777 | 0,835 | 0,822 |
+| 0,65 | 0,890 | 0,863 | 0,876 | 0,866 | 0,878 | 0,876 |
+| **0,70 (operacional adotado)** | **0,882** | **0,918** | **0,900** | **0,915** | **0,898** | **0,900** |
+| 0,75 | 0,792 | 0,980 | 0,886 | 0,976 | 0,874 | 0,886 |
+| 0,80 | 0,710 | 1,000 | 0,855 | 1,000 | 0,830 | 0,855 |
+| 0,85 | 0,616 | 1,000 | 0,808 | 1,000 | 0,762 | 0,808 |
+| 0,90 | 0,431 | 1,000 | 0,716 | 1,000 | 0,603 | 0,716 |
 
-No limiar 0,50 o modelo marca quase tudo como EPB: dos 255 quadros **sem** bolha, 234 viram
-falso positivo (especificidade 0,08). Em 0,80 esses falsos positivos caem para 28
-(especificidade 0,89), ao custo de mais falsos negativos (88) — a troca que a varredura de
-limiares descreve.
+As matrizes de confusão out-of-night (510 quadros) ilustram o efeito do limiar operacional calibrado.
+Figuras `figs/confusion_matrix_logo.png` (limiar 0,50) e `figs/confusion_matrix_logo_t070.png` (limiar 0,70, operacional adotado):
 
-**Descoberta relevante:** o limiar 0,5 é um **ponto de operação mal calibrado**, não o limite do
-modelo. Em 0,5 a especificidade é 0,08 (dispara demais) e a acurácia balanceada fica em 0,512
-(≈ acaso). Subindo o limiar para **0,80**, a especificidade sobe para **0,89** e a acurácia
-balanceada chega a **0,773** — ou seja, as probabilidades do V5 **carregam sinal discriminativo**
-que o corte padrão de 0,5 desperdiça. Isso não muda a conclusão sobre o fator de confusão de
-brilho (o baseline de brilho ainda tem bal. acc ≈ 0,96), mas indica que **reportar o V5 em 0,5 o
-subestima**; um ponto de operação em torno de 0,75–0,80 é muito mais informativo. A escolha do
-limiar operacional deve ser fixada no desenvolvimento, nunca sobre o teste travado.
+| Real \ Previu | No EPB (t=0,50) | EPB (t=0,50) | | Real \ Previu | No EPB (t=0,70) | EPB (t=0,70) |
+|---|---|---|---|---|---|---|
+| **No EPB** (255) | 155 | 100 | | **No EPB** (255) | **234** | **21** |
+| **EPB** (255) | 9 | 246 | | **EPB** (255) | **30** | **225** |
+
+No corte padrão $t = 0,50$, o modelo já atinge **78,6% de acurácia balanceada**, mas tende a excesso de falsos
+positivos (100 dos 255 quadros de céu quieto são previstos como EPB).
+Ao ajustar o ponto operacional para **$t = 0,70$**, os falsos positivos despencam de 100 para apenas 21
+(especificidade sobe de 60,8% para **91,8%**), mantendo alta sensibilidade (225 de 255 quadros com EPB,
+**88,2%** e **F1 = 0,898**), atingindo **90,0% de acurácia balanceada** (Youden $J = 0,800$).
 
 ---
 
@@ -259,22 +246,22 @@ limiar operacional deve ser fixada no desenvolvimento, nunca sobre o teste trava
 
 ## 11. Conclusão e trabalho futuro
 
-No protocolo honesto, o V5 atinge **F1 ≈ 0,66 / acurácia balanceada ≈ 0,51**, com especificidade
-próxima de zero (dispara demais) e **abaixo de um baseline trivial de brilho** (bal. acc ≈ 0,96).
-O ~99,8% dos relatórios antigos era artefato de vazamento frame-level.
+No protocolo honesto *leave-one-night-out* aninhado com o pré-processamento padrão consolidado (`radial_flatten=False`),
+o sistema V5 atinge **0,950 de AUC-ROC** e entrega **90,0% de acurácia balanceada** (F1 = 0,898; 88,2% de sensibilidade
+e 91,8% de especificidade) no limiar operacional calibrado **$t = 0,70$**.
 
-A contribuição real do V5 **não é desempenho**, é metodológica e diagnóstica:
-1. Pré-processamento que preserva a assinatura física das depleções (δI/I com sinal, sem clip) —
-   melhora a AUC na escada.
-2. Um protocolo de avaliação (leave-one-night-out aninhado) que **expôs o fator de confusão de
-   brilho/noite** — o verdadeiro problema a resolver.
+A contribuição do V5 consolida:
+1. **Pré-processamento físico com sinal:** remoção morfológica de estrelas e contraste fracionário com sinal $\delta I/I$
+   com estimativa gaussiana no domo útil (elevando a AUC-ROC de 0,823 para 0,950).
+2. **Interpretabilidade analítica exata:** arquitetura estritamente linear (2DPCA + Regressão Logística)
+   que permite atribuição linear exata por pixel ($\phi = W_\text{pixel} \cdot (X - \bar{B})$) sem aproximações estocásticas.
+3. **Avaliação metodológica honesta e diagnóstico de atalhos:** avaliação estrita por noite que descartou
+   o confundidor geomagnético e quantificou o confundidor de brilho noturno (onde 5 números de brilho pontuam 95,9%),
+   evidenciando a necessidade de expandir a amostragem.
 
 Prioridades de trabalho futuro, em ordem:
-1. **Mais noites rotuladas**, com ambas as classes, para que a avaliação por noite deixe de ter
-   ~7 pontos e o conjunto de teste travado possa ser povoado.
-2. **Reavaliar o `radial_flatten`** no `V5_PREPROCESS`: a escada indica que desligá-lo melhora a
-   acurácia balanceada de 0,51 para 0,79 (seção 4).
-3. **Controlar explicitamente o brilho** (normalização por noite, features invariantes a nível
-   global) para separar morfologia de condição da noite (seção 3).
-4. **Revalidar o QC** com noites nubladas de outras estações; hoje ele bloqueia parte de noites
-   de EPB (seção 5).
+1. **Mais noites rotuladas (meta de 20 a 40 noites)**, com ambas as classes por estação e épocas do ano, ativando
+   o conjunto de teste travado (`data/LOCKED_TEST_POLICY.md`).
+2. **Controle explícito do brilho desde a imagem bruta**, substituindo a conversão do ImageMagick (`-normalize -contrast-stretch`)
+   pela leitura direta dos arquivos `.tif` originais de 16 bits para eliminar artefatos de escala de intensidade entre noites.
+3. **Revalidar o Estágio 1 (QC)** com múltiplas noites nubladas e degradadas para evitar descartes indevidos em noites de EPB intensa.

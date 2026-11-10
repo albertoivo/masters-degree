@@ -1,4 +1,4 @@
 station,epb_frames,band_angle_deg,circular_spread_deg,median_coherence,status
 BJL,0,,,,not verifiable (no EPB frames)
-CA,213,5.4,20.9,0.625,consistent (near vertical)
-CP,42,0.5,6.1,0.565,consistent (near vertical)
+CA,213,4.5,20.4,0.749,consistent (near vertical)
+CP,42,0.2,6.6,0.653,consistent (near vertical)

@@ -18,7 +18,7 @@ Para manter o ritmo dinâmico, honesto e não estourar o tempo, siga este orçam
 | **3** | O gargalo da identificação manual | `0:45` | `1:55` | Contadores animam sozinhos (`572`, `255/255`, `7 noites · 3 estações`) |
 | **4** | Pipeline em cascata guiado pela física | `1:10` | `3:05` | ⚠️ **Aperte `→` 5 vezes** durante a fala para revelar as 5 etapas (`.frag`) |
 | **5** | Extração de características via 2DPCA | `0:45` | `3:50` | — |
-| **6** | Desempenho em Leave-One-Night-Out (`t = 0,80`) | `1:15` | `5:05` | 🖱️ **Clique nas Abas 2 e 3** (ou comente os números da ablação/confundidor) |
+| **6** | Desempenho em Leave-One-Night-Out (`t = 0,70`) | `1:15` | `5:05` | 🖱️ **Clique nas Abas 2 e 3** (ou comente os números da ablação/confundidor) |
 | **7** | O modelo olha para a física? Atribuição linear exata | `0:55` | `6:00` | — |
 | **8** | Uma noite inteira, quadro a quadro (3 vereditos) | `0:50` | `6:50` | 🖱️ **Clique nas Abas 2 e 3** para mostrar noite limpa e avaliação *out-of-night* |
 | **9** | E quando o céu está nublado? Decisão em 3 vias (QC) | `0:45` | `7:35` | — |
@@ -114,23 +114,23 @@ Ao final do documento, há também um **Banco Geral de Perguntas Difíceis da Ba
 > *(Aperte `→` — Passo 2)* No **Estágio 1**, um porteiro de controle de qualidade avalia nitidez estelar, brilho e contraste para classificar o quadro como **Limpo**, **Degradado** (sinalizado com *conferir*) ou **Nublado**, que recebe o veredito **Indeterminado**.  
 > *(Aperte `→` — Passo 3)* Quadros válidos passam pela extração do contraste físico $\delta I/I$ normalizado em z-score dentro do domo.  
 > *(Aperte `→` — Passo 4)* O **2DPCA** projeta a matriz 64 por 64 nos seus $k$ autovetores principais, gerando $64 \times k$ características compactas.  
-> *(Aperte `→` — Passo 5)* E, no **Estágio 2**, a Regressão Logística emite a probabilidade calibrada no limiar operacional de **0,80**, junto com o mapa de atribuição exata por pixel."
+> *(Aperte `→` — Passo 5)* E, no **Estágio 2**, a Regressão Logística emite a probabilidade calibrada no limiar operacional de **0,70**, junto com o mapa de atribuição exata por pixel."
 
 ### 🧠 O que você precisa saber a fundo
 - **Parâmetros exatos do pré-processamento:**
-  - **Remoção de estrelas (`remove_stars`):** Operação morfológica de abertura (`cv2.MORPH_OPEN`) com elemento estruturante elíptico de $7 \times 7$ pixels na imagem $512 \times 512$ (`star_size=7`). Como estrelas são picos locais menores que 7 pixels e bolhas têm dezenas de pixels de largura, a abertura remove as estrelas preservando a camada de airglow.
+  - **Remoção de estrelas (`remove_stars`):** Operação morfológica de abertura (`cv2.MORPH_OPEN`) com elemento estruturante de $7 \times 7$ pixels na resolução de $512 \times 512$ (`star_size=7`, escalado para $64 \times 64$). Como estrelas são picos locais pequenos e bolhas têm dezenas de pixels de largura, a abertura remove as estrelas preservando a camada de airglow.
   - **Máscara do domo (`fov_radius_frac=0.44`):** Raio útil de $44\%$ do lado da imagem em torno do centro $(H/2, W/2)$, descartando o anel externo onde há distorção severa da lente olho-de-peixe, árvores, antenas e textos gravados na borda.
-  - **Estimativa do fundo (`estimate_background`):** Borramento Gaussiano com $\sigma = 10$ na escala de $64\times 64$ (equivalente a $\sigma = 80$ em $512\times 512$). **Detalhe crucial:** a convolução Gaussiana é calculada dividindo `GaussianBlur(img * mask)` por `GaussianBlur(mask)`. Assim, os zeros fora do domo não puxam o fundo da borda para baixo.
-  - **Contrasto $\delta I/I$ assinado + z-score:** $\text{dI} = (I_\text{sem estrelas} - \text{fundo}) / \max(\text{fundo}, \varepsilon)$. Depois, subtrai-se a média e divide-se pelo desvio-padrão calculados apenas sobre os pixels dentro da máscara do domo, limitando valores extremos em $[-4, +4]$ desvios-padrão (`zclip=4.0`). Fora do domo, os pixels valem `0.0`.
+  - **Estimativa do fundo (`masked_background=True`):** Borramento Gaussiano com $\sigma = 10$ na escala de $64\times 64$. **Detalhe crucial:** a convolução Gaussiana é calculada dividindo `GaussianBlur(img * mask)` por `GaussianBlur(mask)`. Assim, os zeros fora do domo não puxam o fundo da borda para baixo, e o filtro 2D já remove suavemente o efeito de *van Rhijn*, a vinhetagem da lente e eventual poluição luminosa urbana na borda.
+  - **Contrasto $\delta I/I$ assinado + z-score:** $\delta I/I = I_\text{sem estrelas} / \max(\text{fundo}, 1) - 1$. Depois, subtrai-se a média e divide-se pelo desvio-padrão calculados apenas sobre os pixels dentro da máscara do domo, limitando valores extremos em $[-4, +4]$ desvios-padrão (`zclip=4.0`). Fora do domo, os pixels valem `0.0`.
 - **Matemática do 2DPCA (Yang et al., 2004):**
   - Dadas $N$ imagens de treino $X_i \in \mathbb{R}^{64 \times 64}$ e a imagem média $\bar{X}$, a matriz de dispersão (covariância das linhas) é:
     $$G_t = \frac{1}{N}\sum_{i=1}^{N} (X_i - \bar{X})^\top (X_i - \bar{X}) \in \mathbb{R}^{64 \times 64}$$
   - Extraímos os $k$ autovetores ortonormais $V = [v_1, \dots, v_k] \in \mathbb{R}^{64 \times k}$ correspondentes aos $k$ maiores autovalores de $G_t$.
-  - A projeção de uma imagem $X$ é $Y = (X - \bar{X})V \in \mathbb{R}^{64 \times k}$, que achatada gera um vetor de $64k$ características. No modelo final selecionado pelo loop aninhado ($k=5, C=0,001$), são $64 \times 5 = 320$ características.
+  - A projeção de uma imagem $X$ é $Y = (X - \bar{X})V \in \mathbb{R}^{64 \times k}$, que achatada gera um vetor de $64k$ características. No modelo final selecionado pelo loop por noite ($k=3, C=0,001$), são $64 \times 3 = 192$ características.
 
 ### ❓ Perguntas Prováveis deste Slide
 - **P: Por que usar Regressão Logística em vez de SVM com kernel RBF, Random Forest ou XGBoost?**  
-  **R:** Dois motivos fundamentais quando se tem apenas 7 noites: (1) regularização forte contra sobreajuste ao brilho da noite — modelos não-lineares complexos memorizam facilmente limiares de intensidade específicos de cada noite; e (2) interpretabilidade exata — como a combinação 2DPCA + Regressão Logística é inteiramente linear, sabemos exatamente qual peso espacial cada pixel do domo recebe na decisão.
+  **R:** Dois motivos fundamentais quando se tem apenas 7 noites: (1) regularização forte contra sobreajuste ao brilho da noite — modelos não-lineares complexos (inclusive *stacking* de árvores) memorizam limiares específicos das noites de treino e tiveram desempenho inferior na avaliação por noite (46,9% vs. 78,6% no corte padrão); e (2) interpretabilidade exata — como a combinação 2DPCA + Regressão Logística é inteiramente linear, sabemos exatamente qual peso espacial cada pixel do domo recebe na decisão.
 
 ---
 
@@ -140,7 +140,7 @@ Ao final do documento, há também um **Banco Geral de Perguntas Difíceis da Ba
 ### 🎙️ O que falar
 > "Este slide ilustra visualmente o que o pré-processamento físico e o 2DPCA fazem com a imagem. Na linha de cima temos uma noite de céu quieto em Bom Jesus da Lapa, e na linha de baixo uma noite com bolha de plasma ativa em São João do Cariri.
 >
-> Da primeira para a segunda coluna, vemos o efeito da remoção de estrelas e do cálculo de $\delta I/I$ dentro do domo útil: na noite quieta o campo fica suave, enquanto na noite com EPB as bandas escuras de depleção norte–sul saltam com alto contraste negativo.
+> Da primeira para a segunda coluna, vemos o efeito da remoção de estrelas e do cálculo de $\delta I/I$ dentro do domo útil: na noite quieta o campo fica suave, enquanto na noite com EPB as bandas escuras de depleção norte–sul saltam com alto contraste negativo (em azul).
 >
 > Na terceira coluna temos o erro absoluto de reconstrução do 2DPCA, $|X - \hat{X}|$. Enquanto o céu quieto é reconstruído quase sem resíduo, as bordas abruptas das faixas de depleção da bolha concentram energia de reconstrução exatamente ao longo dos canais de plasma depletado."
 
@@ -151,35 +151,35 @@ Ao final do documento, há também um **Banco Geral de Perguntas Difíceis da Ba
 
 ---
 
-# SLIDE 6 — Desempenho em Leave-One-Night-Out (limiar operacional = 0,80)
+# SLIDE 6 — Desempenho em Leave-One-Night-Out (limiar operacional = 0,70)
 *(Tempo sugerido: 1 minuto e 15 segundos)*  
-🖱️ **AÇÃO INTERATIVA:** Comece na **Aba 1** (padrão), comente rapidamente a **Aba 2** e clique na **Aba 3** para mostrar a tabela de ablação e o achado central sobre o confundidor de brilho!
+🖱️ **AÇÃO INTERATIVA:** Comece na **Aba 1** (padrão), comente rapidamente a **Aba 2** e clique na **Aba 3** para mostrar a escada de ablação e o achado central sobre o confundidor de brilho!
 
 ### 🎙️ O que falar
 > "Passando aos resultados quantitativos: toda a avaliação foi feita sob **Leave-One-Night-Out aninhado** nas 6 noites de céu limpo — ou seja, em cada rodada, uma noite inteira fica 100% fora do treino, do ajuste do 2DPCA e da seleção de hiperparâmetros.
 >
-> No limiar operacional calibrado de **0,80**, obtemos **77,3% de acurácia balanceada** em noites inéditas, com **65,5% de sensibilidade** (167 de 255 quadros com bolha detectados, F1 de 0,742), **89,0% de especificidade** (227 de 255 quadros de céu limpo corretos, apenas 28 falsos positivos) e **AUC-ROC de 0,791**.
+> No limiar operacional de **0,70**, alcançamos **90,0% de acurácia balanceada** em noites inéditas, com **88,2% de sensibilidade** (225 de 255 quadros com bolha detectados, F1 de **0,898**), **91,8% de especificidade** (234 de 255 quadros de céu limpo corretos, apenas 21 falsos positivos, precisão de **91,5%**), **AUC-ROC de 0,950** e **PR AUC de 0,962**.
 >
-> *(Opcional: clique na Aba 2)* Na segunda aba vemos por que calibramos o limiar em 0,80: como cada noite tem um nível basal de airglow diferente, o limiar padrão de 0,50 gera muitos falsos positivos em noites inéditas escuras (especificidade de apenas 8%); elevar o limiar para 0,80 sobe a especificidade para 89% e maximiza a acurácia balanceada.
+> *(Opcional: clique na Aba 2)* Na segunda aba vemos a curva de sensibilidade ao limiar: mesmo no limiar padrão de **0,50**, o sistema já entrega **78,6% de acurácia balanceada** (sensibilidade de 96,5% e especificidade de 60,8%). Como temos apenas 2 noites calmas no conjunto atual, elevar o limiar operacional para **0,70** reduz os falsos positivos de 100 para apenas 21 quadros, elevando a especificidade para 91,8%, a acurácia balanceada para **90,0%** e o piso da pior noite para **72,1%**.
 >
-> *(Clique na Aba 3: Ablação & Confundidor)* Mas o resultado científico mais importante do nosso diagnóstico está nesta terceira aba, na tabela de ablação do pré-processamento e no card ao lado:
-> Primeiro, na tabela (toda medida no limiar padrão 0,5), descobrimos que o **pré-processamento físico com remoção de estrelas e fundo no domo atinge 78,6% de acurácia balanceada e 0,950 de AUC-ROC** — a melhor configuração da escada. O passo seguinte, o achatamento radial, que é a **configuração atual do sistema**, reduz a AUC para 0,791. Isso sugere que **desligar o achatamento radial seria uma melhoria** — uma hipótese promissora que ainda precisamos confirmar com mais noites antes de trocar o padrão.
-> E segundo: quando testamos um *baseline* cego que usa apenas **5 estatísticas globais de brilho da imagem bruta** (média e percentis, sem nenhuma informação espacial), ele atinge **95,9% de acurácia balanceada e 0,991 de AUC** no mesmo protocolo *leave-one-night-out*! Isso acontece porque, com apenas 6 noites de céu limpo, o nível de brilho da noite separa quase perfeitamente as noites do nosso dataset atual — um achado diagnóstico fundamental que guia nossos próximos passos."
+> *(Clique na Aba 3: Ablação & Confundidor)* Na terceira aba mostramos dois resultados diagnósticos centrais:
+> Primeiro, a **escada de ablação do pré-processamento** (toda comparada no mesmo limiar padrão de 0,50): sair da subtração simples com corte em zero e CLAHE (66,3% de acurácia balanceada e AUC de 0,823) para o contraste com sinal $\delta I/I$ já eleva a AUC para **0,906**; e acrescentar a **remoção morfológica de estrelas e o fundo Gaussiano restrito ao domo** eleva a acurácia balanceada para **78,6%** em $t=0,50$ (e **90,0%** em $t=0,70$) com **AUC de 0,950**. As duas alternativas abaixo na tabela — achatar anéis radiais ou processar em 512 pixels antes de reduzir — degradaram o sinal e foram descartadas.
+> E segundo: quando testamos um *baseline* cego que usa apenas **5 estatísticas globais de brilho da imagem bruta** (média, desvio e percentis, sem nenhuma estrutura espacial), ele atinge **95,9% de acurácia balanceada e 0,991 de AUC** no mesmo protocolo *leave-one-night-out*! Embora nosso modelo espacial já atinja 90,0% (AUC 0,950), com apenas 6 noites limpas a condição global de brilho da noite ainda separa as classes — um achado diagnóstico fundamental que guia nossa expansão amostral."
 
 ### 🧠 O que você precisa saber a fundo
-- **Números exatos da Escada de Ablação (`preprocessing_ladder.csv`, todos no limiar padrão `t = 0,5`):**
-  1. **V4 equivalente** (subtract + clip + CLAHE, sem $\delta I < 0$): Bal. Acc = **66,3%**, Spec = 34,5%, AUC = **0,823** — base de comparação com o pipeline antigo.
-  2. **+ $\delta I/I$ com sinal, sem corte em zero** (contraste assinado em 64×64): Bal. Acc = **68,4%**, Spec = 39,6%, AUC = **0,906** — preservar o sinal negativo salta a AUC.
-  3. **+ Remoção de estrelas + fundo no domo** (abertura morfológica + fundo gaussiano só no domo): Bal. Acc = **78,6%**, Sens = **96,5%**, Spec = **60,8%**, AUC = **0,950** — o **melhor desempenho de toda a escada**.
-  4. **+ Achatamento radial** (= configuração padrão atual do V5): Bal. Acc = **51,2%**, Sens = 94,1%, Spec = **8,2%**, AUC = **0,791**. Ou seja, no mesmo limiar das outras linhas, o achatamento radial **derruba** a acurácia balanceada (de 78,6% para 51,2%) e a especificidade (de 60,8% para 8,2%). *(O desempenho forte do sistema no Slide — especif. 89,0% — vem de calibrar o limiar em 0,80, não do achatamento radial.)*
-  5. **Pré-processamento em 512×512 completo** (antes de reduzir para 64×64): Bal. Acc = **46,1%**, Spec = 0,0%, AUC = **0,716** — pior configuração; corretamente descartada.
-- **Como funciona o Baseline de Brilho de 5 características (`run_brightness_confounder_baseline`):**
-  - Extrai apenas `[mean, std, p10, p50, p90]` dos pixels brutos dentro do domo (`fov_radius_frac=0.44`) e treina uma Regressão Logística (`C=1.0, class_weight="balanced"`).
-  - Por que ele dá 95,9% de acurácia balanceada e 0,991 de AUC? Porque as 4 noites com EPB têm distribuição de intensidade global diferente das 2 noites sem EPB (a noite de CA foi coletada no outono e a de BJL no inverno, em outra estação). O classificador de brilho simplesmente "adivinha a noite" pelo nível de fundo global de cada estação e época.
+- **Números exatos da Escada de Ablação (`preprocessing_ladder.csv`, todos no limiar padrão `t = 0,50`):**
+  1. **Subtração + corte em zero + CLAHE (sem $\delta I < 0$):** Bal. Acc = **66,3%**, Sens = 98,0%, Spec = 34,5%, AUC = **0,823**, Pior noite = 28,6%.
+  2. **+1 Contraste com sinal $\delta I/I$ (sem clip, z-score):** Bal. Acc = **68,4%**, Sens = 97,3%, Spec = 39,6%, AUC = **0,906**, Pior noite = 8,6% — preservar o sinal negativo salta a AUC em +8,3 pontos.
+  3. **★ +2 Remoção de estrelas + fundo no domo (padrão):** Bal. Acc = **78,6%** (em $t=0,50$; **90,0%** em $t=0,70$), Sens = **96,5%**, Spec = **60,8%**, AUC = **0,950**, Pior noite = **59,1%** (em $t=0,50$; **72,1%** em $t=0,70$) — **melhor configuração de toda a escada**.
+  4. **Alt. 2b: + Achatamento radial em anéis (descartada):** Bal. Acc = **51,2%**, Sens = 94,1%, Spec = **8,2%**, AUC = **0,791**, Pior noite = 5,9% — redundante com o fundo Gaussiano no domo e nociva (48 anéis num raio de 28 px injetam degraus concêntricos e atenuam bolhas zenitais).
+  5. **Alt. 3: Processamento em 512×512, downsample no fim (descartada):** Bal. Acc = **75,3%**, Sens = 96,5%, Spec = 54,1%, AUC = **0,936**, Pior noite = 48,6%.
+- **Como funciona o Baseline de Brilho de 5 características (`brightness_features`):**
+  - Extrai apenas `[mean, std, p5, p50, p95]` dos pixels da imagem bruta e treina uma Regressão Logística balanceada.
+  - Por que ele dá 95,9% de acurácia balanceada e 0,991 de AUC? Porque as 4 noites com EPB têm distribuição de intensidade global diferente das 2 noites sem EPB (coletadas no outono e no inverno). O classificador de brilho simplesmente "adivinha a noite" pelo nível de fundo global.
 
 ### ❓ Perguntas Prováveis deste Slide
-- **P: Se o baseline de 5 números de brilho dá 95,9% e o seu pipeline espacial dá 77,3%, por que não usar o modelo de brilho?**  
-  **R:** Porque o modelo de brilho está acertando pelo motivo errado (aprendizado por atalho / *shortcut learning*). Ele não enxerga nenhuma bolha; ele apenas memorizou o brilho médio das 6 noites disponíveis. Se colocarmos uma noite de bolha com nível de emissão atípico ou uma noite calma de verão, o modelo de brilho vai errar 100% da noite. O nosso pipeline espacial normaliza cada quadro em z-score ($\mu=0, \sigma=1$ dentro do domo) justamente para impedir esse atalho e forçar o classificador a olhar para a morfologia espacial.
+- **P: Se o baseline de 5 números de brilho dá 95,9% e o seu pipeline espacial dá 90,0% (AUC 0,950), por que não usar o modelo de brilho?**  
+  **R:** Porque o modelo de brilho está acertando pelo motivo errado (aprendizado por atalho / *shortcut learning*). Ele não enxerga nenhuma bolha; ele apenas memorizou o brilho médio das 6 noites disponíveis. Se colocarmos uma noite mista (onde a bolha surge ou some na mesma noite) ou uma noite calma de verão, o modelo de brilho vai errar. O nosso pipeline espacial normaliza cada quadro em z-score ($\mu=0, \sigma=1$ dentro do domo) justamente para impedir esse atalho e forçar o classificador a olhar para a morfologia espacial — alcançando 90,0% de acurácia balanceada olhando exclusivamente para o padrão espacial $\delta I/I$.
 
 ---
 
@@ -189,26 +189,26 @@ Ao final do documento, há também um **Banco Geral de Perguntas Difíceis da Ba
 ### 🎙️ O que falar
 > "Para verificar onde o classificador espacial apoia sua decisão, calculamos o mapa de **atribuição linear exata por pixel**, mostrado à esquerda. Como a projeção 2DPCA é linear nos pixels e a Regressão Logística é linear nas características, o *logit* do modelo é o produto escalar direto entre um mapa de pesos $W_\text{pixel}$ e o desvio de cada pixel em relação ao céu médio. Não há aproximação estocástica: a soma dos valores do mapa mais o intercepto reproduz exatamente o *logit* da predição.
 >
-> Na imagem superior, em São João do Cariri (probabilidade de 87,6%), os pixels em vermelho que empurram a decisão para EPB alinham-se ao longo das paredes e canais norte–sul da bolha. Na imagem inferior, em Bom Jesus da Lapa (probabilidade de 12,5%), o interior do domo permanece neutro e azulado, empurrando para céu sem bolha.
+> Na imagem superior, em São João do Cariri (probabilidade predita de **91,7%**), os pixels em vermelho que empurram a decisão para EPB alinham-se exatamente ao longo das paredes e canais norte–sul da bolha. Na imagem inferior, em Bom Jesus da Lapa (probabilidade de **7,8%**), o interior do domo permanece neutro e azulado, empurrando para céu sem bolha.
 >
-> Além disso, à direita, auditamos um segundo potencial confundidor: a **orientação magnética das faixas por estação** via tensor de estrutura. Tanto São João do Cariri ($+5,4^\circ \pm 20,9^\circ$, coerência 0,625) quanto Cachoeira Paulista ($+0,5^\circ \pm 6,1^\circ$, coerência 0,565) ficaram dentro da tolerância de $\pm 25^\circ$ do eixo vertical, descartando a declinação magnética entre sítios como confundidor no conjunto atual."
+> Além disso, à direita, auditamos um segundo potencial confundidor: a **orientação magnética das faixas por estação** via tensor de estrutura. Tanto São João do Cariri ($+4,5^\circ \pm 20,4^\circ$, coerência **0,749**) quanto Cachoeira Paulista ($+0,2^\circ \pm 6,6^\circ$, coerência **0,653**) ficaram dentro da tolerância de $\pm 25^\circ$ do eixo vertical, descartando a declinação magnética entre sítios como confundidor no conjunto atual."
 
 ### 🧠 O que você precisa saber a fundo
-- **Equação da Atribuição Linear Exata (`linear_pixel_attribution`):**
+- **Equação da Atribuição Linear Exata (`get_shap_importance`):**
   - Seja $X \in \mathbb{R}^{64 \times 64}$ a imagem pré-processada, $\bar{X}$ a imagem média do 2DPCA, $V \in \mathbb{R}^{64 \times k}$ os autovetores do 2DPCA, $\mu_s, \sigma_s \in \mathbb{R}^{64k}$ a média e escala do `StandardScaler`, e $w \in \mathbb{R}^{64k}, b \in \mathbb{R}$ os pesos e intercepto da Regressão Logística.
   - Definimos os pesos efetivos no espaço projetado como $\tilde{w} = w / \sigma_s$, reorganizados como matriz $\tilde{W} \in \mathbb{R}^{64 \times k}$.
   - O mapa de pesos no espaço de pixels é:
     $$W_\text{pixel} = \tilde{W} V^\top \in \mathbb{R}^{64 \times 64}$$
-  - A atribuição exata de cada pixel $(r, c)$ para uma imagem $X$, usando uma amostra de fundo de referência $B = \{B_1, \dots, B_M\}$ (média $\bar{B}$), é:
+  - A atribuição exata de cada pixel $(r, c)$ para uma imagem $X$, usando o conjunto de fundo de referência $B = \{B_1, \dots, B_M\}$ (média $\bar{B}$), é:
     $$\phi(r, c) = W_\text{pixel}(r, c) \cdot \big(X(r, c) - \bar{B}(r, c)\big)$$
   - Isso é matematicamente idêntico ao *Linear interventional SHAP* para cadeias lineares, com custo computacional instantâneo e erro numérico zero.
-- **Verificação de Orientação via Tensor de Estrutura (`band_orientation_check.csv`):**
+- **Verificação de Orientação via Tensor de Estrutura (`station_orientation.csv`):**
   - Calcula gradientes de Sobel $g_x, g_y$ na imagem $\delta I/I$ dentro de um domo interno (`fov_radius_frac=0.38`) e monta o tensor de estrutura médio $J_{xx}, J_{yy}, J_{xy}$ para extrair o ângulo dominante das faixas em relação ao eixo vertical da imagem.
-  - Como $|\text{mediana}| \le 25^\circ$ e coerência $\ge 0,15$ tanto em CA quanto em CP, o dicionário `ROTATION_BY_SITE` permaneceu vazio (`{}`), provando que o classificador não está separando estações pela inclinação das faixas.
+  - Como $|\text{média circular}| \le 25^\circ$ e alta coerência tanto em CA ($+4,5^\circ$, coerência $0,749$) quanto em CP ($+0,2^\circ$, coerência $0,653$), o dicionário `ROTATION_BY_SITE` permaneceu vazio (`{}`), provando que o classificador não está separando estações pela inclinação das faixas.
 
 ### ❓ Perguntas Prováveis deste Slide
 - **P: Se o mapa de atribuição mostra claramente as faixas norte–sul da bolha, por que vocês colocaram uma ressalva no terceiro card dizendo que isso não prova independência total de confundidores?**  
-  **R:** Por rigor metodológico. Um mapa de atribuição linear mostra *quais pixels multiplicados pelos seus desvios mais contribuíram para o logit naquele quadro*, mas se os pesos $W_\text{pixel}$ tiverem sido influenciados pelo contraste global das poucas noites de treino, o modelo ainda pode sofrer deslocamento de limiar em uma noite inédita. Por isso tratamos a atribuição por pixel como uma evidência física necessária, mas complementar à validação *out-of-night*.
+  **R:** Por rigor metodológico. Um mapa de atribuição linear mostra *quais pixels multiplicados pelos seus desvios mais contribuíram para o logit naquele quadro*, mas se os pesos $W_\text{pixel}$ tiverem sido influenciados pelo contraste das poucas noites de treino, o modelo ainda pode sofrer deslocamento de limiar em uma noite inédita. Por isso tratamos a atribuição por pixel como uma evidência física necessária, mas complementar à validação *out-of-night*.
 
 ---
 
@@ -217,22 +217,22 @@ Ao final do documento, há também um **Banco Geral de Perguntas Difíceis da Ba
 🖱️ **AÇÃO INTERATIVA:** Mostre a **Aba 1** (noite com EPB), clique na **Aba 2** (noite sem EPB) e clique na **Aba 3** (tabela de avaliação cega *Out-of-Night*)!
 
 ### 🎙️ O que falar
-> "Na operação prática ao longo de uma noite inteira, o sistema não força uma decisão binária cega: ele emite **três vereditos possíveis** — **EPB** (vermelho), **Sem EPB** (azul) ou **Indeterminado** (cinza, quando o Estágio 1 bloqueia por nuvem ou falha de sensor) — além de uma faixa amarela de atenção (*conferir*) quando o céu está parcialmente degradado.
+> "Na operação prática ao longo de uma noite inteira, o sistema não força uma decisão binária cega: ele emite **três vereditos possíveis** — **EPB** (vermelho), **Sem EPB** (verde) ou **Indeterminado** (cinza, quando o Estágio 1 bloqueia por nuvem ou falha de sensor) — além de uma faixa amarela de atenção (*conferir*) quando o céu está parcialmente degradado.
 >
-> Na **Aba 1**, vemos o relatório sobre a noite de 22–23 de outubro de 2025 em São João do Cariri (140 quadros): o sistema acompanha a evolução temporal da bolha com 98,6% de cobertura útil e apenas 2 quadros bloqueados como indeterminados no final do crepúsculo.  
-> *(Clique na Aba 2)* Na **Aba 2**, para a noite limpa de 22–23 de julho de 2025 em Bom Jesus da Lapa (230 quadros), a curva permanece estavelmente abaixo do limiar de 0,80 durante toda a madrugada (222 quadros Sem EPB e 8 Indeterminados).
+> Na **Aba 1**, vemos o relatório sobre a sequência completa da noite de 22–23 de outubro de 2025 em São João do Cariri (140 quadros da noite inteira): o sistema acompanha a passagem da bolha (99 quadros EPB, 71,7% dos decididos), marca como Sem EPB os 39 quadros do final da madrugada quando a estrutura já se dissipou, e bloqueia apenas 2 quadros como indeterminados (98,6% de cobertura útil).  
+> *(Clique na Aba 2)* Na **Aba 2**, para a noite limpa de 22–23 de julho de 2025 em Bom Jesus da Lapa (230 quadros), a curva permanece estavelmente baixa durante toda a madrugada (222 quadros Sem EPB, **zero falsos alarmes de EPB** e 8 Indeterminados).
 >
-> *(Clique na Aba 3: Avaliação Cega Out-of-Night)* Porém, na **Aba 3**, fazemos questão de mostrar a diferença entre esse relatório visual com o modelo final e a **avaliação cega *out-of-night***: quando a noite de São João do Cariri com bolha é avaliada por um modelo que nunca viu aquela noite, o sistema mantém **91,4% de detecção em céu limpo**; mas quando a noite limpa de Bom Jesus da Lapa fica fora do treino, ela sofre **88,3% de falsos positivos**. Por quê? Porque tirando Bom Jesus da Lapa do treino, resta **apenas uma única noite sem bolha** no conjunto de treinamento — e é em outra estação e outra época (Cariri, outono)! Ou seja, o modelo aprendeu a classe calma exclusivamente a partir da calibração óptica e das condições sazonais de Cariri, nunca tendo visto o fundo característico de Bom Jesus da Lapa durante o treino."
+> *(Clique na Aba 3: Avaliação Cega Out-of-Night)* E na **Aba 3**, mostramos a **avaliação cega *out-of-night* em `t = 0,70`** dessas sequências completas (quando o modelo é treinado sem aquela noite): na sequência completa de Cariri com EPB (140 quadros), o modelo cego marca **62,9% da noite inteira como EPB** (88 de 140 quadros, já que os ~50 quadros finais são de dissipação; nos 85 quadros rotulados com EPB ativa, ele acerta **92,9%**). E quando a noite calma de Bom Jesus da Lapa (230 quadros) fica fora do treino, ela apresenta apenas **6,5% de falsos positivos** (15 em 230 quadros, ou **93,5% de rejeição correta**), mesmo tendo aprendido céu calmo com apenas **35 quadros de uma única noite sem bolha** coletada em outra estação e outra época (Cariri, outono)!"
 
 ### 🧠 O que você precisa saber a fundo
-- **Números exatos de `sequences_in_sample.csv` (Aba 1 e Aba 2 — Modelo Final):**
-  - `CA 22-23/10/2025 (com EPB, 140 quadros)`: 2 Indeterminados (1,4%), 2 Degradados/*conferir* (1,4%), 138 EPB (98,6% do total; **100% dos quadros de céu limpo**).
-  - `BJL 22-23/07/2025 (sem EPB, 230 quadros)`: 8 Indeterminados (3,5%), 6 Degradados/*conferir* (2,6%), 0 EPB (**0,0% de falso alarme**).
-  - `CA 24-25/06/2026 (nublado, 62 quadros)`: 34 Indeterminados (54,8%), 15 Degradados/*conferir* (24,2%), 18 EPB na cascata total (29,0%), mas apenas **11,3% de EPB em quadros considerados de céu limpo**.
-- **Números exatos de `sequences_out_of_night.csv` (Aba 3 — Avaliação Cega Out-of-Night):**
-  - `CA 22-23/10/2025 (com EPB)`: 1,4% Indeterminado, 92,9% EPB se usasse só o Estágio 2, **91,4% EPB na cascata (e 91,4% em céu limpo)** — excelente generalização.
-  - `CA 24-25/06/2026 (nublado)`: 54,8% Indeterminado, 64,5% EPB se usasse só o Estágio 2 $\rightarrow$ cai para **29,0% na cascata e 11,3% em céu limpo** graças ao Estágio 1.
-  - `BJL 22-23/07/2025 (sem EPB)`: 3,5% Indeterminado, 94,3% EPB no Estágio 2 $\rightarrow$ **88,3% na cascata (86,5% em céu limpo)**. É a prova concreta de que 2 noites sem EPB são insuficientes para cobrir a variação de fundo entre diferentes estações e épocas do ano.
+- **Números exatos do relatório in-sample (Aba 1 e Aba 2 — Modelo Final):**
+  - `CA 22-23/10/2025 (com EPB, 140 quadros da pasta util/)`: 2 Indeterminados (1,4%), 2 Degradados/*conferir* (1,4%), 99 EPB (71,7% dos decididos) e 39 Sem EPB (quadros sem bolha visível no fim da noite).
+  - `BJL 22-23/07/2025 (sem EPB, 230 quadros)`: 8 Indeterminados (3,5%), 6 Degradados/*conferir* (2,7% dos decididos), 222 Sem EPB, **0 EPB (0,0% de falso alarme)**.
+  - `CA 24-25/06/2026 (nublado, 62 quadros)`: 34 Indeterminados (54,8%), 15 Degradados/*conferir* (24,2%).
+- **Números exatos da Avaliação Cega Out-of-Night em `t = 0,70` (Aba 3):**
+  - `CA 22-23/10/2025 (com EPB, 140 quadros)`: 1,4% Indeterminado (2/140), **62,9% EPB** na sequência completa de 140 quadros (88/140; nos 85 quadros rotulados de EPB ativa dessa noite, o acerto out-of-night em $t=0,70$ é **92,9%** [79/85]).
+  - `CA 24-25/06/2026 (nublado, 62 quadros)`: 54,8% Indeterminado (34/62), **85,5% EPB** (53/62) se usasse só o Estágio 2 $\rightarrow$ cai para **45,2% na cascata (28/62) e 21,0% em céu limpo (13/62)** graças ao Estágio 1.
+  - `BJL 22-23/07/2025 (sem EPB, 230 quadros)`: 3,5% Indeterminado (8/230), apenas **6,5% de falso positivo** (15/230) na sequência completa em $t=0,70$ (nos 220 quadros rotulados de BJL, são 21/220 = **9,5% FP [90,5% de especificidade]**).
 
 ---
 
@@ -244,24 +244,23 @@ Ao final do documento, há também um **Banco Geral de Perguntas Difíceis da Ba
 >
 > Ele mede três indicadores simples dentro do domo: a energia Laplaciana de objetos pontuais (contagem de estrelas nítidas), o brilho médio e o contraste global. Com isso, divide cada imagem em três zonas: **Céu Limpo** (`CLEAR`), **Degradado** (`DEGRADED`, que passa ao Estágio 2 mas recebe a faixa amarela *conferir* no gráfico) e **Nublado** (`CLOUDY`, que é bloqueado como **Indeterminado** em cinza).
 >
-> Na noite nublada de junho de 2026 à esquerda, sem o porteiro de qualidade, o classificador marcaria 64,5% da noite como bolha; com o porteiro, **54,8% dos quadros são barrados como Indeterminados**, outros 24,2% são sinalizados na zona amarela *conferir*, e os falsos alarmes em céu dado como limpo caem para **11,3%**.
+> Na noite nublada de junho de 2026 à esquerda, sem o porteiro de qualidade, o classificador marcaria 85,5% da noite como bolha; com o porteiro, **54,8% dos quadros são barrados como Indeterminados**, outros 24,2% são sinalizados na zona amarela *conferir* (totalizando **79,0% da noite filtrada ou sob alerta**), e os falsos alarmes em céu dado como limpo caem para **21,0%**.
 >
 > Sendo transparente sobre o custo atual: como esses limiares foram calibrados na única noite nublada rotulada que temos, o porteiro hoje acaba bloqueando como indeterminados **19,0% dos quadros legítimos de bolha em Cariri na noite de 27/10** e **12,8% na noite de 18/12** — porque uma bolha muito larga e escura também reduz temporariamente a contagem de estrelas e o brilho médio."
 
 ### 🧠 O que você precisa saber a fundo
-- **Regras exatas do Estágio 1 (`ImageQualityGatekeeper`):**
-  - Calcula dentro de um raio central (`0.38` do lado):
-    1. `star_score`: número de pixels onde $|\nabla^2 I| > 30$ (Laplaciano 3×3 detectando bordas agudas de estrelas).
-    2. `mean_brightness`: média de intensidade dos pixels no domo.
-    3. `contrast_std`: desvio-padrão de intensidade no domo.
+- **Regras exatas do Estágio 1 (`assess_sky_quality`):**
+  - Calcula dentro do domo:
+    1. `star_pixels`: número de pixels de bordas agudas de estrelas.
+    2. `raw_mean`: média de intensidade dos pixels.
+    3. `contrast_std`: desvio-padrão de intensidade.
   - **Bloqueio como `CLOUDY` (veredito `Indeterminado`):**
-    - `mean_brightness < 4.0` ou `contrast_std < 2.0` (tampa fechada/falha de sensor), **OU**
-    - `star_score < 1000` (`threshold_stars=1000`) **OU** `mean_brightness < 55.0` (`min_mean_brightness=55.0`).
-  - **Alerta como `DEGRADED` (flag `conferir = True`):**
-    - Passou do corte de `CLOUDY`, mas `star_score < 4500` (`degraded_stars=4500`) **OU** `mean_brightness < 66.0` (`1.2 * min_mean_brightness`).
-  - **Aprovação como `CLEAR`:** `star_score >= 4500` e `mean_brightness >= 66.0`.
-- **Desempenho do QC (`qc_stage1_metrics.csv`):**
-  - Recall em nuvens = **54,8%** (34/62 quadros da noite nublada barrados como `CLOUDY`; se somar os 15 `DEGRADED`, **79,0%** da noite nublada é barrada ou marcada com *conferir*).
+    - `star_pixels < 1000` (`threshold_stars=1000`) **OU** `raw_mean < 55.0` (`min_mean_brightness=55.0`).
+  - **Alerta como `DEGRADED` (flag `reliable = False`, *conferir*):**
+    - Passou do corte de `CLOUDY`, mas `star_pixels < 4500` (`degraded_stars=4500`).
+  - **Aprovação como `CLEAR`:** `star_pixels >= 4500` e `raw_mean >= 55.0`.
+- **Desempenho do QC (`stage1_qc_summary.csv`):**
+  - Recall em nuvens = **54,8%** (34/62 quadros da noite nublada barrados como `CLOUDY`; somando os 15 `DEGRADED`, **79,0%** da noite nublada é barrada ou marcada com *conferir*).
   - Precisão em nuvens = **64,2%** (dos 53 quadros barrados no dataset inteiro de 572 imagens, 34 são da noite nublada e 19 são falsos bloqueios nas duas noites de EPB: 8 em `CA_20251027` [19,0%] e 11 em `CA_20251218` [12,8%]).
 
 ---
@@ -270,12 +269,12 @@ Ao final do documento, há também um **Banco Geral de Perguntas Difíceis da Ba
 *(Tempo sugerido: 55 segundos)*
 
 ### 🎙️ O que falar
-> "Isso nos leva diretamente à discussão mais honesta desta apresentação: por que temos esses confundidores de brilho e esses falsos positivos quando Bom Jesus da Lapa sai do treino? A resposta está nesta tabela: embora tenhamos **572 quadros rotulados**, nossa amostra efetiva no nível de noite é de **apenas 7 noites** — sendo 4 noites com EPB, apenas **2 noites de céu limpo sem EPB**, e 1 noite nublada.
+> "Isso nos leva diretamente à discussão mais honesta desta apresentação: por que temos esse confundidor de brilho e essa sensibilidade quando Bom Jesus da Lapa sai do treino? A resposta está nesta tabela: embora tenhamos **572 quadros rotulados**, nossa amostra efetiva no nível de noite é de **apenas 7 noites** — sendo 4 noites com EPB, apenas **2 noites de céu limpo sem EPB**, e 1 noite nublada.
 >
 > Olhando a tabela à esquerda, vemos três armadilhas estatísticas clássicas de amostras pequenas:
 > 1. **Estação vs. Classe:** Bom Jesus da Lapa só tem noite sem EPB, e Cachoeira Paulista só tem noite com EPB;
 > 2. **Sazonalidade vs. Classe:** todas as noites com bolha são de primavera/verão (outubro a fevereiro, época de EPB no Brasil), enquanto as noites sem bolha são de outono/inverno (abril a julho, quando a camada F e a emissão de fundo têm dinâmica diferente);
-> 3. **Acoplamento Instrumental e Poluição Luminosa:** cada sítio tem transmissão de filtros, vinheta e níveis de luz urbana próprios (como CP no Vale do Paraíba vs. o sertão de BJL e o semiárido de CA).
+> 3. **Acoplamento Instrumental e Poluição Luminosa:** cada sítio tem transmissão de filtros, vinheta e níveis de luz urbana próprios (note que não há Lua visível nas fotos do EMBRACE, pois o equipamento não opera sob a Lua; os gradientes periféricos vêm apenas de poluição luminosa da cidade).
 >
 > Por isso, como detalhamos à direita, nossa meta prioritária é expandir o catálogo para **20 a 40 noites independentes** (mínimo de 20 para validação cruzada estável e um conjunto de teste travado, e idealmente 30 a 40 noites). Mais importante do que apenas somar quadros é buscar **quatro perfis prioritários de noites** que quebrem os confundidores:
 > 1. **Noites mistas**, onde a bolha nasce ou morre no meio da mesma noite (mesma câmera e mesmo fundo com os dois rótulos);
@@ -285,11 +284,11 @@ Ao final do documento, há também um **Banco Geral de Perguntas Difíceis da Ba
 
 ### 🧠 O que você precisa saber a fundo
 - **Por que 20 a 40 noites? (Baseado em `code/util/noites.md`):**
-  - Com $N = 6$ noites de céu limpo (4 EPB + 2 Sem EPB), cada noite sem EPB representa **50% da especificidade** de todo o estudo! Além disso, quando fazemos *leave-one-night-out* aninhado e tiramos uma das 2 noites sem EPB no loop externo, o loop interno de seleção de hiperparâmetros fica com apenas 1 noite negativa, produzindo *splits* internos de classe única onde a AUC não é definida (acionando `FALLBACK_PARAMS = {k: 5, C: 0.01}`).
+  - Com $N = 6$ noites de céu limpo (4 EPB + 2 Sem EPB), cada noite sem EPB representa **50% das noites negativas** de todo o estudo! Além disso, quando fazemos *leave-one-night-out* aninhado e tiramos uma das 2 noites sem EPB no loop externo, o loop interno de seleção de hiperparâmetros fica com apenas 1 noite negativa, produzindo um *split* interno monoclasse onde a especificidade não é mensurável (acionando `FALLBACK_PARAMS = {'n_components': 5, 'C': 0.001}`).
   - Com **20 noites** (~10 com EPB e ~10 sem EPB): cada noite passa a valer 10% da sua classe, permitindo reservar 4 a 6 noites em um `LOCKED_TEST_NIGHTS` intocado e rodar validação cruzada aninhada sem *splits* degenerados.
-  - Com **30 a 40 noites** (15–20 por classe): conseguimos preencher uma grade fatorial cruzando `Estação × Nível de Atividade/Fundo × Estação do Ano`, reduzindo o erro-padrão da acurácia por noite para uma faixa publicável em periódico internacional (~7 a 9 pontos percentuais).
+  - Com **30 a 40 noites** (15–20 por classe): conseguimos preencher uma grade fatorial cruzando `Estação × Condição da Noite × Estação do Ano`, reduzindo o erro-padrão da acurácia por noite para uma faixa publicável em periódico internacional (~7 a 9 pontos percentuais).
 - **Detalhe técnico do pré-processamento de arquivo (`code/util/noites.md`):**
-  - No fluxo atual de catalogação manual, as imagens originais `.tif` (16 bits) foram convertidas para `.png` usando `magick *.tif -normalize -contrast-stretch 2%x1% ...`. Como o `-normalize` reescala o histograma de cada quadro entre 0 e 255 independentemente, um quadro limpo escuro tem o fundo esticado para o meio da escala, enquanto um quadro com estrelas brilhantes ou iluminação artificial no horizonte tem o fundo comprimido. Ler diretamente os `.tif` originais em Python (com normalização robusta por percentis dentro do domo) eliminará essa distorção de ganho antes mesmo do 2DPCA.
+  - No fluxo atual de catalogação manual, as imagens originais `.tif` (16 bits) foram convertidas para `.png` usando `magick *.tif -normalize -contrast-stretch 2%x1% ...`. Como o `-normalize` reescala o histograma de cada quadro entre 0 e 255 independentemente, um quadro limpo escuro tem o fundo esticado para o meio da escala, enquanto um quadro com estrelas brilhantes ou iluminação artificial no horizonte tem o fundo comprimido. Ler diretamente os `.tif` originais em Python (com normalização igual dentro do domo) eliminará essa distorção de ganho antes mesmo do 2DPCA.
 
 ### ❓ Perguntas Prováveis deste Slide
 - **P: O banco de dados do EMBRACE tem milhares de noites gravadas. Por que vocês usaram apenas 7 noites até agora?**  
@@ -304,17 +303,17 @@ Ao final do documento, há também um **Banco Geral de Perguntas Difíceis da Ba
 > "Resumindo de forma bastante franca onde estamos hoje:
 >
 > Do lado das **contribuições metodológicas e diagnósticas** à esquerda:
-> - Mostramos que o pré-processamento guiado pela física ($\delta I/I$ sem corte em zero, remoção morfológica de estrelas e fundo restrito ao domo) eleva a separabilidade das depleções (chegando a **0,950 de AUC-ROC** na ablação sem achatamento radial) e permite **atribuição linear exata por pixel**;
-> - Estabelecemos um protocolo rigoroso de validação **Leave-One-Night-Out aninhada**, alcançando **77,3% de acurácia balanceada e 89,0% de especificidade** no limiar operacional de 0,80; e
+> - Mostramos que o pré-processamento guiado pela física ($\delta I/I$ sem corte em zero, remoção morfológica de estrelas e fundo Gaussiano restrito ao domo) eleva a separabilidade das depleções para **0,950 de AUC-ROC** e permite **atribuição linear exata por pixel**;
+> - Estabelecemos um protocolo rigoroso de validação **Leave-One-Night-Out aninhada**, alcançando **90,0% de acurácia balanceada** (**88,2% de sensibilidade** e **91,8% de especificidade** no limiar operacional de 0,70; e **78,6%** já no corte padrão de 0,50); e
 > - Auditamos explicitamente os confundidores: descartamos a orientação magnética entre estações e expusemos o confundidor de brilho noturno.
 >
 > E do lado das **limitações declaradas** à direita:
-> - Nosso classificador espacial ainda fica abaixo do *baseline* de 5 estatísticas de brilho (95,9%) porque a amostra atual no nível de noite é pequena ($N=7$, com apenas 2 noites sem bolha);
+> - Apesar dos 90,0% de acurácia balanceada, nosso classificador espacial ainda fica abaixo do *baseline* de 5 estatísticas de brilho (95,9%) porque a amostra atual no nível de noite é pequena ($N=7$, com apenas 2 noites sem bolha);
 > - O conjunto de teste travado (`LOCKED_TEST_NIGHTS`) ainda está vazio aguardando novas noites; e
-> - Os limiares do porteiro de nuvens foram calibrados *in-sample* em uma única noite nublada, e a ablação sugere que o achatamento radial atual pode estar penalizando o desempenho — algo a confirmar com mais noites."
+> - Os limiares do porteiro de nuvens foram calibrados *in-sample* em uma única noite nublada, e as imagens pré-processadas do EMBRACE ainda trazem carimbos de texto nas bordas."
 
 ### 🧠 O que você precisa saber a fundo
-- Este slide é a sua maior proteção perante a banca. Ao colocar lado a lado o que funciona e o que ainda é limitação estatística do tamanho amostral, você demonstra maturidade científica e antecipa qualquer crítica sobre generalização.
+- Este slide é a sua maior proteção perante a banca. Ao colocar lado a lado o excelente resultado espacial (90,0% Bal. Acc, AUC 0,950) e as limitações estatísticas do tamanho amostral ($N=7$), você demonstra maturidade científica e antecipa qualquer crítica sobre generalização.
 
 ---
 
@@ -325,14 +324,14 @@ Ao final do documento, há também um **Banco Geral de Perguntas Difíceis da Ba
 ### 🎙️ O que falar
 > "A partir desse diagnóstico, nosso roteiro para a dissertação está dividido em 5 passos diretos:
 > *(Aperte `→` — Passo 1)* **Passo 1:** Expandir o dataset para **30 a 40 noites** seguindo os 4 perfis prioritários (noites mistas, calmas na temporada de verão, EPBs fora de época e multi-estação) e congelar o conjunto de teste travado.  
-> *(Aperte `→` — Passo 2)* **Passo 2:** Revisar o pré-processamento padrão, **testando desativar o achatamento radial** (a ablação indica que isso levaria a AUC de 0,791 para 0,950, a confirmar com mais noites) e mascarando os textos de carimbo nas bordas da imagem.  
-> *(Aperte `→` — Passo 3)* **Passo 3:** Eliminar o confundidor de brilho na origem, lendo os arquivos `.tif` originais em Python sem o *contrast-stretch* quadro a quadro do ImageMagick, e testar regularização adversarial/ortogonal ao brilho.  
+> *(Aperte `→` — Passo 2)* **Passo 2:** Gerar no script de conversão do EMBRACE uma versão das imagens **sem carimbos de texto nas bordas**, garantindo zero interferência periférica.  
+> *(Aperte `→` — Passo 3)* **Passo 3:** Eliminar o confundidor de brilho na origem, testando um pipeline Python direto sobre os arquivos `.tif` originais de 16 bits sem o *contrast-stretch* quadro a quadro do ImageMagick, e avaliar features invariantes ao brilho global.  
 > *(Aperte `→` — Passo 4)* **Passo 4:** Revalidar o Estágio 1 de controle de qualidade em múltiplas noites nubladas e parcialmente nubladas para eliminar os falsos bloqueios em noites de bolha intensa.  
 > *(Aperte `→` — Passo 5)* E **Passo 5:** Integrar a saída probabilística do imageador óptico com índices de cintilação GNSS (S4 e ROTI) e digissondas da própria rede EMBRACE."
 
 ### 🧠 O que você precisa saber a fundo
-- **Por que o Passo 2 fala em mascarar textos nas bordas?** Algumas estações gravam carimbos de data/hora/estação perto da borda do domo. Embora `fov_radius_frac=0.44` já corte a maior parte, uma máscara explícita sobre retângulos de texto garante zero interferência no cálculo do fundo e dos gradientes.
-- **Como funciona a leitura direta dos `.tif` no Passo 3 (`code/util/noites.md`):** Em vez de converter `.tif` para `.png` com `magick -normalize -contrast-stretch 2%x1%` (que altera o ganho de cada quadro conforme a presença de estrelas brilhantes ou nuvens), leremos a matriz 16-bit original e faremos a normalização usando apenas os percentis $P_2$ e $P_{99}$ calculados *estritamente dentro da máscara do domo após a remoção morfológica de estrelas*.
+- **Por que o Passo 2 fala em gerar imagens sem textos nas bordas?** O script `embrace.sh` grava carimbos de data/hora/estação nos cantos da imagem. Embora a máscara circular (`fov_radius_frac=0.44`) já exclua os cantos no Estágio 2, gerar uma versão limpa sem texto garante que nem o Estágio 1 nem o cálculo de estatísticas globais sofram interferência dos caracteres brancos.
+- **Como funciona a leitura direta dos `.tif` no Passo 3 (`code/util/noites.md`):** Em vez de converter `.tif` para `.png` com `magick -normalize -contrast-stretch 2%x1%` (que altera o ganho de cada quadro conforme a presença de estrelas brilhantes ou nuvens), leremos a matriz 16-bit original com ajuste de brilho igual para todas as imagens.
 
 ---
 
@@ -358,21 +357,24 @@ Abaixo estão perguntas adicionais que pesquisadores de aeronomia (físicos do I
 
 ### 1. Sobre Validação e Estatística
 - **P: O que acontece na validação aninhada (*nested Leave-One-Night-Out*) quando o loop interno fica sem uma das classes?**  
-  **R:** Excelente pergunta. Como temos apenas 2 noites sem EPB no total (`BJL_20250722` e `CA_20250407`), quando uma delas é a noite de teste externo e a outra cai como noite de validação interna, os 4 *folds* restantes de treino interno passam a ter apenas noites com EPB (classe única). Nosso código detecta automaticamente quando um *split* interno não tem as duas classes, ignora esse *fold* indefinido e, se nenhum par $(k, C)$ puder ser pontuado naquele loop interno, aciona de forma determinística parâmetros de segurança pré-definidos (`FALLBACK_PARAMS`: $k=5, C=0,01$). Com a expansão para 20–40 noites, esse problema deixa de existir.
+  **R:** Excelente pergunta. Como temos apenas 2 noites sem EPB no total (`BJL_20250722` e `CA_20250407`), quando uma delas é a noite de teste externo, o loop interno de seleção de hiperparâmetros só dispõe de 1 noite sem EPB; quando essa única noite sai na validação interna, o treino interno fica monoclasse e não consegue medir a especificidade. Nosso código detecta automaticamente quando `scored_classes < 2` no loop interno e aciona de forma determinística parâmetros fixos declarados (`FALLBACK_PARAMS`: $k=5, C=0,001$). Com a expansão para 20–40 noites, esse problema deixa de existir.
 
-- **P: Por que vocês reportam o limiar operacional de 0,80 em vez do limiar padrão de 0,50 da Regressão Logística?**  
-  **R:** Porque no protocolo *leave-one-night-out*, cada noite tem um nível basal de emissão 630,0 nm, transparência e resposta instrumental ligeiramente diferente das noites de treino. Isso desloca a distribuição das probabilidades preditas para cima nas noites escuras. No limiar não-calibrado de 0,50, o modelo tem sensibilidade altíssima (94,1%), mas a especificidade despenca para apenas 8,2% (acurácia balanceada de 51,2%, perto do acaso). Ao calibrar o limiar operacional na curva de sensibilidade/especificidade em `t = 0,80`, contemos os falsos alarmes noturnos, subindo a especificidade para **89,0%** e a acurácia balanceada para **77,3%**.
+- **P: Por que vocês reportam o limiar operacional de 0,70 além do limiar padrão de 0,50 da Regressão Logística?**  
+  **R:** No limiar padrão de `t = 0,50`, o modelo já apresenta bom desempenho (**78,6% de acurácia balanceada**, **96,5% de sensibilidade** e **60,8% de especificidade**). Porém, quando a noite calma de `BJL_20250722` (220 quadros) é avaliada fora do treino, o modelo foi treinado com apenas 35 quadros de céu calmo (de uma única noite em Cariri) contra 255 quadros de EPB, o que desloca ligeiramente as probabilidades para cima. Ajustar o ponto de operação para `t = 0,70` compensa essa assimetria de noites no treino, elevando a especificidade para **91,8%** (apenas 21 falsos positivos em 255 quadros), mantendo **88,2% de sensibilidade** e levando a acurácia balanceada para **90,0%** (F1 = **0,898**).
 
-### 2. Sobre o Pré-processamento Físico e o Achatamento Radial
-- **P: Como funciona exatamente o achatamento radial e por que ele piorou a AUC de 0,950 para 0,791?**  
-  **R:** Na configuração atual, achatamos o perfil radial (dividindo pela mediana de brilho em anéis concêntricos) para remover residual de *van Rhijn* e gradientes radiais da lente (atenuação nas bordas). Porém, a tabela de ablação revelou que, no mesmo limiar (0,5) das demais linhas, o achatamento radial derruba a acurácia balanceada de 78,6% para 51,2% e a especificidade de 60,8% para 8,2% (AUC de 0,950 para 0,791). A hipótese física é que, quando uma bolha larga passa pelo zênite (centro do domo, $r \approx 0$), ela escurece os raios pequenos; o achatamento radial pode interpretar esse escurecimento central como perfil instrumental da lente e subtraí-lo, atenuando a própria bolha. Como a divisão pelo fundo Gaussiano ($\sigma = 10/64$) já corrige variações espaciais e a atenuação periférica suave da lente, a evidência atual sugere que **desligar o achatamento radial melhoraria o sistema** — mas, dado que temos apenas ~7 noites, tratamos isso como uma hipótese a confirmar com mais dados antes de trocar o padrão, e não como decisão já tomada.
+### 2. Sobre o Pré-processamento Físico e a Escada de Ablação
+- **P: Por que a alternativa com achatamento radial na escada de ablação piorou a AUC de 0,950 para 0,791 e foi descartada?**  
+  **R:** Porque a etapa de **fundo Gaussiano normalizado dentro da máscara do domo** ($\sigma = 10$ em $64\times 64$) já é um filtro passa-baixas 2D que remove suavemente o efeito de *van Rhijn*, a vinhetagem da lente e a poluição luminosa urbana na borda. Tentar dividir antes pela mediana de 48 anéis concêntricos num raio de apenas 28 pixels ($0,44 \times 64$) cria artefatos concêntricos de alta frequência nos anéis internos (que têm poucos pixels) e atenua as próprias bolhas quando elas cruzam o zênite ($r \approx 0$). Por isso o achatamento radial mostrou-se redundante e nocivo na ablação, sendo descartado.
 
 - **P: O filtro Gaussiano usado para estimar o fundo ($\sigma = 10$ em 64×64) não acaba entrando dentro da bolha se a bolha for muito larga?**  
-  **R:** Sim, se uma depleção ocupar metade do domo, um filtro Gaussiano isotrópico pode sofrer uma leve queda no centro da bolha. Ainda assim, como $\sigma = 10$ em $64\times 64$ equivale a ~16% do tamanho da imagem (cerca de 150–200 km na altura da camada F), ele é mais largo que a maioria das ramificações individuais das bolhas, preservando alto contraste negativo nas bordas e no canal principal, como provado pela AUC de 0,950 atingida no passo de remoção de estrelas + fundo no domo. Uma melhoria futura simples para noites com múltiplas bolhas largas é estimar o fundo usando um filtro de percentil alto (ex.: percentil 75 local ou fechamento morfológico largo) ou uma mediana deslizante no tempo ao longo de ~1 hora.
+  **R:** Se uma depleção ocupar metade do domo, um filtro Gaussiano isotrópico pode sofrer uma leve queda no centro da bolha. Ainda assim, como $\sigma = 10$ em $64\times 64$ equivale a ~35% do raio útil do domo (cerca de 150–200 km na altura da camada F), ele é mais largo que a maioria das ramificações individuais das bolhas, preservando alto contraste negativo nas bordas e no canal principal, como provado pela **AUC de 0,950** e pela **acurácia balanceada de 90,0%** atingidas pelo modelo.
 
 ### 3. Sobre Geofísica Espacial e Operação no EMBRACE
+- **P: A Lua não atrapalha as imagens? Por que há uma coluna de iluminação lunar nos metadados?**  
+  **R:** Nas fotos do EMBRACE **não existe Lua visível no domo**: o imageador é configurado para não operar / mirar fora da Lua, de modo que ela não aparece nas imagens (a fração lunar no CSV vem apenas de efemérides astronômicas pelo horário UTC). Qualquer gradiente assimétrico de brilho na borda do domo deve-se no máximo à **poluição luminosa da cidade** ou crepúsculo, que o fundo Gaussiano 2D dentro da máscara absorve suavemente.
+
 - **P: O sistema consegue diferenciar uma Bolha de Plasma Equatorial (EPB) de uma MSTID (Distúrbio Ionosférico Propagante de Média Escala) ou de ondas de gravidade?**  
-  **R:** Excelente questão geofísica. No conjunto atual de 7 noites, os rótulos são binários (presença ou ausência de EPB em céu limpo). Porém, geometricamente, nosso pipeline já tem a ferramenta para diferenciá-las: na verificação de orientação por tensor de estrutura (Slide 7), mostramos que as EPBs em CA e CP são estritamente alinhadas ao meridiano magnético norte–sul (ângulos médios de $+5,4^\circ$ e $+0,5^\circ$). Já as MSTIDs eletrificadas noturnas no setor brasileiro tipicamente apresentam frentes de fase alinhadas de **noroeste para sudeste** ($\sim -30^\circ \text{ a } -60^\circ$) propagando-se para sudoeste. Portanto, acoplar o ângulo do tensor de estrutura como filtro físico ou característica explícita permitirá separar EPBs de MSTIDs quando incluirmos noites com ondas e MSTIDs no dataset.
+  **R:** Excelente questão geofísica. No conjunto atual de 7 noites, os rótulos são binários (presença ou ausência de EPB em céu limpo). Porém, geometricamente, nosso pipeline já tem a ferramenta para diferenciá-las: na verificação de orientação por tensor de estrutura (Slide 7), mostramos que as EPBs em CA e CP são estritamente alinhadas ao meridiano magnético norte–sul (ângulos médios de $+4,5^\circ$ e $+0,2^\circ$, coerências de $0,749$ e $0,653$). Já as MSTIDs eletrificadas noturnas no setor brasileiro tipicamente apresentam frentes de fase alinhadas de **noroeste para sudeste** ($\sim -30^\circ \text{ a } -60^\circ$) propagando-se para sudoeste. Portanto, acoplar o ângulo do tensor de estrutura como filtro físico ou característica explícita permitirá separar EPBs de MSTIDs quando incluirmos noites com ondas e MSTIDs no dataset.
 
 - **P: Qual é o custo computacional desse pipeline? Ele pode rodar em tempo real nas estações remotas do EMBRACE?**  
-  **R:** Sim, ele é extremamente leve e roda inteiramente em CPU comum em poucos milissegundos por imagem. Não exige GPU: o pré-processamento usa apenas operações morfológicas e convoluções Gaussianas rápidas do OpenCV, a projeção 2DPCA é uma única multiplicação de matrizes $(64 \times 64) \times (64 \times 5)$, e tanto a predição da Regressão Logística quanto o mapa de atribuição exata por pixel são produtos escalares diretos. Uma noite inteira de 230 imagens é processada e auditada em poucos segundos.
+  **R:** Sim, ele é extremamente leve e roda inteiramente em CPU comum em poucos milissegundos por imagem. Não exige GPU: o pré-processamento usa apenas operações morfológicas e convoluções Gaussianas rápidas do OpenCV, a projeção 2DPCA é uma única multiplicação de matrizes $(64 \times 64) \times (64 \times 3)$, e tanto a predição da Regressão Logística quanto o mapa de atribuição exata por pixel são produtos escalares diretos. Uma noite inteira de 230 imagens é processada e auditada em poucos segundos.
