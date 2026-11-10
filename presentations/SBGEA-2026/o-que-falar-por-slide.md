@@ -1,7 +1,7 @@
 # 🎤 Guia Mestre de Apresentação e Defesa — SBGEA 2026
 
-**Título do Trabalho:** *Detecção Automática e Explicável de Bolhas de Plasma Equatoriais em Imagens All-Sky OI 630,0 nm via 2DPCA e Classificação Linear com Atribuição Exata por Pixel*  
-**Autores:** Ivo (UFPB) & Prof. Dr. Paulo Roberto (UFCG)  
+**Título do Trabalho:** *Detecção Automática de Bolhas de Plasma Equatorial em Imagens AirGlow Utilizando Técnicas de Aprendizado de Máquina*  
+**Autores:** Alberto I. C. Vieira (UFPB) & Dr. Cosme A. O. B. Figueiredo (UFCG)  
 **Evento:** IX SBGEA — Simpósio Brasileiro de Geofísica Espacial e Aeronomia (Rio de Janeiro, 2026)  
 **Tempo Alvo da Apresentação Oral:** **~10 minutos** (deixando 2 a 5 minutos para perguntas da banca/platéia)
 
@@ -47,7 +47,7 @@ Ao final do documento, há também um **Banco Geral de Perguntas Difíceis da Ba
 *(Tempo sugerido: 25 segundos)*
 
 ### 🎙️ O que falar
-> "Bom dia / boa tarde a todos. Meu nome é Ivo, sou mestrando na UFPB sob orientação do professor Paulo Roberto, da UFCG. Hoje vou apresentar nosso trabalho sobre detecção automática e explicável de Bolhas de Plasma Equatoriais em imagens *all-sky* na linha do oxigênio atômico em 630 nanômetros, combinando um controle de qualidade do céu em cascata, pré-processamento guiado pela física que preserva o contraste negativo das depleções, redução matricial via 2DPCA e um classificador linear com atribuição exata por pixel — avaliado de forma rigorosa sob validação cruzada deixando uma noite inteira de fora por vez."
+> "Bom dia / boa tarde a todos. Meu nome é Ivo, sou mestrando na UFPB sob orientação do professor Cosme Figueiredo, da UFCG. Hoje vou apresentar nosso trabalho sobre detecção automática e explicável de Bolhas de Plasma Equatoriais em imagens *all-sky* na linha do oxigênio atômico em 630 nanômetros, combinando um controle de qualidade do céu em cascata, pré-processamento guiado pela física que preserva o contraste negativo das depleções, redução matricial via 2DPCA e um classificador linear com atribuição exata por pixel — avaliado de forma rigorosa sob validação cruzada deixando uma noite inteira de fora por vez."
 
 ### 🧠 O que você precisa saber a fundo
 - **Por que cada termo do título importa:**

@@ -1,4 +1,4 @@
-# Detecção Automática e Explicável de Bolhas de Plasma Equatoriais em Imagens All-Sky OI 630,0 nm
+# Detecção Automática de Bolhas de Plasma Equatorial em Imagens AirGlow Utilizando Técnicas de Aprendizado de Máquina
 
 *Texto-base narrativo e integrado da apresentação no IX Simpósio Brasileiro de Geofísica Espacial e Aeronomia (SBGEA 2026). Este documento foi escrito como um texto contínuo — o "livro" por trás dos slides — para que a leitura fluida consolide toda a física, a matemática, os resultados, as descobertas diagnósticas e as limitações do trabalho.*
 
